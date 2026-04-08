@@ -1,0 +1,301 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="/mod/_core/visual/index.css" />
+    <link rel="stylesheet" href="/mod/_core/huggingface/huggingface.css" />
+    <script type="module" src="/mod/_core/huggingface/store.js"></script>
+  </head>
+  <body>
+    <div x-data>
+      <template x-if="$store.huggingface">
+        <section
+          class="space-panel huggingface-page"
+          x-cloak
+          x-init="$nextTick(() => $store.huggingface.mount({ composer: $refs.composer, thread: $refs.thread }))"
+          x-destroy="$store.huggingface.unmount()"
+        >
+          <div class="huggingface-layout">
+            <aside class="huggingface-card huggingface-config-card">
+              <div class="huggingface-current-block">
+                <div class="huggingface-current-header">
+                  <p class="huggingface-current-label">Current model</p>
+                  <span
+                    class="huggingface-current-badge"
+                    :class="$store.huggingface.currentModelBadgeTone"
+                    x-text="$store.huggingface.currentModelBadgeText"
+                  ></span>
+                </div>
+                <div class="huggingface-current-main">
+                  <p class="huggingface-current-model" x-text="$store.huggingface.currentModelLabel"></p>
+                  <button
+                    type="button"
+                    class="secondary-button huggingface-unload-button"
+                    :class="{ 'huggingface-stop-button': $store.huggingface.isLoadingModel }"
+                    x-show="$store.huggingface.activeModelId || $store.huggingface.isLoadingModel"
+                    x-cloak
+                    :disabled="!$store.huggingface.canUnloadActiveModel"
+                    @click="$store.huggingface.requestUnloadModel()"
+                    x-text="$store.huggingface.currentModelActionLabel"
+                  ></button>
+                </div>
+
+                <template x-if="$store.huggingface.isLoadingModel">
+                  <div class="huggingface-progress-block">
+                    <div
+                      class="huggingface-progress-track"
+                      role="progressbar"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      :aria-valuenow="$store.huggingface.loadProgressPercent"
+                    >
+                      <div
+                        class="huggingface-progress-fill"
+                        :style="`--huggingface-progress-width: ${$store.huggingface.loadProgressPercent}%`"
+                      ></div>
+                    </div>
+                    <p class="huggingface-progress-step" x-text="$store.huggingface.loadStepLabel || 'Loading model'"></p>
+                  </div>
+                </template>
+
+                <template x-if="$store.huggingface.error">
+                  <p class="huggingface-error-copy" x-text="$store.huggingface.error"></p>
+                </template>
+              </div>
+
+              <section class="huggingface-browser-block huggingface-browser-block--models">
+                <div class="huggingface-card-header">
+                  <h2>Models</h2>
+                  <span class="huggingface-section-meta" x-text="`${$store.huggingface.savedModels.length} saved`"></span>
+                </div>
+
+                <label class="huggingface-field">
+                  <span>Hugging Face model</span>
+                  <input
+                    type="text"
+                    x-model="$store.huggingface.modelInput"
+                    :disabled="$store.huggingface.isGenerating"
+                    placeholder="onnx-community/Qwen2.5-0.5B-Instruct-ONNX or https://huggingface.co/..."
+                  />
+                </label>
+
+                <div class="huggingface-model-actions">
+                  <button
+                    type="button"
+                    class="primary-button"
+                    :disabled="$store.huggingface.isGenerating"
+                    @click="$store.huggingface.handleLoadModel()"
+                  >
+                    Load
+                  </button>
+
+                  <a
+                    class="secondary-button huggingface-link-button"
+                    :href="$store.huggingface.compatibleModelsUrl"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Compatible models
+                  </a>
+                </div>
+
+                <template x-if="$store.huggingface.savedModels.length">
+                  <div class="huggingface-catalog-list">
+                    <template x-for="model in $store.huggingface.savedModels" :key="`${model.modelId}:${model.dtype}`">
+                      <article
+                        class="huggingface-catalog-item"
+                        :class="{ 'is-loaded': $store.huggingface.isActiveSavedModel(model) }"
+                      >
+                        <div class="huggingface-catalog-main">
+                          <p class="huggingface-catalog-title" x-text="model.modelId"></p>
+                          <p class="huggingface-catalog-meta">
+                            <span x-text="model.dtype"></span>
+                          </p>
+                        </div>
+                        <div class="huggingface-catalog-actions">
+                          <button
+                            type="button"
+                            class="secondary-button huggingface-list-button"
+                            :class="{ 'is-unload': $store.huggingface.isActiveSavedModel(model) }"
+                            :disabled="$store.huggingface.isLoadingModel || $store.huggingface.isGenerating"
+                            @click="$store.huggingface.handleSavedModelAction(model)"
+                            x-text="$store.huggingface.getSavedModelActionLabel(model)"
+                          ></button>
+                        </div>
+                      </article>
+                    </template>
+                  </div>
+                </template>
+
+                <template x-if="!$store.huggingface.savedModels.length">
+                  <p class="field-note">
+                    No saved models yet. Load a compatible Hugging Face repo once and it will stay here for quick reuse.
+                  </p>
+                </template>
+              </section>
+
+              <section class="huggingface-browser-block">
+                <div class="huggingface-section-heading">
+                  <h3>Advanced</h3>
+                  <button
+                    type="button"
+                    class="secondary-button"
+                    @click="$store.huggingface.showAdvanced = !$store.huggingface.showAdvanced"
+                    x-text="$store.huggingface.showAdvanced ? 'Hide' : 'Show'"
+                  ></button>
+                </div>
+
+                <div x-show="$store.huggingface.showAdvanced" x-cloak>
+                  <div class="huggingface-advanced-block">
+                    <div class="huggingface-inline-fields">
+                      <label class="huggingface-field">
+                        <span>Dtype</span>
+                        <select x-model="$store.huggingface.selectedDtype">
+                          <template x-for="option in $store.huggingface.dtypeOptions" :key="option.value">
+                            <option :value="option.value" x-text="option.label"></option>
+                          </template>
+                        </select>
+                      </label>
+
+                      <label class="huggingface-field">
+                        <span>Max new tokens</span>
+                        <input type="number" min="1" max="4096" step="1" x-model="$store.huggingface.maxNewTokens" />
+                      </label>
+                    </div>
+
+                    <p class="field-note">
+                      Runs locally in this browser with WebGPU. Only Transformers.js-compatible repos with ONNX assets can load, and the browser caches the downloaded files after the first load.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            </aside>
+
+            <section class="huggingface-card huggingface-chat-card">
+              <div class="huggingface-card-header">
+                <div class="huggingface-section-heading">
+                  <h2>Testing chat</h2>
+                  <button
+                    type="button"
+                    class="secondary-button"
+                    :disabled="$store.huggingface.isGenerating || !$store.huggingface.messages.length"
+                    @click="$store.huggingface.clearChat()"
+                  >
+                    Clear Chat
+                  </button>
+                </div>
+              </div>
+
+              <section class="huggingface-prompt-section">
+                <div class="huggingface-section-heading">
+                  <h3>System prompt</h3>
+                  <button
+                    type="button"
+                    class="secondary-button"
+                    @click="$store.huggingface.showSystemPrompt = !$store.huggingface.showSystemPrompt"
+                    x-text="$store.huggingface.showSystemPrompt ? 'Hide' : 'Show'"
+                  ></button>
+                </div>
+
+                <div x-show="$store.huggingface.showSystemPrompt" x-cloak>
+                  <label class="huggingface-field huggingface-field--prompt">
+                    <textarea rows="4" x-model="$store.huggingface.systemPrompt"></textarea>
+                  </label>
+                </div>
+              </section>
+
+              <div class="huggingface-thread" x-ref="thread">
+                <template x-if="!$store.huggingface.messages.length">
+                  <div class="huggingface-empty-state">
+                    <p>Load a compatible Hugging Face model, set a system prompt, and send a message to start a simple browser-only chat.</p>
+                  </div>
+                </template>
+
+                <template x-for="message in $store.huggingface.messages" :key="message.id">
+                  <article class="huggingface-message" :class="`huggingface-message--${message.role}`">
+                    <header class="huggingface-message-header">
+                      <span class="huggingface-message-role" x-text="message.role === 'assistant' ? 'Assistant' : 'User'"></span>
+                      <span class="huggingface-message-finish" x-text="message.finishReason || (message.isStreaming ? 'streaming' : '')"></span>
+                    </header>
+                    <pre class="huggingface-message-body" x-text="message.content || (message.isStreaming ? 'Generating...' : '')"></pre>
+
+                    <template x-if="message.metrics">
+                      <div class="huggingface-message-meta">
+                        <span class="huggingface-message-meta-item huggingface-message-meta-item--model" x-show="message.modelId">
+                          <strong x-text="message.modelId"></strong>
+                        </span>
+                        <span
+                          class="huggingface-message-meta-item"
+                          x-show="message.metrics && message.metrics.tokensPerSecond != null"
+                          title="Tokens per second"
+                        >
+                          t/s
+                          <strong x-text="$store.huggingface.formatTokenRate(message.metrics.tokensPerSecond)"></strong>
+                        </span>
+                        <span
+                          class="huggingface-message-meta-item"
+                          x-show="message.metrics && message.metrics.tokensPerMinute != null"
+                          title="Tokens per minute"
+                        >
+                          t/min
+                          <strong x-text="$store.huggingface.formatTokenRate(message.metrics.tokensPerMinute)"></strong>
+                        </span>
+                        <span
+                          class="huggingface-message-meta-item"
+                          x-show="message.metrics && (message.metrics.promptTokens != null || message.metrics.completionTokens != null)"
+                          title="Prompt tokens / completion tokens"
+                        >
+                          p/c
+                          <strong
+                            x-text="`${$store.huggingface.formatMetricNumber(message.metrics.promptTokens, 0)}/${$store.huggingface.formatMetricNumber(message.metrics.completionTokens, 0)}`"
+                          ></strong>
+                        </span>
+                        <span
+                          class="huggingface-message-meta-item"
+                          x-show="message.metrics && message.metrics.timeToFirstTokenSeconds != null"
+                          title="Time to first token"
+                        >
+                          ttft
+                          <strong x-text="$store.huggingface.formatDuration(message.metrics.timeToFirstTokenSeconds)"></strong>
+                        </span>
+                        <span
+                          class="huggingface-message-meta-item"
+                          x-show="message.metrics && message.metrics.endToEndLatencySeconds != null"
+                          title="End-to-end latency"
+                        >
+                          e2e
+                          <strong x-text="$store.huggingface.formatDuration(message.metrics.endToEndLatencySeconds)"></strong>
+                        </span>
+                      </div>
+                    </template>
+                  </article>
+                </template>
+              </div>
+
+              <form class="huggingface-composer" @submit.prevent="$store.huggingface.handleComposerPrimaryAction()">
+                <textarea
+                  x-ref="composer"
+                  rows="2"
+                  :disabled="!$store.huggingface.activeModelId && !$store.huggingface.isGenerating"
+                  :placeholder="$store.huggingface.composerPlaceholder"
+                  x-model="$store.huggingface.draft"
+                  @input="$store.huggingface.handleComposerInput($event)"
+                  @keydown="$store.huggingface.handleComposerKeydown($event)"
+                ></textarea>
+
+                <div class="huggingface-composer-actions">
+                  <p class="huggingface-composer-hint">Enter to send, Shift+Enter for newline.</p>
+                  <button
+                    type="submit"
+                    class="primary-button"
+                    :class="{ 'huggingface-stop-button': $store.huggingface.isGenerating }"
+                    :disabled="(!$store.huggingface.draft.trim() && !$store.huggingface.isGenerating) || $store.huggingface.isLoadingModel"
+                    x-text="$store.huggingface.composerButtonText"
+                  ></button>
+                </div>
+              </form>
+            </section>
+          </div>
+        </section>
+      </template>
+    </div>
+  </body>
+</html>

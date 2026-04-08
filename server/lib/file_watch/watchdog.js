@@ -8,7 +8,7 @@ import {
   resolveProjectPathFromAbsolute
 } from "../customware/layout.js";
 import { globToRegExp, normalizePathSegment } from "../utils/app_files.js";
-import { parseSimpleYaml } from "../utils/yaml_lite.js";
+import { parseSimpleYaml } from "../../../app/L0/_all/mod/_core/framework/js/yaml-lite.js";
 
 const REFRESH_DEBOUNCE_MS = 75;
 const RECONCILE_INTERVAL_MS = 1_000;

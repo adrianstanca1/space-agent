@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { parseSimpleYaml } from "../utils/yaml_lite.js";
+import { parseSimpleYaml } from "../../../app/L0/_all/mod/_core/framework/js/yaml-lite.js";
 import {
   normalizeEntityId,
   parseGroupConfigProjectPath,

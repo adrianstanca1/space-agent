@@ -69,8 +69,7 @@
     "purpose": "Thin mobile-compatible server bridge for fetch proxying and local infrastructure."
   },
   "dependencies": {
-    "isomorphic-git": "^1.37.4",
-    "yaml": "^2.8.3"
+    "isomorphic-git": "^1.37.4"
   },
   "optionalDependencies": {
     "nodegit": "^0.27.0"

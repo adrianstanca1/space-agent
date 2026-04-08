@@ -56,7 +56,7 @@ Important namespaces:
 - `space.config`: frontend-exposed runtime params
 - `space.fw.createStore`: Alpine store helper
 - `space.utils.markdown.render(...)` and `parseDocument(...)`
-- `space.utils.yaml.parse(...)` and `stringify(...)`
+- `space.utils.yaml.parse(...)` and `stringify(...)`, backed by the shared project-owned lightweight YAML utility in `_core/framework/js/yaml-lite.js`, which server modules also import directly
 - `space.proxy`, `space.download`, `space.fetchExternal(...)`
 - `space.router`: router helper surface on routed app pages
 - `space.onscreenAgent`: overlay display and prompt submission helpers

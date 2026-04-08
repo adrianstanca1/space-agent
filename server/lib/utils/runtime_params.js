@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { parseSimpleYaml } from "../../../app/L0/_all/mod/_core/framework/js/yaml-lite.js";
 import { getProjectEnvFilePath, readDotEnvFile } from "./env_files.js";
-import { parseSimpleYaml } from "./yaml_lite.js";
 
 const PARAM_TYPES = new Set(["boolean", "number", "text"]);
 const BOOLEAN_ALLOWED_VALUES = ["true", "false"];

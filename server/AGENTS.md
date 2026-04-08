@@ -142,7 +142,7 @@ The server relies on a small set of shared infrastructure contracts. Do not re-i
 - `server/lib/auth/service.js` is the canonical session and login service
 - `server/lib/auth/keys_manage.js` is the canonical backend auth-key loader, with shared-env override support and local `server/data/` fallback
 - `server/lib/utils/runtime_params.js` is the canonical parameter-resolution layer for startup env overrides, defaults, and frontend exposure
-- `server/lib/utils/yaml_lite.js` is the canonical server YAML parser and serializer wrapper; it should stay aligned with the browser YAML helper contract when YAML behavior changes
+- `app/L0/_all/mod/_core/framework/js/yaml-lite.js` is the canonical YAML parser and serializer for both browser and server code; server modules import it directly instead of maintaining a duplicate server-side helper
 - `server/lib/customware/layout.js` is the canonical logical-to-disk resolver for repo `L0` and configured writable `L1`/`L2` roots
 
 Infrastructure rules:

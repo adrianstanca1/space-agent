@@ -1,0 +1,588 @@
+.huggingface-page {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  min-height: calc(100dvh - 3rem);
+}
+
+.huggingface-card h2 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.huggingface-card h3 {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+.huggingface-error-copy,
+.huggingface-composer-hint,
+.huggingface-empty-state p,
+.field-note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.huggingface-card,
+.huggingface-message {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 0.95rem;
+  background: rgba(8, 13, 24, 0.92);
+  box-shadow: none;
+}
+
+.huggingface-page .primary-button,
+.huggingface-page .secondary-button {
+  min-height: 1.95rem;
+  padding: 0.32rem 0.72rem;
+  border-radius: 0.72rem;
+  box-shadow: none;
+  font-size: 0.82rem;
+}
+
+.huggingface-page .primary-button {
+  background: var(--color-accent-primary-strong);
+}
+
+.huggingface-page .primary-button:hover:not(:disabled) {
+  background: var(--color-accent-primary);
+}
+
+.huggingface-page .secondary-button {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.huggingface-page .secondary-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.huggingface-card {
+  padding: 0.85rem;
+}
+
+.huggingface-current-block {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.72rem 0.78rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.88rem;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.huggingface-current-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.huggingface-current-label {
+  margin: 0;
+  color: var(--color-text-tertiary);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.huggingface-current-model {
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.huggingface-current-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.6rem;
+}
+
+.huggingface-current-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.45rem;
+  padding: 0.08rem 0.52rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.huggingface-current-badge.is-ready {
+  border-color: rgba(121, 237, 216, 0.22);
+  background: rgba(121, 237, 216, 0.08);
+  color: #9de4d4;
+}
+
+.huggingface-current-badge.is-loading {
+  border-color: rgba(148, 188, 255, 0.24);
+  background: rgba(148, 188, 255, 0.08);
+  color: #b8d1ff;
+}
+
+.huggingface-current-badge.is-error {
+  border-color: rgba(255, 141, 152, 0.28);
+  background: rgba(255, 141, 152, 0.08);
+  color: #ffb4bd;
+}
+
+.huggingface-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.9fr) minmax(0, 1.4fr);
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.huggingface-layout > * {
+  min-width: 0;
+}
+
+.huggingface-config-card,
+.huggingface-chat-card {
+  display: grid;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.huggingface-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.huggingface-field {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.huggingface-field span {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.huggingface-field input,
+.huggingface-field select,
+.huggingface-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0.62rem 0.72rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 0.78rem;
+  background: rgba(5, 8, 22, 0.56);
+  color: var(--color-text-primary);
+  font: inherit;
+  resize: vertical;
+}
+
+.huggingface-field select {
+  appearance: none;
+  resize: none;
+}
+
+.huggingface-field input:focus-visible,
+.huggingface-field select:focus-visible,
+.huggingface-field textarea:focus-visible,
+.huggingface-composer textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-accent-primary-strong);
+  box-shadow: 0 0 0 3px rgba(148, 188, 255, 0.14);
+}
+
+.huggingface-browser-block {
+  display: grid;
+  gap: 0.55rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.huggingface-browser-block--models {
+  min-height: 0;
+}
+
+.huggingface-model-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.huggingface-link-button {
+  text-decoration: none;
+}
+
+.huggingface-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.huggingface-prompt-section {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.huggingface-advanced-block {
+  display: grid;
+  gap: 0.55rem;
+  padding-top: 0.15rem;
+}
+
+.huggingface-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.huggingface-section-meta {
+  color: var(--color-text-tertiary);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.huggingface-catalog-list {
+  display: grid;
+  gap: 0;
+  align-content: start;
+  grid-auto-rows: max-content;
+  overflow: auto;
+  padding-right: 0.08rem;
+}
+
+.huggingface-catalog-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.35rem 0.65rem;
+  align-items: center;
+  padding: 0.42rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-border-soft);
+  border-radius: 0;
+  background: none;
+}
+
+.huggingface-catalog-item.is-loaded {
+  margin: 0.14rem 0;
+  padding: 0.46rem 0.52rem;
+  border-top-color: transparent;
+  border-radius: 0.78rem;
+  background: rgba(121, 237, 216, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(121, 237, 216, 0.42);
+}
+
+.huggingface-catalog-main {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.huggingface-catalog-title {
+  margin: 0;
+  font-weight: 700;
+  word-break: break-word;
+  font-size: 0.82rem;
+}
+
+.huggingface-catalog-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  margin: 0;
+  color: var(--color-text-tertiary);
+  font-size: 0.79rem;
+}
+
+.huggingface-catalog-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  align-items: center;
+  justify-self: end;
+}
+
+.huggingface-list-button {
+  justify-content: center;
+  min-width: 0;
+  width: auto;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.015);
+  white-space: nowrap;
+}
+
+.huggingface-list-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.huggingface-list-button.is-unload,
+.huggingface-unload-button {
+  border-color: rgba(121, 237, 216, 0.28);
+  background: rgba(121, 237, 216, 0.1);
+  color: #a8eadc;
+}
+
+.huggingface-list-button.is-unload:hover:not(:disabled),
+.huggingface-unload-button:hover:not(:disabled) {
+  background: rgba(121, 237, 216, 0.15);
+}
+
+.huggingface-unload-button {
+  min-width: 5.6rem;
+}
+
+.huggingface-progress-block {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.huggingface-progress-step {
+  margin: 0;
+  color: var(--color-text-tertiary);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.huggingface-progress-track {
+  width: 100%;
+  height: 0.48rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(5, 8, 22, 0.8);
+}
+
+.huggingface-progress-fill {
+  width: max(var(--huggingface-progress-width, 0%), 1em);
+  max-width: 100%;
+  height: 100%;
+  min-width: 1em;
+  border-radius: 999px;
+  background: var(--color-accent-primary-strong);
+  transition: width 140ms ease;
+}
+
+.huggingface-error-copy {
+  color: var(--color-danger);
+}
+
+.huggingface-thread {
+  display: grid;
+  gap: 0.42rem;
+  align-content: start;
+  grid-auto-rows: max-content;
+  min-height: 14rem;
+  max-height: 58vh;
+  overflow: auto;
+  padding-right: 0.1rem;
+}
+
+.huggingface-empty-state {
+  display: grid;
+  place-items: center;
+  min-height: 10rem;
+  padding: 1rem;
+  border: 1px dashed var(--color-border-soft);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.015);
+  text-align: center;
+}
+
+.huggingface-message {
+  display: grid;
+  gap: 0.32rem;
+  padding: 0.38rem 0.5rem;
+}
+
+.huggingface-message--assistant {
+  border-color: rgba(125, 220, 255, 0.18);
+  background: rgba(8, 13, 24, 0.82);
+}
+
+.huggingface-message--user {
+  border-color: rgba(121, 237, 216, 0.16);
+  background: rgba(10, 18, 31, 0.82);
+}
+
+.huggingface-message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.huggingface-message-role {
+  font-weight: 700;
+}
+
+.huggingface-message-finish {
+  color: var(--color-text-tertiary);
+  text-transform: lowercase;
+}
+
+.huggingface-message-body {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: inherit;
+  line-height: 1.38;
+}
+
+.huggingface-message-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.7rem;
+  margin: 0;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--color-text-tertiary);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.huggingface-message-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.huggingface-message-meta-item strong {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.huggingface-message-meta-item--model strong {
+  color: var(--color-text-primary);
+}
+
+.huggingface-composer {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.huggingface-composer textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 3.2rem;
+  max-height: 10rem;
+  padding: 0.58rem 0.68rem;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 0.82rem;
+  background: rgba(5, 8, 22, 0.6);
+  color: var(--color-text-primary);
+  font: inherit;
+  line-height: 1.45;
+  resize: none;
+}
+
+.huggingface-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.huggingface-composer-hint {
+  margin-right: auto;
+  font-size: 0.74rem;
+}
+
+.huggingface-stop-button {
+  color: var(--color-text-primary);
+  background: rgba(255, 141, 152, 0.14);
+  border-color: rgba(255, 141, 152, 0.34);
+  box-shadow: none;
+}
+
+.huggingface-stop-button:hover:not(:disabled) {
+  background: rgba(255, 141, 152, 0.2);
+}
+
+@media (min-width: 1101px) {
+  .huggingface-page {
+    height: calc(100dvh - 3rem);
+    min-height: calc(100dvh - 3rem);
+    align-content: stretch;
+  }
+
+  .huggingface-layout {
+    height: 100%;
+    align-items: stretch;
+  }
+
+  .huggingface-config-card,
+  .huggingface-chat-card {
+    height: 100%;
+  }
+
+  .huggingface-config-card {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  .huggingface-chat-card {
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+
+  .huggingface-browser-block--models {
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+
+  .huggingface-browser-block--models .huggingface-catalog-list {
+    min-height: 0;
+    max-height: none;
+  }
+
+  .huggingface-thread {
+    min-height: 0;
+    max-height: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .huggingface-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .huggingface-page {
+    padding: 0.75rem;
+  }
+
+  .huggingface-card-header,
+  .huggingface-composer-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .huggingface-inline-fields,
+  .huggingface-catalog-item,
+  .huggingface-current-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .huggingface-catalog-actions {
+    justify-self: start;
+  }
+
+  .huggingface-thread {
+    max-height: none;
+  }
+}

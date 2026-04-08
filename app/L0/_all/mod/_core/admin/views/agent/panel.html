@@ -175,27 +175,106 @@
                   <header class="dialog-header">
                     <div>
                       <p class="page-eyebrow">LLM</p>
-                      <h2>Provider, model, credentials, and params</h2>
+                      <h2>Provider and model configuration</h2>
                     </div>
                   </header>
-                  <label class="field">
-                    <span>Provider API Endpoint URL</span>
-                    <input type="url" x-model="$store.adminAgent.settingsDraft.apiEndpoint" />
-                  </label>
-                  <label class="field">
-                    <span>Model Name</span>
-                    <input type="text" x-model="$store.adminAgent.settingsDraft.model" />
-                  </label>
+                  <div class="dialog-segmented-control admin-agent-provider-switch" role="tablist" aria-label="LLM provider">
+                    <button
+                      type="button"
+                      class="secondary-button dialog-segmented-button"
+                      :class="{ 'is-active': $store.adminAgent.isSettingsDraftUsingApiProvider }"
+                      @click="$store.adminAgent.setSettingsProvider('api')"
+                    >
+                      <span>LLM APIs</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="secondary-button dialog-segmented-button"
+                      :class="{ 'is-active': $store.adminAgent.isSettingsDraftUsingWebLlmProvider }"
+                      @click="$store.adminAgent.setSettingsProvider('webllm')"
+                    >
+                      <span>Local WebLLM</span>
+                    </button>
+                  </div>
+                  <div x-show="$store.adminAgent.isSettingsDraftUsingApiProvider" x-cloak>
+                    <label class="field">
+                      <span>Provider API Endpoint URL</span>
+                      <input type="url" x-model="$store.adminAgent.settingsDraft.apiEndpoint" />
+                    </label>
+                    <label class="field">
+                      <span>Model Name</span>
+                      <input type="text" x-model="$store.adminAgent.settingsDraft.model" />
+                    </label>
+                    <label class="field">
+                      <span>API Key</span>
+                      <input type="password" x-model="$store.adminAgent.settingsDraft.apiKey" />
+                    </label>
+                  </div>
+                  <div x-show="$store.adminAgent.isSettingsDraftUsingWebLlmProvider" x-cloak>
+                    <p class="dialog-note admin-agent-webllm-disclaimer">
+                      WebLLM runs the model locally in this browser. It needs WebGPU, uses substantial GPU memory, and models must be downloaded first in WebLLM configuration before they can be selected here.
+                    </p>
+                    <label class="field">
+                      <span>Downloaded Model</span>
+                      <select
+                        x-model="$store.adminAgent.settingsDraft.webllmModel"
+                        @change="$store.adminAgent.handleSettingsWebLlmModelDraftChange()"
+                      >
+                        <option value="">Select downloaded model</option>
+                        <template x-for="model in $store.adminAgent.webllmDownloadedModels" :key="model.model_id">
+                          <option :value="model.model_id" x-text="model.model_id"></option>
+                        </template>
+                      </select>
+                      <p class="field-note" x-show="!$store.adminAgent.hasDownloadedWebllmModels">
+                        No downloaded WebLLM models were found in this browser yet.
+                      </p>
+                    </label>
+                    <section class="admin-agent-webllm-status-card">
+                      <div class="admin-agent-webllm-status-row">
+                        <div>
+                          <p class="page-eyebrow">Local Model Status</p>
+                          <strong x-text="$store.adminAgent.webllmCurrentModelLabel"></strong>
+                        </div>
+                        <span
+                          class="admin-agent-webllm-badge"
+                          :class="`is-${$store.adminAgent.webllmStatusTone.replace('is-', '')}`"
+                          x-text="$store.adminAgent.webllmStatusBadgeText"
+                        ></span>
+                      </div>
+                      <template x-if="$store.adminAgent.webllm.isLoadingModel">
+                        <div class="admin-agent-webllm-progress">
+                          <div
+                            class="admin-agent-webllm-progress-track"
+                            role="progressbar"
+                            aria-label="WebLLM model loading progress"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            :aria-valuenow="$store.adminAgent.webllmLoadProgressPercent"
+                          >
+                            <div
+                              class="admin-agent-webllm-progress-fill"
+                              :style="`--admin-agent-webllm-progress-width: ${$store.adminAgent.webllmLoadProgressPercent}%`"
+                            ></div>
+                          </div>
+                          <p class="field-note" x-text="$store.adminAgent.webllmSelectedModelStatusText"></p>
+                        </div>
+                      </template>
+                      <template x-if="!$store.adminAgent.webllm.isLoadingModel">
+                        <p class="field-note" x-text="$store.adminAgent.webllmSelectedModelStatusText"></p>
+                      </template>
+                    </section>
+                    <div class="dialog-actions dialog-actions-start admin-agent-webllm-actions">
+                      <button type="button" class="secondary-button" @click="$store.adminAgent.openWebLlmConfiguration()">
+                        Open WebLLM Config
+                      </button>
+                    </div>
+                  </div>
                   <label class="field">
                     <span>Max Tokens</span>
                     <input type="number" min="1" step="1" inputmode="numeric" x-model="$store.adminAgent.settingsDraft.maxTokens" />
                     <p class="field-note">
-                      Default <code>64000</code>. When prompt history exceeds this, compaction runs automatically before the next send.
+                      Shared across both provider modes. Default <code>64000</code>. When prompt history exceeds this, compaction runs automatically before the next send.
                     </p>
-                  </label>
-                  <label class="field">
-                    <span>API Key</span>
-                    <input type="password" x-model="$store.adminAgent.settingsDraft.apiKey" />
                   </label>
                   <label class="field">
                     <span>Params</span>
@@ -206,11 +285,11 @@
                       x-model="$store.adminAgent.settingsDraft.paramsText"
                     ></textarea>
                     <p class="field-note">
-                      YAML format. Example: <code>temperature:0.2</code>
+                      YAML format. Passed through to the active provider. Example: <code>temperature:0.2</code>
                     </p>
                   </label>
                   <p class="dialog-note">
-                    These values are stored in <code>~/conf/admin-chat.yaml</code>.
+                    These settings are stored in <code>~/conf/admin-chat.yaml</code>.
                   </p>
                   <div class="dialog-actions">
                     <button type="button" class="secondary-button" @click="$store.adminAgent.resetSettingsDraftToDefaults()">

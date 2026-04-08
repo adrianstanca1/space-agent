@@ -1,14 +1,26 @@
 export const ADMIN_CHAT_CONFIG_PATH = "~/conf/admin-chat.yaml";
 export const ADMIN_CHAT_HISTORY_PATH = "~/hist/admin-chat.json";
 export const DEFAULT_ADMIN_CHAT_MAX_TOKENS = 64_000;
+export const ADMIN_CHAT_LLM_PROVIDER = {
+  API: "api",
+  WEBLLM: "webllm"
+};
 
 export const DEFAULT_ADMIN_CHAT_SETTINGS = {
   apiEndpoint: "https://openrouter.ai/api/v1/chat/completions",
   apiKey: "",
   maxTokens: DEFAULT_ADMIN_CHAT_MAX_TOKENS,
   model: "openai/gpt-5.4-mini",
-  paramsText: "temperature:0.2"
+  paramsText: "temperature:0.2",
+  provider: ADMIN_CHAT_LLM_PROVIDER.API,
+  webllmModel: ""
 };
+
+export function normalizeAdminChatLlmProvider(value) {
+  return value === ADMIN_CHAT_LLM_PROVIDER.WEBLLM
+    ? ADMIN_CHAT_LLM_PROVIDER.WEBLLM
+    : ADMIN_CHAT_LLM_PROVIDER.API;
+}
 
 function normalizeMaxTokensText(value) {
   return String(value ?? "")

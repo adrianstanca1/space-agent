@@ -23,6 +23,7 @@ Examples:
 - `/mod/_core/framework/js/initFw.js`
 - `/mod/_core/router/view.html`
 - `/mod/_core/documentation/documentation.js`
+- `/mod/_core/huggingface/view.html`
 - `/mod/_core/webllm/view.html`
 
 The backend resolves those requests through layered customware inheritance, so the same `/mod/...` URL may be backed by `L0`, `L1`, or `L2`.
@@ -34,6 +35,7 @@ The authenticated router is hash-based.
 Important route rules:
 
 - `#/dashboard` -> `/mod/_core/dashboard/view.html`
+- `#/huggingface` -> `/mod/_core/huggingface/view.html`
 - `#/webllm` -> `/mod/_core/webllm/view.html`
 - `#/author/repo/path` -> `/mod/author/repo/path/view.html`
 - if the last route segment already ends in `.html`, the router resolves directly to that file under `/mod/...`
@@ -72,6 +74,7 @@ Rules:
 - the wrapped function becomes async
 - hooks resolve under `mod/<author>/<repo>/ext/js/<extension-point>/*.js` or `*.mjs`
 - wrapped functions expose `/start` and `/end` hook points
+- framework-backed page boot exposes `_core/framework/initializer.js/initialize`; its `/end` hook is the normal place for once-per-page integrations such as analytics bootstrap or `document.head` tag setup
 - feature-specific prompt or execution behavior for the onscreen agent should be supplied from the owning module through `_core/onscreen_agent/...` extension seams, not hardcoded into `_core/onscreen_agent`
 
 Uncached HTML `<x-extension>` lookups are grouped before they hit `/api/extensions_load`:
@@ -105,6 +108,7 @@ Heavy browser-only runtimes do not have to become global framework dependencies.
 
 Current first-party example:
 
+- `_core/huggingface` keeps its worker, local import shim, and the Transformers.js browser runtime contract inside one route-local module
 - `_core/webllm` keeps the vendored WebLLM browser build and its dedicated worker inside the module
 - the routed page imports only its local store and talks to the worker through a small module-local protocol file
 - this is the preferred pattern for experimental routed test surfaces that need a large browser runtime but do not yet justify promotion into `_core/framework`

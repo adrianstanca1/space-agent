@@ -1,6 +1,7 @@
 import * as config from "/mod/_core/admin/views/agent/config.js";
 import { buildMessageContentForApi } from "/mod/_core/admin/views/agent/attachments.js";
 import * as llmParams from "/mod/_core/admin/views/agent/llm-params.js";
+import { AdminAgentWebLlmRuntime } from "/mod/_core/admin/views/agent/webllm.js";
 import { mergeConsecutiveChatMessages } from "/mod/_core/framework/js/chat-messages.js";
 import * as proxyUrl from "/mod/_core/framework/js/proxy-url.js";
 
@@ -277,7 +278,7 @@ async function readStreamingResponse(response, onDelta) {
   }
 }
 
-export async function streamAdminAgentCompletion({ settings, systemPrompt, messages, onDelta, signal }) {
+async function streamAdminAgentApiCompletion({ settings, systemPrompt, messages, onDelta, signal }) {
   if (!settings.apiEndpoint.trim()) {
     throw new Error("Set an API endpoint before sending a message.");
   }
@@ -313,4 +314,30 @@ export async function streamAdminAgentCompletion({ settings, systemPrompt, messa
   }
 
   return readStreamingResponse(response, onDelta);
+}
+
+export async function streamAdminAgentCompletion({ settings, systemPrompt, messages, onDelta, signal, webllmRuntime }) {
+  const provider = config.normalizeAdminChatLlmProvider(settings?.provider);
+
+  if (provider === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM) {
+    if (!(webllmRuntime instanceof AdminAgentWebLlmRuntime)) {
+      throw new Error("WebLLM runtime is not available.");
+    }
+
+    return webllmRuntime.streamCompletion({
+      messages: buildAdminAgentPromptMessages(systemPrompt, messages),
+      modelId: settings.webllmModel,
+      onDelta,
+      requestOptions: llmParams.parseAdminAgentParamsText(settings.paramsText || ""),
+      signal
+    });
+  }
+
+  return streamAdminAgentApiCompletion({
+    messages,
+    onDelta,
+    settings,
+    signal,
+    systemPrompt
+  });
 }

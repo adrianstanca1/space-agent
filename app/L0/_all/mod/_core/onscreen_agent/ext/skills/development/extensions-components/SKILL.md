@@ -28,6 +28,7 @@ Example:
 - JS hook files live at `mod/<author>/<repo>/ext/js/<extension-point>/*.js` or `*.mjs`.
 - The runtime resolves `/start` and `/end` hooks around the wrapped function automatically.
 - `space.extend()` requires a valid module ref and a standalone named function or explicit extension point name.
+- Framework-backed pages expose `_core/framework/initializer.js/initialize`; prefer its `/end` hook for once-per-page shell setup such as analytics or `document.head` injection.
 - If a feature needs onscreen-agent-specific prompt shaping or execution validation for its own helpers, add an `ext/js/_core/onscreen_agent/...` hook from that feature instead of editing `_core/onscreen_agent` directly.
 
 ## Component Loader Rules

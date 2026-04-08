@@ -80,7 +80,7 @@ Current shell responsibilities:
 High-level ownership:
 
 - `views/dashboard/` is the lightweight dashboard and launch surface
-- `views/agent/` is the admin-side chat or execution surface and owns `space.admin.loadSkill(...)`
+- `views/agent/` is the admin-side chat or execution surface, owns `space.admin.loadSkill(...)`, and now supports both remote API LLM transport and browser-local WebLLM transport behind one shared admin loop
 - `views/files/` is the firmware-backed file browser for app-rooted paths
 - `views/modules/` is the firmware-backed module list and removal surface
 

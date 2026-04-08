@@ -22,6 +22,8 @@ Use this skill when the task changes browser runtime behavior, framework-backed 
 
 - Framework-backed pages boot through `/mod/_core/framework/js/initFw.js`.
 - The runtime installs onto `globalThis.space`.
+- `initFw.js` runs the extensible framework bootstrap step at `_core/framework/initializer.js/initialize` before Alpine startup.
+- Use `_core/framework/initializer.js/initialize/end` for once-per-page shell setup such as analytics bootstrap or `document.head` tag injection instead of editing page shells.
 - Current shared runtime surface includes:
   - `space.api`
   - `space.config`

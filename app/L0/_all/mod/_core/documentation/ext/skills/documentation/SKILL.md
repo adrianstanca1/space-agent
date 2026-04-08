@@ -21,7 +21,9 @@ recommended starting points
 - overall system shape: `architecture/overview.md`
 - documentation rules: `architecture/documentation-system.md`
 - frontend runtime and layers: `app/runtime-and-layers.md`
+- admin agent runtime: `app/admin-agent-runtime.md`
 - modules, routing, or extensions: `app/modules-and-extensions.md`
+- browser-side Hugging Face testing: `app/huggingface-browser-runtime.md`
 - browser-side WebLLM testing: `app/webllm-browser-runtime.md`
 - spaces and widgets: `app/spaces-and-widgets.md`
 - overlay agent runtime: `agent/onscreen-agent-runtime.md`
@@ -38,7 +40,9 @@ docs path|name|description↓
 architecture/overview.md|Runtime Overview|Browser-first architecture, major entry surfaces, and the layered runtime model.
 architecture/documentation-system.md|Documentation System|How `AGENTS.md`, the documentation module, and code fit together, plus update rules.
 app/runtime-and-layers.md|App Runtime And Layers|Frontend boot flow, `space` runtime namespaces, entry shells, and `L0/L1/L2` rules.
+app/admin-agent-runtime.md|Admin Agent Runtime|Admin chat ownership, config persistence, shared execution loop, and API-versus-WebLLM transport switching.
 app/modules-and-extensions.md|Modules And Extensions|`/mod/...` delivery, router path resolution, `ext/html`, `ext/js`, and `<x-component>` behavior.
+app/huggingface-browser-runtime.md|Hugging Face Browser Runtime|The routed Transformers.js test surface, its worker split, direct Hub model loading contract, and throughput metrics.
 app/webllm-browser-runtime.md|WebLLM Browser Runtime|The routed WebLLM test surface, its worker split, model-loading modes, and throughput metrics contract.
 app/spaces-and-widgets.md|Spaces And Widgets|Space storage, widget renderer contracts, widget-shell defaults, and the main `space.current` / `space.spaces` helpers.
 agent/onscreen-agent-runtime.md|Onscreen Agent Runtime|Overlay ownership, persistence, defaults, UI/runtime surfaces, and prompt file ownership.

@@ -5,7 +5,10 @@ import {
   normalizeEntityId,
   resolveProjectAbsolutePath
 } from "./layout.js";
-import { parseSimpleYaml, serializeSimpleYaml } from "../utils/yaml_lite.js";
+import {
+  parseSimpleYaml,
+  serializeSimpleYaml
+} from "../../../app/L0/_all/mod/_core/framework/js/yaml-lite.js";
 
 const GROUP_WRITE_LAYER = "L1";
 

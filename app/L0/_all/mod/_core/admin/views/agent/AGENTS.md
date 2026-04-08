@@ -14,7 +14,7 @@ This surface owns:
 
 - `panel.html`: mounted admin agent UI
 - `store.js`: main state, send loop, compaction flow, dialog control, and persistence orchestration
-- `api.js`, `prompt.js`, `execution.js`, `attachments.js`, `llm-params.js`, and `view.js`: local runtime helpers
+- `api.js`, `prompt.js`, `execution.js`, `attachments.js`, `llm-params.js`, `view.js`, `webllm.js`, and `webllm-worker.js`: local runtime helpers
 - `config.js` and `storage.js`: persisted settings and history contract
 - `system-prompt.md`, `compact-prompt.md`, and `compact-prompt-auto.md`: firmware prompt files
 - `skills.js`: admin skill catalog building and `space.admin.loadSkill(...)`
@@ -28,15 +28,18 @@ Current persistence paths:
 
 Current stored config fields are written in YAML as:
 
+- `llm_provider`
 - `api_endpoint`
 - `api_key`
 - `model`
 - `params`
 - `max_tokens`
+- `webllm_model`
 - optional `custom_system_prompt`
 
 Current defaults:
 
+- provider: `api`
 - API endpoint: `https://openrouter.ai/api/v1/chat/completions`
 - model: `openai/gpt-5.4-mini`
 - params: `temperature:0.2`
@@ -56,6 +59,12 @@ Prompt rules:
 
 Current behavior:
 
+- the LLM settings modal keeps one provider switch at the top and shows either the API settings fields or the local WebLLM section
+- local WebLLM selection is limited to prebuilt models that are already downloaded in the current browser cache; the modal includes a selector, current local-model status, load progress, and a button that opens `/#/webllm` in a new tab for downloading or testing models
+- the settings modal keeps `maxTokens` and `paramsText` as shared controls below the provider-specific sections so both remote API and local WebLLM modes use the same compaction threshold and request-params surface
+- the admin agent keeps one shared prompt assembly or compaction or execution loop and branches only at the final LLM transport call between API fetch streaming and browser-local WebLLM worker streaming
+- `llm-params.js` delegates YAML parsing to the shared framework `js/yaml-lite.js` utility but still enforces the admin-agent-specific top-level `key: value` params contract
+- `webllm.js` is the admin-local bridge and `webllm-worker.js` is the admin-local worker; keep admin-side WebLLM orchestration here rather than depending on the routed test surface worker implementation
 - browser execution blocks are detected by the `_____javascript` separator
 - `execution.js` runs browser-side JavaScript in an async wrapper and formats console output and result values for the thread
 - when an execution follow-up turn returns no assistant content, the runtime retries the same request once automatically before sending a short protocol-correction user message

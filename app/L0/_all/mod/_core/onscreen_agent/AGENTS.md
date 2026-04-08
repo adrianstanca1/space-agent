@@ -52,6 +52,7 @@ This module owns:
 - `llm.js`, `api.js`, `execution.js`, `attachments.js`, and `llm-params.js`: local runtime helpers
 - `llm.js` owns LLM-facing system-prompt file loading, optional example-message construction, always-loaded skill injection into the system prompt, runtime system-prompt assembly, prompt-instance caching, separate transient-message construction, final request assembly, history-compaction prompt loading, and the model-facing JS extension seams
 - `api.js` owns chat transport, HTTP error handling, and streaming response parsing; prompt-shaping logic lives in `llm.js`
+- `llm-params.js` delegates YAML parsing to the shared framework `js/yaml-lite.js` utility but still enforces the overlay-specific top-level `key: value` params contract
 - `config.js` and `storage.js`: persisted settings, position, display mode, and history
 - `prompts/`: shipped prompt files and prompt-local documentation
 - `res/`: overlay-local assets

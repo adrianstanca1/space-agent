@@ -4,7 +4,10 @@ import {
   normalizeEntityId,
   resolveProjectAbsolutePath
 } from "../customware/layout.js";
-import { parseSimpleYaml, serializeSimpleYaml } from "../utils/yaml_lite.js";
+import {
+  parseSimpleYaml,
+  serializeSimpleYaml
+} from "../../../app/L0/_all/mod/_core/framework/js/yaml-lite.js";
 
 const USER_META_DIRNAME = "meta";
 const USER_CONFIG_FILENAME = "user.yaml";

@@ -36,6 +36,7 @@ Child doc section pattern:
 This scope owns:
 
 - repo-level test harnesses under `tests/`
+- standalone repo-level verification scripts such as `yaml_lite_test.mjs`
 - shared expectations for test config, fixtures, scripted execution, and saved evaluation results
 
 ## Local Contracts

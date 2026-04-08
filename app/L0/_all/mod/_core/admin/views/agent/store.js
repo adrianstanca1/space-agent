@@ -6,6 +6,7 @@ import * as prompt from "/mod/_core/admin/views/agent/prompt.js";
 import * as skills from "/mod/_core/admin/views/agent/skills.js";
 import * as storage from "/mod/_core/admin/views/agent/storage.js";
 import * as agentView from "/mod/_core/admin/views/agent/view.js";
+import { AdminAgentWebLlmRuntime } from "/mod/_core/admin/views/agent/webllm.js";
 import { closeDialog, openDialog } from "/mod/_core/visual/forms/dialog.js";
 import { countTextTokens } from "/mod/_core/framework/js/token-count.js";
 import {
@@ -214,6 +215,39 @@ function dataTransferContainsFiles(dataTransfer) {
   return Number(dataTransfer.files?.length) > 0;
 }
 
+function createEmptyWebLlmState() {
+  return {
+    activeModelId: "",
+    cacheStatusReady: false,
+    cachedModelIds: [],
+    error: "",
+    isLoadingModel: false,
+    isUnloadingModel: false,
+    isWorkerReady: false,
+    loadProgress: {
+      progress: 0,
+      text: "",
+      timeElapsed: 0
+    },
+    loadingModelLabel: "",
+    prebuiltModels: [],
+    statusText: "Starting WebLLM worker...",
+    webgpuSupported: Boolean(globalThis.navigator?.gpu)
+  };
+}
+
+function summarizeAdminAgentLlmSelection(settings, webllmState) {
+  const provider = config.normalizeAdminChatLlmProvider(settings?.provider);
+
+  if (provider === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM) {
+    const activeModelId = typeof webllmState?.activeModelId === "string" ? webllmState.activeModelId.trim() : "";
+    const configuredModelId = typeof settings?.webllmModel === "string" ? settings.webllmModel.trim() : "";
+    return configuredModelId || activeModelId || "Local WebLLM";
+  }
+
+  return agentView.summarizeLlmConfig(settings?.apiEndpoint || "", settings?.model || "");
+}
+
 const model = {
   activeRequestController: null,
   attachmentDragDepth: 0,
@@ -259,14 +293,18 @@ const model = {
     apiKey: "",
     maxTokens: config.DEFAULT_ADMIN_CHAT_SETTINGS.maxTokens,
     model: "",
-    paramsText: ""
+    paramsText: "",
+    provider: config.DEFAULT_ADMIN_CHAT_SETTINGS.provider,
+    webllmModel: ""
   },
   settingsDraft: {
     apiEndpoint: "",
     apiKey: "",
     maxTokens: config.DEFAULT_ADMIN_CHAT_SETTINGS.maxTokens,
     model: "",
-    paramsText: ""
+    paramsText: "",
+    provider: config.DEFAULT_ADMIN_CHAT_SETTINGS.provider,
+    webllmModel: ""
   },
   status: "Loading admin agent...",
   stopRequested: false,
@@ -274,6 +312,9 @@ const model = {
   systemPrompt: "",
   systemPromptDraft: "",
   runtimeSystemPrompt: "",
+  webllm: createEmptyWebLlmState(),
+  webllmRuntime: null,
+  windowFocusHandler: null,
 
   get composerPlaceholder() {
     const statusText = typeof this.status === "string" ? this.status.trim() : "";
@@ -331,7 +372,108 @@ const model = {
   },
 
   get llmSummary() {
-    return agentView.summarizeLlmConfig(this.settings.apiEndpoint, this.settings.model);
+    const provider = config.normalizeAdminChatLlmProvider(this.settings.provider);
+    const providerLabel = provider === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM ? "Local" : "API";
+    return `${providerLabel} · ${summarizeAdminAgentLlmSelection(this.settings, this.webllm)}`;
+  },
+
+  get isSettingsDraftUsingApiProvider() {
+    return config.normalizeAdminChatLlmProvider(this.settingsDraft.provider) === config.ADMIN_CHAT_LLM_PROVIDER.API;
+  },
+
+  get isSettingsDraftUsingWebLlmProvider() {
+    return config.normalizeAdminChatLlmProvider(this.settingsDraft.provider) === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM;
+  },
+
+  get webllmDownloadedModels() {
+    const cachedModelIds = new Set(this.webllm.cachedModelIds);
+    return this.webllm.prebuiltModels.filter((modelRecord) => cachedModelIds.has(modelRecord.model_id));
+  },
+
+  get hasDownloadedWebllmModels() {
+    return this.webllmDownloadedModels.length > 0;
+  },
+
+  get webllmLoadProgressPercent() {
+    return Math.max(0, Math.min(100, Math.round(Number(this.webllm.loadProgress?.progress || 0) * 100)));
+  },
+
+  get webllmStatusBadgeText() {
+    if (!this.webllm.webgpuSupported) {
+      return "Unavailable";
+    }
+
+    if (!this.webllm.isWorkerReady) {
+      return "Starting";
+    }
+
+    if (this.webllm.isUnloadingModel) {
+      return "Stopping";
+    }
+
+    if (this.webllm.isLoadingModel) {
+      return "Loading";
+    }
+
+    if (this.webllm.activeModelId) {
+      return "Ready";
+    }
+
+    return "Idle";
+  },
+
+  get webllmStatusTone() {
+    if (!this.webllm.webgpuSupported) {
+      return "is-error";
+    }
+
+    if (!this.webllm.isWorkerReady || this.webllm.isLoadingModel || this.webllm.isUnloadingModel) {
+      return "is-loading";
+    }
+
+    if (this.webllm.activeModelId) {
+      return "is-ready";
+    }
+
+    return "is-idle";
+  },
+
+  get webllmSelectedModelStatusText() {
+    const selectedModelId = String(this.settingsDraft.webllmModel || "").trim();
+
+    if (!this.webllm.webgpuSupported) {
+      return "WebGPU is unavailable in this browser.";
+    }
+
+    if (!this.webllm.isWorkerReady) {
+      return "Starting WebLLM runtime...";
+    }
+
+    if (this.webllm.isLoadingModel) {
+      return this.webllm.loadProgress.text || "Loading selected model...";
+    }
+
+    if (!selectedModelId) {
+      return this.hasDownloadedWebllmModels ? "Choose a downloaded model." : "No downloaded models found yet.";
+    }
+
+    if (!this.isDownloadedWebllmModel(selectedModelId)) {
+      return "This model is not downloaded in this browser yet.";
+    }
+
+    if (this.webllm.activeModelId === selectedModelId) {
+      return "Loaded locally and ready for admin chat.";
+    }
+
+    if (this.webllm.activeModelId) {
+      return `Loaded model: ${this.webllm.activeModelId}`;
+    }
+
+    return "This model will load locally when used.";
+  },
+
+  get webllmCurrentModelLabel() {
+    return this.webllm.loadingModelLabel || this.webllm.activeModelId || "None loaded";
   },
 
   get promptSummary() {
@@ -446,6 +588,56 @@ const model = {
     }));
   },
 
+  async ensureWebLlmRuntime() {
+    if (this.webllmRuntime instanceof AdminAgentWebLlmRuntime) {
+      return this.webllmRuntime;
+    }
+
+    this.webllmRuntime = new AdminAgentWebLlmRuntime({
+      onStateChange: (nextState) => {
+        this.webllm = nextState;
+      }
+    });
+    this.webllm = this.webllmRuntime.getSnapshot();
+    await this.webllmRuntime.ensureWorker();
+    return this.webllmRuntime;
+  },
+
+  isDownloadedWebllmModel(modelId) {
+    const normalizedModelId = String(modelId || "").trim();
+    return normalizedModelId ? this.webllm.cachedModelIds.includes(normalizedModelId) : false;
+  },
+
+  async refreshWebLlmCatalog() {
+    const runtime = await this.ensureWebLlmRuntime();
+    await runtime.requestCacheStatus();
+    return this.webllmDownloadedModels;
+  },
+
+  async preloadConfiguredWebLlmModel(modelId = this.settings.webllmModel, provider = this.settings.provider) {
+    const normalizedProvider = config.normalizeAdminChatLlmProvider(provider);
+    const normalizedModelId = String(modelId || "").trim();
+
+    if (normalizedProvider !== config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM || !normalizedModelId) {
+      return false;
+    }
+
+    const runtime = await this.ensureWebLlmRuntime();
+
+    try {
+      await runtime.waitForInitialCacheStatus();
+      if (!runtime.isModelCached(normalizedModelId)) {
+        return false;
+      }
+
+      await runtime.ensureModelLoaded(normalizedModelId);
+      return true;
+    } catch (error) {
+      this.status = error.message;
+      return false;
+    }
+  },
+
   async init() {
     if (this.initializationPromise) {
       return this.initializationPromise;
@@ -486,6 +678,13 @@ const model = {
         this.systemPromptDraft = this.systemPrompt;
         await this.refreshRuntimeSystemPrompt();
 
+        void this.ensureWebLlmRuntime()
+          .then(() => this.refreshWebLlmCatalog())
+          .then(() => this.preloadConfiguredWebLlmModel())
+          .catch((error) => {
+            this.status = error.message;
+          });
+
         this.isInitialized = true;
         this.status = "Ready.";
         this.render();
@@ -516,6 +715,17 @@ const model = {
       agentView.autoResizeTextarea(this.refs.input);
     }
 
+    if (!this.windowFocusHandler) {
+      this.windowFocusHandler = () => {
+        if (!this.webllmRuntime) {
+          return;
+        }
+
+        void this.refreshWebLlmCatalog();
+      };
+      window.addEventListener("focus", this.windowFocusHandler);
+    }
+
     this.render();
     void this.init();
   },
@@ -523,6 +733,13 @@ const model = {
   unmount() {
     this.cancelStreamingMessageRender();
     this.resetAttachmentDragState();
+    if (this.windowFocusHandler) {
+      window.removeEventListener("focus", this.windowFocusHandler);
+      this.windowFocusHandler = null;
+    }
+    this.webllmRuntime?.destroy();
+    this.webllmRuntime = null;
+    this.webllm = createEmptyWebLlmState();
     this.refs = {
       attachmentInput: null,
       historyDialog: null,
@@ -1033,11 +1250,71 @@ const model = {
     this.settingsDraft = {
       ...this.settings
     };
+    void this.ensureWebLlmRuntime()
+      .then(() => this.refreshWebLlmCatalog())
+      .then(() => {
+        if (this.isSettingsDraftUsingWebLlmProvider && this.settingsDraft.webllmModel) {
+          return this.preloadConfiguredWebLlmModel(this.settingsDraft.webllmModel, this.settingsDraft.provider);
+        }
+
+        return false;
+      })
+      .catch((error) => {
+        this.status = error.message;
+      });
     openDialog(this.refs.settingsDialog);
   },
 
   closeSettingsDialog() {
     closeDialog(this.refs.settingsDialog);
+  },
+
+  setSettingsProvider(provider) {
+    this.settingsDraft.provider = config.normalizeAdminChatLlmProvider(provider);
+
+    if (this.isSettingsDraftUsingWebLlmProvider) {
+      void this.ensureWebLlmRuntime()
+        .then(() => this.refreshWebLlmCatalog())
+        .then(() => {
+          if (this.settingsDraft.webllmModel) {
+            return this.preloadConfiguredWebLlmModel(this.settingsDraft.webllmModel, this.settingsDraft.provider);
+          }
+
+          return false;
+        })
+        .catch((error) => {
+          this.status = error.message;
+        });
+    }
+  },
+
+  handleSettingsWebLlmModelDraftChange() {
+    if (!this.isSettingsDraftUsingWebLlmProvider) {
+      return;
+    }
+
+    const selectedModelId = String(this.settingsDraft.webllmModel || "").trim();
+    if (!selectedModelId) {
+      return;
+    }
+
+    void this.ensureWebLlmRuntime()
+      .then(() => this.refreshWebLlmCatalog())
+      .then(() => {
+        if (this.settingsDraft.webllmModel) {
+          return this.preloadConfiguredWebLlmModel(this.settingsDraft.webllmModel, this.settingsDraft.provider);
+        }
+
+        return false;
+      })
+      .catch((error) => {
+        this.status = error.message;
+      });
+  },
+
+  openWebLlmConfiguration() {
+    const targetUrl = new URL("/#/webllm", window.location.origin).href;
+    window.open(targetUrl, "_blank", "noopener");
   },
 
   resetSettingsDraftToDefaults() {
@@ -1094,12 +1371,26 @@ const model = {
   },
 
   async saveSettingsFromDialog() {
+    const provider = config.normalizeAdminChatLlmProvider(this.settingsDraft.provider);
     const paramsText = typeof this.settingsDraft.paramsText === "string" ? this.settingsDraft.paramsText.trim() : "";
     let maxTokens = config.DEFAULT_ADMIN_CHAT_SETTINGS.maxTokens;
 
     try {
       maxTokens = config.parseAdminChatMaxTokens(this.settingsDraft.maxTokens);
       llmParams.parseAdminAgentParamsText(paramsText);
+
+      if (provider === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM) {
+        await this.refreshWebLlmCatalog();
+
+        const webllmModel = String(this.settingsDraft.webllmModel || "").trim();
+        if (!webllmModel) {
+          throw new Error("Choose a downloaded WebLLM model before saving.");
+        }
+
+        if (!this.isDownloadedWebllmModel(webllmModel)) {
+          throw new Error("This WebLLM model is not downloaded in this browser. Open WebLLM configuration to download it first.");
+        }
+      }
     } catch (error) {
       this.status = error.message;
       return;
@@ -1110,12 +1401,18 @@ const model = {
       apiKey: (this.settingsDraft.apiKey || "").trim(),
       maxTokens,
       model: (this.settingsDraft.model || "").trim(),
-      paramsText
+      paramsText,
+      provider,
+      webllmModel: (this.settingsDraft.webllmModel || "").trim()
     };
 
     try {
       await this.persistConfig();
-      this.status = "LLM settings updated.";
+      if (provider === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM && this.settings.webllmModel) {
+        void this.preloadConfiguredWebLlmModel();
+      }
+      this.status =
+        provider === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM ? "Local WebLLM settings updated." : "API LLM settings updated.";
       this.closeSettingsDialog();
     } catch (error) {
       this.status = error.message;
@@ -1147,11 +1444,17 @@ const model = {
       this.executionContext.reset();
     }
 
+    void this.webllmRuntime?.resetChat().catch(() => {});
+
     this.render();
     this.status = "Admin chat cleared and execution context reset.";
   },
 
   async streamAssistantResponse(requestMessages, assistantMessage) {
+    if (config.normalizeAdminChatLlmProvider(this.settings.provider) === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM) {
+      await this.ensureWebLlmRuntime();
+    }
+
     this.status = "Streaming response...";
     const runtimeSystemPrompt = await prompt.buildRuntimeAdminSystemPrompt(this.systemPrompt, {
       defaultSystemPrompt: this.defaultSystemPrompt
@@ -1170,7 +1473,8 @@ const model = {
           assistantMessage.content += delta;
           this.scheduleStreamingMessageRender(assistantMessage);
         },
-        signal: controller.signal
+        signal: controller.signal,
+        webllmRuntime: this.webllmRuntime
       });
     } catch (error) {
       assistantMessage.streaming = false;
@@ -1271,6 +1575,9 @@ const model = {
       const compactPrompt = await prompt.fetchAdminHistoryCompactPrompt({
         mode
       });
+      if (config.normalizeAdminChatLlmProvider(this.settings.provider) === config.ADMIN_CHAT_LLM_PROVIDER.WEBLLM) {
+        await this.ensureWebLlmRuntime();
+      }
       let trimmedHistoryText = historyText;
 
       for (let attempt = 0; attempt < MAX_COMPACT_TRIM_ATTEMPTS; attempt++) {
@@ -1289,7 +1596,8 @@ const model = {
             ],
             onDelta: (delta) => {
               compactedHistory += delta;
-            }
+            },
+            webllmRuntime: this.webllmRuntime
           });
         } catch (err) {
           compactionError = err;

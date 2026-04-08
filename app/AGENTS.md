@@ -24,6 +24,7 @@ Current module-local docs in the app tree:
 - `app/L0/_all/mod/_core/skillset/AGENTS.md`
 - `app/L0/_all/mod/_core/spaces/AGENTS.md`
 - `app/L0/_all/mod/_core/visual/AGENTS.md`
+- `app/L0/_all/mod/_core/huggingface/AGENTS.md`
 - `app/L0/_all/mod/_core/webllm/AGENTS.md`
 - `app/L0/_all/mod/_core/admin/AGENTS.md`
 - `app/L0/_all/mod/_core/admin/views/agent/AGENTS.md`
@@ -100,6 +101,7 @@ Current major first-party modules under `app/L0/_all/mod/_core/`:
 - `onscreen_menu/`: top-right routed shell menu extension
 - `skillset/`: first-party reusable onscreen skill packs plus browser helper scripts that those skills import through stable `/mod/...` paths
 - `webllm/`: routed browser-only WebLLM test surface with a module-local worker, vendored browser runtime, compact searchable prebuilt model loading, expert-only compiled custom model loading, and simple throughput reporting
+- `huggingface/`: routed browser-only Hugging Face Transformers.js test surface with a module-local worker, direct Hub model loading, saved local model presets, and simple throughput reporting
 - `dashboard/`, `dashboard_welcome/`, `spaces/`, and the `space/` compatibility shim: current routed feature surfaces and dashboard-injected surfaces under the router
 
 ## Layer Rules And Module Model
@@ -133,7 +135,7 @@ Current boot flow:
 
 1. A page shell in `server/pages/` loads shared framework CSS and `/mod/_core/framework/js/initFw.js`.
 2. The shell exposes one top-level HTML anchor in the body.
-3. `initFw.js` installs the runtime, extension system, Alpine helpers, and shared bootstrap behavior.
+3. `initFw.js` installs the runtime, runs the extensible framework bootstrap step in `_core/framework/js/initializer.js`, then installs Alpine helpers and shared bootstrap behavior.
 4. The first mounted module owns the next seam and exposes more anchors or wrapped functions.
 5. Other modules compose into those explicit seams instead of patching private internals.
 
@@ -168,6 +170,7 @@ JS extension hooks:
 - wrapped functions become async and should be awaited by callers
 - JS hook files live at `mod/<author>/<repo>/ext/js/<extension-point>/*.js` or `*.mjs`
 - JS callers name only the seam; the runtime loads hooks from the module's `ext/js/` tree automatically
+- framework-backed pages expose `_core/framework/initializer.js/initialize`; prefer its `/end` hook for once-per-page shell setup such as analytics bootstrap or `document.head` injections instead of editing page shells
 - use `callJsExtensions("name", data)` only when the seam is an explicit event rather than a function lifecycle
 - when a feature module needs onscreen-agent prompt shaping, execution-plan validation, or other module-specific chat behavior for its own helpers, add an `ext/js/_core/onscreen_agent/...` hook from the owning module; do not hardcode feature-specific policy into `_core/onscreen_agent`
 
@@ -218,7 +221,7 @@ Runtime guidance:
 - use `space.api.userSelfInfo()` as the canonical browser-side identity snapshot; it returns `{ username, fullName, groups, managedGroups }`, and frontend code should derive writable app roots from that data plus the standard layer rules
 - use `space.config` for frontend reads of backend parameters that were explicitly marked `frontend_exposed`
 - use `space.utils.markdown.render(text, target)` for lightweight shared markdown rendering into a `.markdown` wrapper and `space.utils.markdown.parseDocument(...)` for frontmatter parsing; keep feature-local presentation in the owning module's CSS
-- use `space.utils.yaml.parse(...)` and `space.utils.yaml.stringify(...)` for frontend YAML parsing and serialization owned by browser modules; this wrapper is backed by the shared vendored YAML implementation so nested maps lists block scalars and standard YAML quoting stay consistent with the server helper
+- use `space.utils.yaml.parse(...)` and `space.utils.yaml.stringify(...)` for frontend YAML parsing and serialization owned by browser modules; this runtime surface is backed by the shared project-owned lightweight YAML utility in `_core/framework/js/yaml-lite.js`, which the server also imports directly so nested maps lists block scalars and standard YAML quoting stay consistent across both runtimes
 - framework-managed external `fetch(...)` calls should prefer a direct browser request first; if the direct cross-origin request fails and the `/api/proxy` retry succeeds, the runtime should remember that origin in memory and route later requests for the same origin through the backend immediately
 - browser storage is for small non-authoritative UI state; persistent user state belongs in app files or explicit backend APIs
 
@@ -257,6 +260,7 @@ Detailed visual subsystem rules now live in `app/L0/_all/mod/_core/visual/AGENTS
 - `documentation/` owns the supplemental documentation tree, the documentation skill that carries its compact docs map, and the focused docs helper used by the onscreen agent; see `app/L0/_all/mod/_core/documentation/AGENTS.md`
 - `visual/` owns the shared visual system, reusable presentation primitives, and shared icon-selection modal helpers; see `app/L0/_all/mod/_core/visual/AGENTS.md`
 - `webllm/` owns the routed WebLLM browser-inference test surface, its route-local worker, and its vendored WebLLM browser runtime; see `app/L0/_all/mod/_core/webllm/AGENTS.md`
+- `huggingface/` owns the routed Hugging Face Transformers.js browser-inference test surface, its route-local worker, and its pinned local browser-import shim; see `app/L0/_all/mod/_core/huggingface/AGENTS.md`
 - `admin/` owns the firmware-backed admin shell, panels, and admin-specific skills/runtime glue; see `app/L0/_all/mod/_core/admin/AGENTS.md`
 - `admin/views/agent/` owns the admin-side agent surface; see `app/L0/_all/mod/_core/admin/views/agent/AGENTS.md`
 - `admin/views/files/` owns the firmware-backed file browser; see `app/L0/_all/mod/_core/admin/views/files/AGENTS.md`
