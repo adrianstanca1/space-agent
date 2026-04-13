@@ -30,7 +30,7 @@ Important rules:
 
 Current first-party skill-context examples:
 
-- `_core/onscreen_agent/panel.html` exports `onscreen`
+- `_core/onscreen_agent/panel.html` exports `agent`
 - `_core/admin/views/shell/shell.html` exports `admin`
 - `_core/router/view.html` exports `route:<current-path>`
 - `_core/spaces/view.html` exports `space:open` when a current space is active
@@ -76,7 +76,7 @@ Current repo-owned shared top-level skills include:
 
 Additional group-scoped skills may exist for narrower audiences.
 
-Some of those first-party ids are still gated by live skill-context tags. For example, the shared `development`, `file-download`, and `user-management` skills require `onscreen`, while `spaces` requires `route:spaces`.
+Some of those first-party ids are still gated by live skill-context tags. For example, the shared `development`, `file-download`, and `user-management` skills require `agent`, while `spaces` requires `route:spaces`.
 
 The first-party `development` tree is intentionally split into narrower nested skills. In particular, `development/modules-routing` now teaches custom routed pages as the main alternative to spaces when the user wants a reusable feature surface, and it may reference small importable helper scripts under the same module tree instead of pasting long browser snippets into the skill text.
 

@@ -17,7 +17,7 @@ This module owns:
 - `store.js`: page store plus load or reload or save flow and inline status state for the personality editor
 - `storage.js`: file-path constants plus load or save helpers for the user personality include file
 - `ext/pages/agent.yaml`: dashboard page-manifest entry for the routed agent page
-- `ext/html/_core/onscreen_menu/items/agent.html`: top-right menu item adapter for the Agent route
+- `ext/html/_core/onscreen_menu/items/agent.html`: routed header-menu item adapter for the Agent route
 
 ## Local Contracts
 
@@ -25,7 +25,7 @@ Current route and page-manifest contract:
 
 - the route is `#/agent`, so the router resolves it to `/mod/_core/agent/view.html`
 - `ext/pages/agent.yaml` should continue to advertise this route to the dashboard pages index with the shorthand manifest path `agent`
-- the Agent action in the top-right onscreen menu is owned here through `_core/onscreen_menu/items` with `data-order="100"`
+- the Agent action in the routed header menu is owned here through `_core/onscreen_menu/items` with `data-order="100"`
 - the page should stay self-contained inside this module; feature logic, styling, and persistence helpers do not belong in router or overlay internals
 
 Current UI and persistence contract:

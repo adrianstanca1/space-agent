@@ -68,7 +68,7 @@ Important shell contracts:
 - `/login` and `/enter` keep their mirrored canvas gradient and backdrop scene on fixed viewport layers, so public-shell scrolling moves only the foreground content
 - every server-owned shell now declares the shared Space Agent favicon family and app manifest so standard browser tabs, install surfaces, and Apple touch shortcuts use the same helmet avatar
 - the shared page titles are `Space Agent`, `Admin Mode | Space Agent`, `Login | Space Agent`, and `Enter Space | Space Agent`
-- page shells can declare `SPACE_PROJECT_VERSION` for server-side version injection; `/enter` renders that value as centered white text below the launcher content
+- page shells can declare `SPACE_PROJECT_VERSION` for server-side version injection; `/login` and `/enter` render that value as centered white text below the public-shell content
 - `/login` keeps the public run-it-yourself path inside a recovery-safe two-panel modal with `Native App` and `Own Server` choices, a privacy/security subtitle, and one short explanatory line per option; its app action links to `https://github.com/agent0ai/space-agent/releases/latest`, and server hosting links to the README `#host` section
 - `/login` uses browser Web Crypto for password-login proof generation; when `crypto.subtle` is unavailable, such as common plain-HTTP remote origins, the shell blocks sign-in and guest-account creation with an explicit HTTPS-or-localhost error instead of surfacing a raw browser exception
 - server page shells must load runtime resources only from local page assets, inline SVG/CSS, or local `/mod/...` module assets; external URLs in page shells are navigation targets only

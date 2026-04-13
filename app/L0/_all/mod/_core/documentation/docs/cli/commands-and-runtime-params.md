@@ -54,7 +54,7 @@ Runtime-state commands:
 
 The command tree prefers a small number of readable top-level commands with explicit subcommands instead of many tiny files.
 
-`node space version`, the `node space serve` startup banner, and the `/enter` launcher version label share the resolver in `server/lib/utils/project_version.js`. Source checkouts use the latest Git tag plus commit count when needed, while package-only runtimes can fall back to the package version for display.
+`node space version`, the `node space serve` startup banner, and the `/login` plus `/enter` public-shell version labels share the resolver in `server/lib/utils/project_version.js`. Source checkouts use the latest Git tag plus commit count when needed, while package-only runtimes can fall back to the package version for display.
 
 ## `update`
 

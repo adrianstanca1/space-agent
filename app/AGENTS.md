@@ -114,18 +114,18 @@ Current major first-party modules under `app/L0/_all/mod/_core/`:
 - `router/`: root routed shell for the authenticated app; route-level frame width, height or scroll policy, and other shell-owned layout overrides belong here rather than in feature modules, but routed pages own their own content padding
 - `admin/`: firmware-backed admin shell and panels
 - `agent/`: routed first-party agent information and user-local personality include editor, kept self-contained inside the module and advertised to the dashboard through `ext/pages/agent.yaml`
-- `file_explorer/`: reusable app-file browser component, routed Files page, dashboard manifest, and top-right menu item
+- `file_explorer/`: reusable app-file browser component, routed Files page, dashboard manifest, and routed header-menu item
 - `documentation/`: supplemental agent-facing documentation docs, the focused-read documentation helper, and the documentation skill that carries the top-level docs map
 - `pages/`: headless page-manifest discovery plus the dashboard-injected pages section, backed by permission-aware `ext/pages/*.yaml` metadata loaded through the shared extension resolver
 - `promptinclude/`: headless promptinclude discovery and onscreen-agent prompt injection for readable `*.system.include.md` and `*.transient.include.md` app files
 - `onscreen_agent/`: floating routed overlay agent and the first-party user-facing chat runtime
-- `onscreen_menu/`: top-right routed shell menu extension, Home shortcut to the empty default route, and `_core/onscreen_menu/items` feature-item seam
+- `onscreen_menu/`: reserved routed shell header bar, Home shortcut to the empty default route, left and right shell-control seams, and `_core/onscreen_menu/items` dropdown action seam
 - `open_router/`: headless OpenRouter request-policy module that extends the admin and onscreen API transport seams instead of hardcoding provider-specific headers into the chat runtimes
 - `skillset/`: first-party shared skill packs plus browser helper scripts and shared browser-side skill discovery helpers used by the onscreen and admin agents
 - `webllm/`: unlisted routed browser-only WebLLM test surface with a module-local worker, vendored browser runtime, compact searchable prebuilt model loading, expert-only compiled custom model loading, and simple throughput reporting
 - `huggingface/`: dashboard-listed Local LLM page backed by a routed browser-only Hugging Face Transformers.js test surface, with a module-local singleton runtime manager and worker, direct Hub model loading, a vendored local browser runtime for upstream testing, shared saved-model state and browser-wide last-loaded selection reused by the admin and onscreen agents in the same browser context, and simple throughput reporting
 - `time_travel/`: routed writable-layer history surface that defaults to the authenticated user's local Git commits, can switch to write-accessible `L1` or `L2` history repositories through a permission-aware picker, filters by changed file, opens per-file diffs, and calls the server rollback or revert APIs after explicit confirmation
-- `dashboard/`, `dashboard_welcome/`, `spaces/`, and the `space/` compatibility shim: current routed feature surfaces and dashboard-injected surfaces under the router
+- `dashboard/`, `dashboard_welcome/`, and `spaces/`: current routed feature surfaces and dashboard-injected surfaces under the router; `_core/dashboard` also teleports a route-owned control cluster into `[id="_core/onscreen_menu/bar_start"]` and exposes ordered dashboard-local topbar seams so feature modules can contribute dashboard-only header actions without hardcoding them into the shell
 
 ## Layer Rules And Module Model
 
@@ -190,7 +190,7 @@ HTML extension anchors:
 - root page anchors such as `body/start` and `page/admin/body/start` are fixed shell contracts; module-owned anchors should be named after the owning module path, for example `_core/router/shell_start`
 - `_core/framework` also creates `_core/framework/head/end` in `document.head` during bootstrap so layers can add declarative head-side tags or inline bootstraps without editing page shells or adding a JS hook
 - runtime discovery watches the whole document tree, so `x-extension` and `x-component` insertions under `head` are supported the same way as body-mounted seams
-- `_core/onscreen_menu` owns a persistent Home button that routes to the empty route `#/` so the router default decides the home screen; `_core/onscreen_menu/items` is the top-right menu item seam for non-Home feature buttons, whose modules contribute thin button adapters there with numeric `data-order` values while `_core/onscreen_menu` sorts them automatically and keeps only the auth exit action local after the seam
+- `_core/onscreen_menu` owns a reserved centered header bar from `_core/router/shell_start`; it keeps `_core/onscreen_menu/bar_start` on the left and `_core/onscreen_menu/bar_end` on the right for shell-level controls, allows route-owned `x-teleport` content to target the existing left-side `[id="_core/onscreen_menu/bar_start"]` container when a feature wants ephemeral controls that disappear with the route, keeps a persistent Home button that routes to the empty route `#/` so the router default decides the home screen, and exposes `_core/onscreen_menu/items` as the dropdown action seam for non-Home feature buttons, whose modules contribute thin button adapters with numeric `data-order` values while `_core/onscreen_menu` sorts them automatically and keeps only the auth exit action local after the seam; `_core/dashboard` is the current first-party example of a route-owned wrapper that teleports into `bar_start` and then exposes ordered dashboard-local seams for dashboard-only topbar actions
 
 JS extension hooks:
 
@@ -216,6 +216,7 @@ Skill-context tags:
 - modules may export live prompt-skill context through hidden `<x-skill-context>` elements anywhere in mounted DOM
 - skill discovery unions the current document's `tag` and `tags` values from those elements each time a skill catalog, just-loaded block, or explicit skill load is resolved
 - modules own the actual tag names they emit; the framework does not reserve a hardcoded route or surface tag registry
+- current first-party examples are `agent` from the overlay, `admin` from the admin shell, router-owned tags such as `route:<current-path>`, and feature-owned state tags such as `space:open`
 - Alpine attribute binding on `<x-skill-context>` is the normal way to make tags follow live routed or store state
 
 Resolution and overrides:
@@ -307,7 +308,7 @@ Detailed visual subsystem rules now live in `app/L0/_all/mod/_core/visual/AGENTS
 - `dashboard_welcome/` owns the dismissible dashboard welcome panel and bundled demo spaces; see `app/L0/_all/mod/_core/dashboard_welcome/AGENTS.md`
 - `documentation/` owns the supplemental documentation tree, the documentation skill that carries its compact docs map, and the focused docs helper used by the onscreen agent; see `app/L0/_all/mod/_core/documentation/AGENTS.md`
 - `agent/` owns the routed agent information page, its local avatar-card styling, and the user-local personality include editor for `~/conf/personality.system.include.md`; see `app/L0/_all/mod/_core/agent/AGENTS.md`
-- `file_explorer/` owns the reusable app-file browser component, routed Files page, dashboard page manifest, and top-right menu item; see `app/L0/_all/mod/_core/file_explorer/AGENTS.md`
+- `file_explorer/` owns the reusable app-file browser component, routed Files page, dashboard page manifest, and routed header-menu item; see `app/L0/_all/mod/_core/file_explorer/AGENTS.md`
 - `promptinclude/` owns readable prompt-include discovery through `file_paths` plus the onscreen-agent hooks that inject stable prompt-include instructions into the system prompt, append readable `*.system.include.md` file bodies there, and inject discovered `*.transient.include.md` file bodies into transient context; see `app/L0/_all/mod/_core/promptinclude/AGENTS.md`
 - `visual/` owns the shared visual system, reusable presentation primitives, and shared icon-selection modal helpers; see `app/L0/_all/mod/_core/visual/AGENTS.md`
 - `webllm/` owns the unlisted routed WebLLM browser-inference test surface, its route-local worker, and its vendored WebLLM browser runtime; see `app/L0/_all/mod/_core/webllm/AGENTS.md`

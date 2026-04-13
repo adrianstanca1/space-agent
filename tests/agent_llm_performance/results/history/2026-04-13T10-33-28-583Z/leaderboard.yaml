@@ -1,0 +1,107 @@
+generated_at: "2026-04-13T10:33:28.583Z"
+generation_id: 2026-04-13T10-33-28-583Z
+model: openai/gpt-5.4-mini
+prompts:
+  -
+    rank: 1
+    id: 082A_069A_reliability_surgical
+    passed_cases: 59
+    total_cases: 68
+    pass_rate: 0.8676
+    passed_attempts: 59
+    total_attempts: 68
+    attempt_pass_rate: 0.8676
+    failed_cases:
+      - new_user_show_me_something_executes_demo
+      - download_html_without_helper_uses_browser_js
+      - click_button_without_helper_uses_browser_js
+      - partial_mitigation_is_not_completion
+      - weather_omitted_scope
+      - unpack_collapsed_weather_payload
+      - full_rewrite_contract_error_continues_without_user_push
+      - partial_layout_fix_followup_requires_same_widget_repair
+      - protocol_nudge_requires_real_thrust
+  -
+    rank: 2
+    id: 082C_state_machine_hard_edges
+    passed_cases: 37
+    total_cases: 68
+    pass_rate: 0.5441
+    passed_attempts: 37
+    total_attempts: 68
+    attempt_pass_rate: 0.5441
+    failed_cases:
+      - page_title_requires_execution
+      - time_requires_execution
+      - new_user_show_me_something_executes_demo
+      - new_user_impressive_followup_executes_demo
+      - empty_space_create_one_uses_renderwidget
+      - whole_page_flip_after_scope_clarification_uses_dom_root
+      - screenshot_download_without_helper_uses_browser_js
+      - screenshot_after_helper_unavailable_uses_browser_js
+      - followup_after_screenshot_refusal_requires_browser_js
+      - download_html_without_helper_uses_browser_js
+      - click_button_without_helper_uses_browser_js
+      - canvas_screenshot_requires_real_capture_strategy
+      - verification_reveals_remaining_widget_error_requires_correction
+      - partial_mitigation_is_not_completion
+      - on_screen_widget_complaint_stays_on_known_target
+      - silent_widget_failure_reopens_repair
+      - weather_omitted_scope
+      - weather_self_scope_followup
+      - weather_self_scope_after_indirect_fail
+      - weather_after_precise_location_fetch_error_keeps_location
+      - unpack_collapsed_weather_payload
+      - selective_widget_fix_requires_read_first
+      - space_navigation_after_take_me_there_uses_open_helper
+      - full_rewrite_contract_error_continues_without_user_push
+      - terminal_after_successful_retry_patch
+      - protocol_correction_after_successful_open_requires_terminal
+      - partial_layout_fix_followup_requires_same_widget_repair
+      - repeat_do_it_requires_execution
+      - protocol_nudge_requires_real_thrust
+      - continue_after_widget_load_success
+      - remove_space_by_title_requires_discovery_first
+  -
+    rank: 3
+    id: 082B_069A_output_gate_and_reuse
+    passed_cases: 35
+    total_cases: 68
+    pass_rate: 0.5147
+    passed_attempts: 35
+    total_attempts: 68
+    attempt_pass_rate: 0.5147
+    failed_cases:
+      - page_title_requires_execution
+      - time_requires_execution
+      - new_user_show_me_something_executes_demo
+      - new_user_impressive_followup_executes_demo
+      - whole_page_flip_after_scope_clarification_uses_dom_root
+      - screenshot_download_without_helper_uses_browser_js
+      - screenshot_after_helper_unavailable_uses_browser_js
+      - followup_after_screenshot_refusal_requires_browser_js
+      - download_html_without_helper_uses_browser_js
+      - click_button_without_helper_uses_browser_js
+      - canvas_screenshot_requires_real_capture_strategy
+      - verification_reveals_remaining_widget_error_requires_correction
+      - partial_mitigation_is_not_completion
+      - on_screen_widget_complaint_stays_on_known_target
+      - silent_widget_failure_reopens_repair
+      - weather_omitted_scope
+      - weather_self_scope_followup
+      - weather_self_scope_after_indirect_fail
+      - weather_after_place_prerequisite
+      - unpack_collapsed_weather_payload
+      - create_note_after_user_detail_read
+      - selective_text_edit_requires_read_first
+      - selective_yaml_edit_requires_read_first
+      - selective_widget_fix_requires_read_first
+      - space_navigation_read_is_not_completion
+      - full_rewrite_contract_error_continues_without_user_push
+      - terminal_after_successful_widget_patch
+      - terminal_after_successful_retry_patch
+      - protocol_correction_after_successful_open_requires_terminal
+      - post_success_followup_requires_execution_or_completion
+      - continue_after_widget_load_success
+      - remove_space_by_title_requires_discovery_first
+      - followup_after_wrong_space_removal_requires_discovery_execution

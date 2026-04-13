@@ -85,8 +85,12 @@ The authenticated router backdrop comes from `_core/visual` and stays on fixed v
 
 Current first-party shell extension example:
 
-- `_core/onscreen_menu` mounts into `_core/router/shell_start`, owns the top-right routed page menu shell, keeps a Home button that routes to the empty default route `#/`, exposes `_core/onscreen_menu/items` for feature-owned menu buttons, sorts contributed items by numeric `data-order`, and renders only the auth-dependent Logout or Leave action locally after that seam
-- `_core/agent`, `_core/file_explorer`, `_core/time_travel`, and `_core/admin` each contribute their own top-right menu item through `_core/onscreen_menu/items` with `data-order` values `100`, `200`, `300`, and `400` instead of being hardcoded into the menu shell
+- `_core/onscreen_menu` mounts into `_core/router/shell_start`, owns the viewport-fixed centered routed header bar, keeps `_core/onscreen_menu/bar_start` on the left and `_core/onscreen_menu/bar_end` on the right for shell-level controls, allows route-owned teleported controls to target the existing `[id="_core/onscreen_menu/bar_start"]` container, keeps a Home button that routes to the empty default route `#/`, exposes `_core/onscreen_menu/items` for feature-owned dropdown menu buttons, sorts contributed controls or items by numeric `data-order`, renders only the auth-dependent Logout or Leave action locally after the dropdown seam, and styles the shell as a compact glass bar that stays flush to the top edge with only the bottom corners rounded while normal routed pages clear it through the router-owned top inset
+- route-owned teleported controls in that left header container should generally inherit the bar's overall chrome and avoid adding their own nested button borders or filled backgrounds unless a feature has a strong reason to call out one control
+- `_core/dashboard` now defines one route-owned teleported wrapper in that same left header container and exposes ordered `_core/dashboard/topbar_primary` and `_core/dashboard/topbar_secondary` seams inside it, so dashboard-only controls such as the spaces create action or the welcome restore toggle stay route-scoped without teaching `_core/onscreen_menu` about dashboard features
+- `_core/agent`, `_core/file_explorer`, `_core/time_travel`, and `_core/admin` each contribute their own routed header-menu dropdown item through `_core/onscreen_menu/items` with `data-order` values `100`, `200`, `300`, and `400` instead of being hardcoded into the menu shell
+- `_core/spaces` now defines its current-space control cluster directly inside the spaces route and teleports it into `[id="_core/onscreen_menu/bar_start"]`; that keeps the controls route-owned so they are removed when the route unmounts, while still keeping Back, the space-title toggle, Rearrange, and a confirmed clear-all-widgets trash action together in shared shell chrome, with the metadata editor popover anchored to the title button instead of owning a separate fixed page overlay
+- `_core/time_travel` keeps its page title copy inside the routed page but teleports its route-owned Refresh and repository-picker controls into `[id="_core/onscreen_menu/bar_start"]`, keeping those controls in shared shell chrome without turning them into persistent shell extensions
 - the `_core/admin` shell keeps its admin tabs in the left-pane topbar and ends that topbar with a leave-admin icon button that returns to the current iframe URL
 
 ## JavaScript Extension Hooks
@@ -135,6 +139,7 @@ Current first-party example:
 Modules may also export live skill-filter tags with hidden helper elements:
 
 ```html
+<x-skill-context tag="agent"></x-skill-context>
 <x-skill-context tag="admin"></x-skill-context>
 <x-skill-context :tags="$store.router.current?.path ? `route:${$store.router.current.path}` : ''"></x-skill-context>
 ```

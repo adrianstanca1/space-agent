@@ -41,7 +41,7 @@ Examples:
 ## Skill Content Rules
 
 - Start with frontmatter containing `name`, `description`, and optional runtime-owned `metadata`.
-- Use `<x-skill-context>` tags in mounted DOM when a module needs to expose live skill-filter state such as `onscreen`, `admin`, `route:spaces`, or `space:open`.
+- Use `<x-skill-context>` tags in mounted DOM when a module needs to expose live skill-filter state such as `agent`, `admin`, `route:spaces`, or `space:open`.
 - Use `metadata.when.tags` when the skill should exist only in those live contexts.
 - Use `metadata.just_loaded` only when the skill should be auto-injected after the catalog without an explicit `space.skills.load(...)` call.
 - Prompt-facing skill text is token-budgeted. Keep wording terse, avoid unnecessary markdown or filler, and measure before or after changes with the local tokenizer when you edit just-loaded or catalog-facing skill text.

@@ -25,6 +25,9 @@ It owns:
 
 It does not depend on `_core/onscreen_agent` internals.
 
+The shared thread view keeps settled admin assistant replies markdown-rendered, but submitted user bubbles stay plain pre-wrapped text so typed blank lines display literally instead of expanding into markdown paragraph gaps.
+That shared history styling resets rendered markdown bubbles back to normal white-space so parser formatting newlines between tags do not show up as visible blank lines, and it also collapses direct block margins inside list items so loose markdown bullets do not render blank-line-sized gaps between entries.
+
 ## Skill Discovery
 
 The admin agent now uses the same shared browser-side skill helper as the onscreen agent:

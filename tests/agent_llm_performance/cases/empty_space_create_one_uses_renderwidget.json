@@ -1,0 +1,32 @@
+{
+  "id": "empty_space_create_one_uses_renderwidget",
+  "description": "after an empty widget catalog and a direct create-one request, the next reply should render a starter widget instead of re-listing or asking what kind",
+  "history": "../histories/empty_space_create_one_uses_renderwidget.json",
+  "expect": {
+    "response_type": "thrust",
+    "require_staging_line": true,
+    "require_separator_line": true,
+    "require_single_separator": true,
+    "require_code_after_separator": true,
+    "require_valid_javascript": true,
+    "must_contain": [
+      "_____javascript"
+    ],
+    "must_match": [
+      {
+        "pattern": "renderWidget\\(",
+        "flags": "u"
+      }
+    ],
+    "must_not_match": [
+      {
+        "pattern": "listWidgets\\(|readWidget\\(",
+        "flags": "u"
+      },
+      {
+        "pattern": "Which widget|what do you want it to do|tell me what",
+        "flags": "iu"
+      }
+    ]
+  }
+}

@@ -5,8 +5,11 @@ body {
 }
 
 body.app-page-router {
+  --router-shell-start-clearance: calc(env(safe-area-inset-top, 0px) + clamp(34px, 4.2vw, 43px));
   margin: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-padding-top: var(--router-shell-start-clearance);
   color: var(--color-text);
   font: 15px/1.5 "SF Pro Text", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
@@ -36,8 +39,8 @@ body.app-page-router > div[x-data] {
 .router-stage {
   width: 100%;
   min-height: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
+  overscroll-behavior: auto;
 }
 
 .router-stage[data-route-path="spaces"] {
@@ -53,7 +56,7 @@ body.app-page-router > div[x-data] {
   min-width: 0;
   min-height: 100%;
   margin: 0 auto;
-  padding: 0;
+  padding: var(--router-shell-start-clearance) 0 0;
 }
 
 .router-stage-inner[data-route-path="spaces"] {

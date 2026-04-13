@@ -121,7 +121,6 @@ export function normalizeOnscreenAgentHiddenEdge(value) {
   switch (value) {
     case ONSCREEN_AGENT_HIDDEN_EDGE.LEFT:
     case ONSCREEN_AGENT_HIDDEN_EDGE.RIGHT:
-    case ONSCREEN_AGENT_HIDDEN_EDGE.TOP:
     case ONSCREEN_AGENT_HIDDEN_EDGE.BOTTOM:
       return value;
     default:

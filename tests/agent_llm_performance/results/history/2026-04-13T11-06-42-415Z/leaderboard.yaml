@@ -1,0 +1,108 @@
+generated_at: "2026-04-13T11:06:42.415Z"
+generation_id: 2026-04-13T11-06-42-415Z
+model: openai/gpt-5.4-mini
+prompts:
+  -
+    rank: 1
+    id: 086A_082A_no_half_thrust_onboarding
+    passed_cases: 65
+    total_cases: 68
+    pass_rate: 0.9559
+    passed_attempts: 65
+    total_attempts: 68
+    attempt_pass_rate: 0.9559
+    failed_cases:
+      - page_title_requires_execution
+      - time_requires_execution
+      - weather_after_place_prerequisite
+  -
+    rank: 2
+    id: 086B_reply_gate_onboarding_router
+    passed_cases: 39
+    total_cases: 68
+    pass_rate: 0.5735
+    passed_attempts: 39
+    total_attempts: 68
+    attempt_pass_rate: 0.5735
+    failed_cases:
+      - page_title_requires_execution
+      - time_requires_execution
+      - screenshot_after_helper_unavailable_uses_browser_js
+      - followup_after_screenshot_refusal_requires_browser_js
+      - canvas_screenshot_requires_real_capture_strategy
+      - verification_reveals_remaining_widget_error_requires_correction
+      - partial_mitigation_is_not_completion
+      - on_screen_widget_complaint_stays_on_known_target
+      - silent_widget_failure_reopens_repair
+      - weather_self_scope_followup
+      - weather_self_scope_after_indirect_fail
+      - finish_weather_after_geolocation
+      - weather_after_place_prerequisite
+      - reverse_geocode_after_precise_followup
+      - unpack_collapsed_weather_payload
+      - create_note_after_user_detail_read
+      - selective_text_edit_requires_read_first
+      - selective_yaml_edit_requires_read_first
+      - selective_widget_fix_requires_read_first
+      - space_navigation_after_current_helper_error_switches_family
+      - space_navigation_read_is_not_completion
+      - space_navigation_after_take_me_there_uses_open_helper
+      - space_navigation_after_user_push_uses_open_helper
+      - terminal_after_successful_retry_patch
+      - protocol_correction_after_successful_open_requires_terminal
+      - repeat_do_it_requires_execution
+      - direct_repair_after_known_widget_error
+      - remove_space_by_title_requires_discovery_first
+      - followup_after_wrong_space_removal_requires_discovery_execution
+  -
+    rank: 3
+    id: 086C_three_mode_gate
+    passed_cases: 26
+    total_cases: 68
+    pass_rate: 0.3824
+    passed_attempts: 26
+    total_attempts: 68
+    attempt_pass_rate: 0.3824
+    failed_cases:
+      - page_title_requires_execution
+      - time_requires_execution
+      - whole_page_flip_after_scope_clarification_uses_dom_root
+      - screenshot_download_without_helper_uses_browser_js
+      - screenshot_after_helper_unavailable_uses_browser_js
+      - followup_after_screenshot_refusal_requires_browser_js
+      - click_button_without_helper_uses_browser_js
+      - see_known_widget_after_render_uses_same_target
+      - verification_reveals_remaining_widget_error_requires_correction
+      - partial_mitigation_is_not_completion
+      - verify_visible_layout_patch_before_done
+      - on_screen_widget_complaint_stays_on_known_target
+      - silent_widget_failure_reopens_repair
+      - fresh_widget_read_then_do_it_requires_patch
+      - widget_patch_error_then_do_it_requires_recovery_action
+      - widget_not_found_error_uses_available_widget_id
+      - weather_omitted_scope
+      - weather_self_scope_followup
+      - weather_self_scope_after_indirect_fail
+      - finish_weather_after_geolocation
+      - weather_after_place_prerequisite
+      - reverse_geocode_after_precise_followup
+      - unpack_collapsed_weather_payload
+      - live_fact_double_check_requires_refetch
+      - create_note_after_user_detail_read
+      - write_user_yaml_after_read
+      - selective_text_edit_requires_read_first
+      - selective_yaml_edit_requires_read_first
+      - selective_widget_fix_requires_read_first
+      - recover_after_combined_widget_read_write_error
+      - space_navigation_after_current_helper_error_switches_family
+      - space_navigation_after_take_me_there_uses_open_helper
+      - space_navigation_after_user_push_uses_open_helper
+      - repeat_do_it_requires_execution
+      - post_success_followup_requires_execution_or_completion
+      - protocol_nudge_requires_real_thrust
+      - continue_after_widget_load_success
+      - continue_after_widget_read
+      - no_false_success_after_error
+      - direct_repair_after_known_widget_error
+      - remove_space_by_title_requires_discovery_first
+      - followup_after_wrong_space_removal_requires_discovery_execution

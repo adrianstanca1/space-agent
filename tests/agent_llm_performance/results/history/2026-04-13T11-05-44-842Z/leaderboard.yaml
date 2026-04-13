@@ -1,0 +1,17 @@
+generated_at: "2026-04-13T11:05:44.842Z"
+generation_id: 2026-04-13T11-05-44-842Z
+model: openai/gpt-5.4-mini
+prompts:
+  -
+    rank: 1
+    id: 086A_082A_no_half_thrust_onboarding
+    passed_cases: 65
+    total_cases: 68
+    pass_rate: 0.9559
+    passed_attempts: 65
+    total_attempts: 68
+    attempt_pass_rate: 0.9559
+    failed_cases:
+      - weather_after_place_prerequisite
+      - recover_after_combined_widget_read_write_error
+      - direct_repair_after_known_widget_error

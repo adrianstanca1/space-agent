@@ -4,7 +4,7 @@ description: Explain and manage group membership, manager inheritance, special g
 metadata:
   when:
     tags:
-      - onscreen
+      - agent
 ---
 
 Use this skill for group creation, membership changes, manager changes, or explaining how `_all` and `_admin` work.

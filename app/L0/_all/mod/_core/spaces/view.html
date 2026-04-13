@@ -1,61 +1,41 @@
 <html>
   <head>
     <link rel="stylesheet" href="/mod/_core/spaces/spaces.css" />
+    <link rel="stylesheet" href="/mod/_core/spaces/onboarding/empty-canvas.css" />
     <link rel="stylesheet" href="/mod/_core/spaces/widget-content.css" />
     <script type="module" src="/mod/_core/spaces/store.js"></script>
   </head>
   <body>
     <div x-data class="spaces-view-root">
       <x-skill-context :tags="$store.spacesPage?.hasCurrentSpace ? 'space:open' : ''"></x-skill-context>
-      <template x-if="$store.spacesPage">
-        <section
-          class="spaces-canvas"
-          x-cloak
-          x-init="$nextTick(() => $store.spacesPage.mount({ canvas: $refs.canvas, grid: $refs.grid }))"
-          x-destroy="$store.spacesPage.unmount()"
-          x-ref="canvas"
-        >
+      <template x-if="$store.spacesPage?.hasCurrentSpace">
+        <template x-teleport='[id="_core/onscreen_menu/bar_start"]'>
           <div
-            x-show="$store.spacesPage.hasCurrentSpace"
             x-cloak
-            class="spaces-config-panel"
+            data-order="100"
+            class="spaces-header-controls"
             :class="{ 'is-open': $store.spacesPage.isConfigPanelOpen }"
-            @keydown.escape.window="$store.spacesPage.closeConfigPanel()"
           >
-            <div class="space-topbar spaces-config-shell">
-              <button
-                type="button"
-                class="space-topbar-button space-topbar-button--icon spaces-config-back"
-                x-cloak
-                x-show="!$store.spacesPage.isConfigPanelOpen"
-                aria-label="Go back"
-                title="Go back"
-                @click="void $store.spacesPage.goBackToDashboard()"
-              >
-                <x-icon>chevron_left</x-icon>
-              </button>
+            <button
+              type="button"
+              class="space-topbar-button space-topbar-button--icon spaces-config-back"
+              aria-label="Go back"
+              title="Go back"
+              @click="void $store.spacesPage.goBackToDashboard()"
+            >
+              <x-icon>chevron_left</x-icon>
+            </button>
 
-              <button
-                x-cloak
-                x-show="!$store.spacesPage.isConfigPanelOpen && $store.spacesPage.currentSpace?.widgetIds?.length"
-                type="button"
-                class="space-topbar-button space-topbar-button--icon spaces-config-action"
-                aria-label="Rearrange space"
-                title="Rearrange space"
-                @click="void $store.spacesPage.rearrangeCurrentSpace()"
-              >
-                <x-icon>dashboard_customize</x-icon>
-              </button>
-
+            <div class="spaces-config-menu">
               <button
                 type="button"
                 class="space-topbar-button spaces-config-toggle"
                 :class="{ 'is-active': $store.spacesPage.isConfigPanelOpen }"
                 :aria-label="$store.spacesPage.currentSpaceMetaToggleLabel"
                 :title="$store.spacesPage.currentSpaceMetaToggleLabel"
-                aria-controls="spaces-config-drawer"
+                aria-controls="spaces-config-popover"
                 :aria-expanded="String($store.spacesPage.isConfigPanelOpen)"
-                @click="$store.spacesPage.toggleConfigPanel()"
+                @click="$store.spacesPage.toggleConfigPanel($event.currentTarget)"
               >
                 <span class="spaces-config-toggle-copy">
                   <span class="spaces-config-toggle-title" x-text="$store.spacesPage.currentSpaceDisplayTitle"></span>
@@ -64,52 +44,95 @@
               </button>
             </div>
 
-            <section
-              id="spaces-config-drawer"
-              class="space-topbar-menu-panel spaces-config-drawer"
+            <button
               x-cloak
-              x-show="$store.spacesPage.isConfigPanelOpen"
-              x-transition.opacity.duration.140ms
+              x-show="$store.spacesPage.currentSpace?.widgetIds?.length"
+              type="button"
+              class="space-topbar-button space-topbar-button--icon spaces-config-action"
+              aria-label="Rearrange space"
+              title="Rearrange space"
+              @click="void $store.spacesPage.rearrangeCurrentSpace()"
             >
-              <div class="spaces-config-drawer-content">
-                <label class="spaces-config-field">
-                  <span class="spaces-config-field-label">Space Name</span>
-                  <div class="spaces-config-name-row">
-                    <input
-                      type="text"
-                      class="spaces-config-field-input"
-                      placeholder="Untitled"
-                      x-model="$store.spacesPage.currentSpaceTitleDraft"
-                      @keydown.enter.prevent="if (!$event.isComposing) { $event.target.blur() }"
-                      @blur="void $store.spacesPage.flushCurrentSpaceMetaSave({ suppressErrors: true })"
-                    />
+              <x-icon>dashboard_customize</x-icon>
+            </button>
 
-                    <button
-                      type="button"
-                      class="spaces-config-icon-trigger"
-                      :aria-label="$store.spacesPage.currentSpaceIconPickerLabel"
-                      :title="$store.spacesPage.currentSpaceIconPickerLabel"
-                      :style="{ '--spaces-config-icon-color': $store.spacesPage.currentSpaceDisplayIconColor }"
-                      @click="void $store.spacesPage.openCurrentSpaceIconSelector()"
-                    >
-                      <x-icon x-text="$store.spacesPage.currentSpaceDisplayIcon"></x-icon>
-                    </button>
+            <button
+              x-cloak
+              x-show="$store.spacesPage.currentSpace?.widgetIds?.length"
+              type="button"
+              class="space-topbar-button space-topbar-button--icon spaces-config-action"
+              :aria-label="$store.spacesPage.currentSpaceClearAllWidgetsLabel"
+              :title="$store.spacesPage.currentSpaceClearAllWidgetsLabel"
+              @click="void $store.spacesPage.clearCurrentSpaceWidgets()"
+            >
+              <x-icon>delete_sweep</x-icon>
+            </button>
+
+            <template x-teleport="body">
+              <div
+                class="space-popover-layer spaces-config-popover-layer"
+                x-show="$store.spacesPage.isConfigPanelOpen"
+                x-cloak
+              >
+                <section
+                  id="spaces-config-popover"
+                  class="space-popover-panel spaces-config-popover"
+                  x-show="$store.spacesPage.isConfigPanelOpen"
+                  :style="$store.spacesPage.currentSpaceConfigPopoverStyle"
+                  @click.outside="$store.spacesPage.closeConfigPanel()"
+                  @keydown.escape.window="$store.spacesPage.closeConfigPanel()"
+                >
+                  <div class="spaces-config-drawer-content">
+                    <label class="spaces-config-field">
+                      <span class="spaces-config-field-label">Space Name</span>
+                      <div class="spaces-config-name-row">
+                        <input
+                          type="text"
+                          class="spaces-config-field-input"
+                          placeholder="Untitled"
+                          x-model="$store.spacesPage.currentSpaceTitleDraft"
+                          @keydown.enter.prevent="if (!$event.isComposing) { $event.target.blur() }"
+                          @blur="void $store.spacesPage.flushCurrentSpaceMetaSave({ suppressErrors: true })"
+                        />
+
+                        <button
+                          type="button"
+                          class="spaces-config-icon-trigger"
+                          :aria-label="$store.spacesPage.currentSpaceIconPickerLabel"
+                          :title="$store.spacesPage.currentSpaceIconPickerLabel"
+                          :style="{ '--spaces-config-icon-color': $store.spacesPage.currentSpaceDisplayIconColor }"
+                          @click="void $store.spacesPage.openCurrentSpaceIconSelector()"
+                        >
+                          <x-icon x-text="$store.spacesPage.currentSpaceDisplayIcon"></x-icon>
+                        </button>
+                      </div>
+                    </label>
+
+                    <label class="spaces-config-field spaces-config-field--grow">
+                      <span class="spaces-config-field-label">Agent Instructions</span>
+                      <textarea
+                        class="spaces-config-field-textarea"
+                        placeholder="Add space-specific instructions for the Space Agent."
+                        x-model="$store.spacesPage.currentSpaceInstructionsDraft"
+                        @input="$store.spacesPage.queueCurrentSpaceMetaSave()"
+                        @blur="void $store.spacesPage.flushCurrentSpaceMetaSave({ suppressErrors: true })"
+                      ></textarea>
+                    </label>
                   </div>
-                </label>
-
-                <label class="spaces-config-field spaces-config-field--grow">
-                  <span class="spaces-config-field-label">Agent Instructions</span>
-                  <textarea
-                    class="spaces-config-field-textarea"
-                    placeholder="Add space-specific instructions for the Space Agent."
-                    x-model="$store.spacesPage.currentSpaceInstructionsDraft"
-                    @blur="void $store.spacesPage.flushCurrentSpaceMetaSave({ suppressErrors: true })"
-                  ></textarea>
-                </label>
+                </section>
               </div>
-            </section>
+            </template>
           </div>
-
+        </template>
+      </template>
+      <template x-if="$store.spacesPage">
+        <section
+          class="spaces-canvas"
+          x-cloak
+          x-init="$nextTick(() => $store.spacesPage.mount({ canvas: $refs.canvas, grid: $refs.grid }))"
+          x-destroy="$store.spacesPage.unmount()"
+          x-ref="canvas"
+        >
           <div class="spaces-widget-grid" x-ref="grid" :aria-busy="String($store.spacesPage.loadingSpace)"></div>
         </section>
       </template>

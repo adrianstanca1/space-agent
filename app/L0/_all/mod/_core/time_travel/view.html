@@ -9,34 +9,39 @@
       x-data
       x-init="$nextTick(() => { $store.timeTravel.mount({ actionDialog: $refs.actionDialog, diffDialog: $refs.diffDialog, repositoryDialog: $refs.repositoryDialog }); $store.timeTravel.init(); })"
     >
+      <template x-teleport='[id="_core/onscreen_menu/bar_start"]'>
+        <div x-cloak data-order="300" class="time-travel-topbar-controls">
+          <button
+            type="button"
+            class="space-topbar-button time-travel-refresh"
+            :disabled="$store.timeTravel.loading || $store.timeTravel.rollingBack || $store.timeTravel.reverting"
+            aria-label="Refresh history"
+            title="Refresh history"
+            @click="$store.timeTravel.refreshHistory()"
+          >
+            <x-icon x-text="$store.timeTravel.loading ? 'hourglass_top' : 'refresh'"></x-icon>
+            <span x-text="$store.timeTravel.loading ? 'Loading...' : 'Refresh'"></span>
+          </button>
+          <button
+            type="button"
+            class="space-topbar-button time-travel-repository-button"
+            :disabled="$store.timeTravel.rollingBack || $store.timeTravel.reverting"
+            :aria-label="`Choose Git repository (${ $store.timeTravel.currentRepositoryName })`"
+            :title="`Choose Git repository (${ $store.timeTravel.currentRepositoryName })`"
+            @click="$store.timeTravel.openRepositoryDialog()"
+          >
+            <x-icon>folder_open</x-icon>
+            <span x-text="$store.timeTravel.currentRepositoryName"></span>
+          </button>
+        </div>
+      </template>
+
       <div class="time-travel-shell">
         <header class="time-travel-header">
           <h1 class="time-travel-title">Time Travel</h1>
           <p class="time-travel-subtitle">
             Time Travel lets you undo your changes, including settings, spaces, and custom development.
           </p>
-
-          <div class="time-travel-header-controls">
-            <button
-              type="button"
-              class="secondary-button time-travel-refresh"
-              :disabled="$store.timeTravel.loading || $store.timeTravel.rollingBack || $store.timeTravel.reverting"
-              @click="$store.timeTravel.refreshHistory()"
-            >
-              <x-icon x-text="$store.timeTravel.loading ? 'hourglass_top' : 'refresh'"></x-icon>
-              <span x-text="$store.timeTravel.loading ? 'Loading...' : 'Refresh'"></span>
-            </button>
-            <button
-              type="button"
-              class="secondary-button time-travel-repository-button"
-              :disabled="$store.timeTravel.rollingBack || $store.timeTravel.reverting"
-              @click="$store.timeTravel.openRepositoryDialog()"
-              aria-label="Choose Git repository"
-            >
-              <x-icon>folder_open</x-icon>
-              <span x-text="$store.timeTravel.currentRepositoryName"></span>
-            </button>
-          </div>
         </header>
 
         <div class="time-travel-grid">

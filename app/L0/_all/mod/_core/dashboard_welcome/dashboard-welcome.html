@@ -4,7 +4,7 @@
     <script type="module" src="/mod/_core/dashboard_welcome/dashboard-welcome.js"></script>
   </head>
   <body>
-    <section class="dashboard-welcome" x-data="dashboardWelcome()" x-init="init()" x-cloak>
+    <section class="dashboard-welcome" x-data="dashboardWelcome()" x-init="init()" x-destroy="destroy()" x-cloak>
       <template x-if="ready && !hidden">
         <div class="space-card dashboard-welcome-panel">
           <button
@@ -50,20 +50,6 @@
               </template>
             </div>
           </div>
-        </div>
-      </template>
-
-      <template x-if="ready && hidden">
-        <div class="dashboard-welcome-hidden">
-          <button
-            type="button"
-            class="secondary-button"
-            :disabled="savingPreference || isInstalling"
-            @click="showWelcome()"
-          >
-            <x-icon>visibility</x-icon>
-            <span>Welcome</span>
-          </button>
         </div>
       </template>
     </section>

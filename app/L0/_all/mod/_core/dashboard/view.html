@@ -3,7 +3,14 @@
     <link rel="stylesheet" href="/mod/_core/dashboard/dashboard.css" />
   </head>
   <body>
-    <section class="space-panel dashboard-view">
+    <section class="space-panel dashboard-view" x-data>
+      <template x-teleport='[id="_core/onscreen_menu/bar_start"]'>
+        <div class="dashboard-topbar-controls">
+          <x-extension id="_core/dashboard/topbar_primary"></x-extension>
+          <x-extension id="_core/dashboard/topbar_secondary"></x-extension>
+        </div>
+      </template>
+
       <div class="dashboard-shell">
         <div class="dashboard-stack">
           <x-extension id="_core/dashboard/content_start"></x-extension>

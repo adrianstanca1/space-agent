@@ -172,6 +172,10 @@
   white-space: pre-wrap;
 }
 
+.agent-thread-surface .message-markdown {
+  white-space: normal;
+}
+
 .agent-thread-surface .message-markdown > :first-child {
   margin-top: 0;
 }
@@ -265,6 +269,14 @@
 
 .agent-thread-surface .message-markdown li + li {
   margin-top: 0.2rem;
+}
+
+.agent-thread-surface .message-markdown li > :first-child {
+  margin-top: 0;
+}
+
+.agent-thread-surface .message-markdown li > :last-child {
+  margin-bottom: 0;
 }
 
 .agent-thread-surface .message-markdown hr {

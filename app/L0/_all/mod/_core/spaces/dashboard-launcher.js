@@ -1,4 +1,4 @@
-import "/mod/_core/spaces/store.js";
+import { createDashboardSpace } from "/mod/_core/spaces/dashboard-actions.js";
 import { showToast } from "/mod/_core/visual/chrome/toast.js";
 import {
   getSpaceDisplayIcon,
@@ -308,12 +308,7 @@ globalThis.spacesDashboardLauncher = function spacesDashboardLauncher() {
       this.creating = true;
 
       try {
-        await globalThis.space.spaces.createSpace();
-      } catch (error) {
-        logDashboardSpacesError("createSpace failed", error);
-        showToast(String(error?.message || "Unable to create a space."), {
-          tone: "error"
-        });
+        await createDashboardSpace();
       } finally {
         this.creating = false;
       }

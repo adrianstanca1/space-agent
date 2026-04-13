@@ -187,16 +187,6 @@
   font-size: 0.95rem;
 }
 
-.dashboard-welcome-hidden {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0;
-  padding: 0.1rem 0;
-  color: var(--color-text-tertiary);
-  font-size: 0.88rem;
-}
-
 @media (max-width: 860px) {
   .dashboard-welcome-copy {
     max-width: none;
@@ -228,9 +218,5 @@
 
   .dashboard-welcome-copy {
     padding-right: 3rem;
-  }
-
-  .dashboard-welcome-hidden {
-    justify-content: space-between;
   }
 }

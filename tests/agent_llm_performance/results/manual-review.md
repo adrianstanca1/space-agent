@@ -259,6 +259,49 @@
 
 #### next prompt thesis
 
+#### `086` onboarding and no-half-thrust generation
+
+- the suite is now at `68` active cases after adding the onboarding and rewrite-recovery cases from the lazy new-user transcript
+- `086A_082A_no_half_thrust_onboarding` is the new frontier on `openai/gpt-5.4-mini`
+  - best observed full-suite result: `67/68` strict
+  - the productive gains are real:
+    - `new_user_show_me_something_executes_demo`
+    - `new_user_impressive_followup_executes_demo`
+    - `empty_space_create_one_uses_renderwidget`
+    - `full_rewrite_contract_error_continues_without_user_push`
+    - helperless browser actions stayed strong
+    - visible-repair ownership cases stayed strong
+  - the single remaining miss in the best observed run was `remove_space_by_title_requires_discovery_first`
+  - failure shape there is not target selection anymore; it is a separator-line formatting wobble on an otherwise correct `listSpaces()` move
+- `086B_reply_gate_onboarding_router` underperformed
+  - official generation run: `39/68`
+  - it fixed onboarding demos but reopened too many ownership, screenshot, weather, and space-navigation cases
+- `086C_three_mode_gate` is a valid wild branch but not competitive
+  - official generation run: `26/68`
+  - it broadened terminal drift and lost too much read-first and weather behavior
+- important harness lesson from this generation:
+  - the first full `086` matrix with default concurrency produced widespread `request error: fetch failed`
+  - rerunning the same generation at low concurrency restored meaningful prompt signal
+  - for this harness, a broad spray of transport errors across unrelated cases should be treated as saturation noise until a low-concurrency rerun confirms it
+- repeat and rerun stability on `086A` is still not fully solved
+  - later low-concurrency reruns of the same prompt fell back into the `62/68` to `65/68` range
+  - that rerun reopened `page_title_requires_execution`, `time_requires_execution`, and `weather_after_place_prerequisite`
+  - the current interpretation is:
+    - `086A` clearly beats the older frontier
+    - the branch is close to the ceiling
+    - the remaining problem is tiny formatting and example-leak instability, not target-choice logic
+- `temperature: 0.0` was tested as a reliability lever with a dedicated experimental config
+  - outcome: `65/68`
+  - conclusion:
+    - keep the official frontier at `temperature: 0.2`
+    - lower entropy did not outperform the best `0.2` run
+- next profitable move from here is not more onboarding prose
+  - the gains already landed
+  - the remaining work is micro-hardening around:
+    - separator-on-own-line stability
+    - keeping simple live-fact replies as valid javascript
+    - preventing accidental terminalization immediately after a prerequisite place lookup in weather flows
+
 #### suite expansion after the teapot and crypto recovery trace
 
 - the suite now includes `64` active cases

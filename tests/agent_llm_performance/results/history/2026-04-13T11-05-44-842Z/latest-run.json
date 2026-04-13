@@ -1,0 +1,2496 @@
+{
+  "generated_at": "2026-04-13T11:05:44.842Z",
+  "generation_id": "2026-04-13T11-05-44-842Z",
+  "models": [
+    "openai/gpt-5.4-mini"
+  ],
+  "results": [
+    {
+      "prompt_id": "086A_082A_no_half_thrust_onboarding",
+      "model_id": "openai/gpt-5.4-mini",
+      "passed_cases": 65,
+      "total_cases": 68,
+      "pass_rate": 0.9559,
+      "passed_attempts": 65,
+      "total_attempts": 68,
+      "attempt_pass_rate": 0.9559,
+      "failed_cases": [
+        "weather_after_place_prerequisite",
+        "recover_after_combined_widget_read_write_error",
+        "direct_repair_after_known_widget_error"
+      ],
+      "cases": [
+        {
+          "case_id": "page_title_requires_execution",
+          "description": "current page questions should trigger a live browser read, not a conversational guess",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/page_title_requires_execution.json",
+          "history_path": "tests/agent_llm_performance/histories/page_title_requires_execution.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Checking the current page now...\n\n\n_____javascript\nreturn { title: document.title, url: location.href }",
+          "usage": {
+            "prompt_tokens": 4984,
+            "completion_tokens": 32,
+            "total_tokens": 5016,
+            "cost": 0.0005988,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005988,
+              "upstream_inference_prompt_cost": 0.0004548,
+              "upstream_inference_completions_cost": 0.000144
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "smalltalk_hi_terminal",
+          "description": "casual conversation should answer normally without execution",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/smalltalk_hi_terminal.json",
+          "history_path": "tests/agent_llm_performance/histories/smalltalk_hi_terminal.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Hi.",
+          "usage": {
+            "prompt_tokens": 4980,
+            "completion_tokens": 6,
+            "total_tokens": 4986,
+            "cost": 0.0004788,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0004788,
+              "upstream_inference_prompt_cost": 0.0004518,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "time_requires_execution",
+          "description": "live time should trigger execution instead of a blocker or narration",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/time_requires_execution.json",
+          "history_path": "tests/agent_llm_performance/histories/time_requires_execution.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Checking the current time now...\n\n\n_____javascript\nreturn new Date().toString()",
+          "usage": {
+            "prompt_tokens": 4984,
+            "completion_tokens": 27,
+            "total_tokens": 5011,
+            "cost": 0.0005763,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005763,
+              "upstream_inference_prompt_cost": 0.0004548,
+              "upstream_inference_completions_cost": 0.0001215
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "new_user_show_me_something_executes_demo",
+          "description": "after new-user context is known, a vague show-me-something request should trigger one concrete demo action instead of a menu of options",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/new_user_show_me_something_executes_demo.json",
+          "history_path": "tests/agent_llm_performance/histories/new_user_show_me_something_executes_demo.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Showing you something now...\n_____javascript\nreturn {\n  page: document.title,\n  url: location.href,\n  time: new Date().toString()\n}",
+          "usage": {
+            "prompt_tokens": 5067,
+            "completion_tokens": 36,
+            "total_tokens": 5103,
+            "cost": 0.00067905,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00067905,
+              "upstream_inference_prompt_cost": 0.00051705,
+              "upstream_inference_completions_cost": 0.000162
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "new_user_impressive_followup_executes_demo",
+          "description": "after a lazy onboarding menu, a follow-up request to do something impressive should execute one concrete demo instead of another menu or clarification",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/new_user_impressive_followup_executes_demo.json",
+          "history_path": "tests/agent_llm_performance/histories/new_user_impressive_followup_executes_demo.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Showing you something impressive now...\n\n_____javascript\nconst html2canvasSrc = \"https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js\"\nif (!window.html2canvas) {\n  await new Promise((resolve, reject) => {\n    const s = document.createElement(\"script\")\n    s.src = html2canvasSrc\n    s.onload = resolve\n    s.onerror = reject\n    document.head.appendChild(s)\n  })\n}\nconst canvas = await window.html2canvas(document.body)\nconst blob = await new Promise(resolve => canvas.toBlob(resolve, \"image/png\"))\nconst a = document.createElement(\"a\")\na.href = URL.createObjectURL(blob)\na.download = `screenshot-${Date.now()}.png`\na.click()\nreturn \"Screenshot captured and download triggered\"",
+          "usage": {
+            "prompt_tokens": 5148,
+            "completion_tokens": 179,
+            "total_tokens": 5327,
+            "cost": 0.0013833,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0013833,
+              "upstream_inference_prompt_cost": 0.0005778,
+              "upstream_inference_completions_cost": 0.0008055
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "empty_space_create_one_uses_renderwidget",
+          "description": "after an empty widget catalog and a direct create-one request, the next reply should render a starter widget instead of re-listing or asking what kind",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/empty_space_create_one_uses_renderwidget.json",
+          "history_path": "tests/agent_llm_performance/histories/empty_space_create_one_uses_renderwidget.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Creating a starter widget now...\n\n\n_____javascript\nreturn await space.current.renderWidget({\n  id: \"starter-widget\",\n  name: \"Starter Widget\",\n  cols: 4,\n  rows: 4,\n  renderer: async (parent) => {\n    parent.innerHTML = \"<div>Starter widget</div>\"\n  }\n})",
+          "usage": {
+            "prompt_tokens": 5043,
+            "completion_tokens": 78,
+            "total_tokens": 5121,
+            "cost": 0.00085005,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00085005,
+              "upstream_inference_prompt_cost": 0.00049905,
+              "upstream_inference_completions_cost": 0.000351
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "whole_page_flip_after_scope_clarification_uses_dom_root",
+          "description": "after the user clarifies the whole page, the next move should act on the page DOM directly instead of asking about a space again",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/whole_page_flip_after_scope_clarification_uses_dom_root.json",
+          "history_path": "tests/agent_llm_performance/histories/whole_page_flip_after_scope_clarification_uses_dom_root.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Flipping the whole page upside down now...\n\n\n_____javascript\ndocument.documentElement.style.transition = \"transform 6s ease\"\ndocument.documentElement.style.transformOrigin = \"center center\"\ndocument.documentElement.style.transform = \"rotate(180deg)\"\nreturn \"flipped\"",
+          "usage": {
+            "prompt_tokens": 5014,
+            "completion_tokens": 70,
+            "total_tokens": 5084,
+            "cost": 0.0007923,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0007923,
+              "upstream_inference_prompt_cost": 0.0004773,
+              "upstream_inference_completions_cost": 0.000315
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "screenshot_download_without_helper_uses_browser_js",
+          "description": "browser-native screenshot and download requests should trigger direct browser javascript, not helper dependency or refusal",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/screenshot_download_without_helper_uses_browser_js.json",
+          "history_path": "tests/agent_llm_performance/histories/screenshot_download_without_helper_uses_browser_js.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Taking a screenshot of the current page now...\n\n\n_____javascript\nconst html2canvasSrc = \"https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js\"\nif (!window.html2canvas) {\n  await new Promise((resolve, reject) => {\n    const s = document.createElement(\"script\")\n    s.src = html2canvasSrc\n    s.onload = resolve\n    s.onerror = reject\n    document.head.appendChild(s)\n  })\n}\nconst canvas = await window.html2canvas(document.body)\nconst blob = await new Promise(resolve => canvas.toBlob(resolve, \"image/png\"))\nconst a = document.createElement(\"a\")\na.href = URL.createObjectURL(blob)\na.download = `screenshot-${Date.now()}.png`\na.click()\nreturn \"Screenshot captured and download triggered\"",
+          "usage": {
+            "prompt_tokens": 4988,
+            "completion_tokens": 182,
+            "total_tokens": 5170,
+            "cost": 0.0012768,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0012768,
+              "upstream_inference_prompt_cost": 0.0004578,
+              "upstream_inference_completions_cost": 0.000819
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "screenshot_after_helper_unavailable_uses_browser_js",
+          "description": "after a helper-unavailable screenshot result, the next move should switch to direct browser javascript rather than refusing or retrying the same helper",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/screenshot_after_helper_unavailable_uses_browser_js.json",
+          "history_path": "tests/agent_llm_performance/histories/screenshot_after_helper_unavailable_uses_browser_js.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Taking a screenshot of the current page now...\n_____javascript\nconst html2canvasSrc = \"https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js\"\nif (!window.html2canvas) {\n  await new Promise((resolve, reject) => {\n    const s = document.createElement(\"script\")\n    s.src = html2canvasSrc\n    s.onload = resolve\n    s.onerror = reject\n    document.head.appendChild(s)\n  })\n}\nconst canvas = await window.html2canvas(document.body)\nconst blob = await new Promise(resolve => canvas.toBlob(resolve, \"image/png\"))\nconst a = document.createElement(\"a\")\na.href = URL.createObjectURL(blob)\na.download = `screenshot-${Date.now()}.png`\na.click()\nreturn \"Screenshot captured and download triggered\"",
+          "usage": {
+            "prompt_tokens": 5052,
+            "completion_tokens": 181,
+            "total_tokens": 5233,
+            "cost": 0.0013203,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0013203,
+              "upstream_inference_prompt_cost": 0.0005058,
+              "upstream_inference_completions_cost": 0.0008145
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "followup_after_screenshot_refusal_requires_browser_js",
+          "description": "after refusing a screenshot request because no helper exists, an explicit user push should force a direct browser-javascript attempt in the next reply",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/followup_after_screenshot_refusal_requires_browser_js.json",
+          "history_path": "tests/agent_llm_performance/histories/followup_after_screenshot_refusal_requires_browser_js.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Capturing the page screenshot directly now...\n_____javascript\nconst html2canvasSrc = \"https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js\"\nif (!window.html2canvas) {\n  await new Promise((resolve, reject) => {\n    const s = document.createElement(\"script\")\n    s.src = html2canvasSrc\n    s.onload = resolve\n    s.onerror = reject\n    document.head.appendChild(s)\n  })\n}\nconst canvas = await window.html2canvas(document.body)\nconst blob = await new Promise(resolve => canvas.toBlob(resolve, \"image/png\"))\nconst a = document.createElement(\"a\")\na.href = URL.createObjectURL(blob)\na.download = `screenshot-${Date.now()}.png`\na.click()\nreturn \"Screenshot captured and download triggered\"",
+          "usage": {
+            "prompt_tokens": 5098,
+            "completion_tokens": 180,
+            "total_tokens": 5278,
+            "cost": 0.0013503,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0013503,
+              "upstream_inference_prompt_cost": 0.0005403,
+              "upstream_inference_completions_cost": 0.00081
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "download_html_without_helper_uses_browser_js",
+          "description": "browser-native download work should use direct javascript primitives when no special helper is required",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/download_html_without_helper_uses_browser_js.json",
+          "history_path": "tests/agent_llm_performance/histories/download_html_without_helper_uses_browser_js.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Saving the current page HTML now...\n\n\n_____javascript\nconst html = document.documentElement.outerHTML\nconst blob = new Blob([html], { type: \"text/html;charset=utf-8\" })\nconst a = document.createElement(\"a\")\na.href = URL.createObjectURL(blob)\na.download = `page-${Date.now()}.html`\na.click()\nreturn \"downloaded current page html\"",
+          "usage": {
+            "prompt_tokens": 4987,
+            "completion_tokens": 91,
+            "total_tokens": 5078,
+            "cost": 0.00086655,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00086655,
+              "upstream_inference_prompt_cost": 0.00045705,
+              "upstream_inference_completions_cost": 0.0004095
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "click_button_without_helper_uses_browser_js",
+          "description": "simple page-control requests should use direct DOM javascript instead of searching for an imaginary helper or refusing",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/click_button_without_helper_uses_browser_js.json",
+          "history_path": "tests/agent_llm_performance/histories/click_button_without_helper_uses_browser_js.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Clicking the first button on the page now...\n_____javascript\nconst button = document.querySelector(\"button, input[type='button'], input[type='submit']\")\nif (!button) throw new Error(\"No button found\")\nbutton.click()\nreturn \"clicked first button\"",
+          "usage": {
+            "prompt_tokens": 4986,
+            "completion_tokens": 77,
+            "total_tokens": 5063,
+            "cost": 0.0008028,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0008028,
+              "upstream_inference_prompt_cost": 0.0004563,
+              "upstream_inference_completions_cost": 0.0003465
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "canvas_screenshot_requires_real_capture_strategy",
+          "description": "canvas-based screenshot requests must use a real page-capture strategy, not a fabricated placeholder image with page title or url text",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/canvas_screenshot_requires_real_capture_strategy.json",
+          "history_path": "tests/agent_llm_performance/histories/canvas_screenshot_requires_real_capture_strategy.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Taking a screenshot of the current page now...\n\n\n_____javascript\nconst html2canvasSrc = \"https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js\"\nif (!window.html2canvas) {\n  await new Promise((resolve, reject) => {\n    const s = document.createElement(\"script\")\n    s.src = html2canvasSrc\n    s.onload = resolve\n    s.onerror = reject\n    document.head.appendChild(s)\n  })\n}\nconst canvas = await window.html2canvas(document.body)\nconst blob = await new Promise(resolve => canvas.toBlob(resolve, \"image/png\"))\nconst a = document.createElement(\"a\")\na.href = URL.createObjectURL(blob)\na.download = `screenshot-${Date.now()}.png`\na.click()\nreturn \"Screenshot captured and download triggered\"",
+          "usage": {
+            "prompt_tokens": 4991,
+            "completion_tokens": 182,
+            "total_tokens": 5173,
+            "cost": 0.00127905,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00127905,
+              "upstream_inference_prompt_cost": 0.00046005,
+              "upstream_inference_completions_cost": 0.000819
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "see_known_widget_after_render_uses_same_target",
+          "description": "after a widget was just created successfully, a follow-up request to see it should inspect that same widget instead of hallucinating another target",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/see_known_widget_after_render_uses_same_target.json",
+          "history_path": "tests/agent_llm_performance/histories/see_known_widget_after_render_uses_same_target.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Seeing the status widget now...\n\n\n_____javascript\nreturn await space.current.seeWidget(\"status-board\")",
+          "usage": {
+            "prompt_tokens": 5105,
+            "completion_tokens": 31,
+            "total_tokens": 5136,
+            "cost": 0.00068505,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00068505,
+              "upstream_inference_prompt_cost": 0.00054555,
+              "upstream_inference_completions_cost": 0.0001395
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "fix_visible_widget_error_requires_readwidget",
+          "description": "after rendered widget output shows an error and the user says fix it, the next step should read that widget source before any selective patch",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/fix_visible_widget_error_requires_readwidget.json",
+          "history_path": "tests/agent_llm_performance/histories/fix_visible_widget_error_requires_readwidget.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Reading the widget source now...\n_____javascript\nreturn await space.current.readWidget(\"status-board\")",
+          "usage": {
+            "prompt_tokens": 5062,
+            "completion_tokens": 29,
+            "total_tokens": 5091,
+            "cost": 0.0006438,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006438,
+              "upstream_inference_prompt_cost": 0.0005133,
+              "upstream_inference_completions_cost": 0.0001305
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "verify_visible_widget_fix_after_patch",
+          "description": "after patching a widget to fix a visible defect, the agent should verify the rendered result instead of declaring completion immediately",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/verify_visible_widget_fix_after_patch.json",
+          "history_path": "tests/agent_llm_performance/histories/verify_visible_widget_fix_after_patch.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Checking the repaired status widget now...\n_____javascript\nreturn await space.current.seeWidget(\"status-board\")",
+          "usage": {
+            "prompt_tokens": 5126,
+            "completion_tokens": 31,
+            "total_tokens": 5157,
+            "cost": 0.0007008,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0007008,
+              "upstream_inference_prompt_cost": 0.0005613,
+              "upstream_inference_completions_cost": 0.0001395
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "look_at_it_now_uses_see_widget",
+          "description": "when the user explicitly says to look and use the see function, the next reply should inspect the rendered widget, not claim to have looked already",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/look_at_it_now_uses_see_widget.json",
+          "history_path": "tests/agent_llm_performance/histories/look_at_it_now_uses_see_widget.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Seeing the current widget now...\n\n\n_____javascript\nreturn await space.current.seeWidget(\"iphone-weather\")",
+          "usage": {
+            "prompt_tokens": 4988,
+            "completion_tokens": 31,
+            "total_tokens": 5019,
+            "cost": 0.0005973,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005973,
+              "upstream_inference_prompt_cost": 0.0004578,
+              "upstream_inference_completions_cost": 0.0001395
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "verification_reveals_remaining_widget_error_requires_correction",
+          "description": "if a verification step still shows a visible widget error, the agent should continue repair work on that target instead of stopping to explain",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/verification_reveals_remaining_widget_error_requires_correction.json",
+          "history_path": "tests/agent_llm_performance/histories/verification_reveals_remaining_widget_error_requires_correction.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Reading the financials widget source now...\n_____javascript\nreturn await space.current.readWidget(\"financials\")",
+          "usage": {
+            "prompt_tokens": 5062,
+            "completion_tokens": 25,
+            "total_tokens": 5087,
+            "cost": 0.0006258,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006258,
+              "upstream_inference_prompt_cost": 0.0005133,
+              "upstream_inference_completions_cost": 0.0001125
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "partial_mitigation_is_not_completion",
+          "description": "after the agent admits a visible problem is still present, a user push should reopen execution immediately instead of more explanation",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/partial_mitigation_is_not_completion.json",
+          "history_path": "tests/agent_llm_performance/histories/partial_mitigation_is_not_completion.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Patching the financials widget now...\n_____javascript\nreturn await space.current.readWidget(\"financials\")",
+          "usage": {
+            "prompt_tokens": 5098,
+            "completion_tokens": 31,
+            "total_tokens": 5129,
+            "cost": 0.0006798,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006798,
+              "upstream_inference_prompt_cost": 0.0005403,
+              "upstream_inference_completions_cost": 0.0001395
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "verify_visible_layout_patch_before_done",
+          "description": "after patching a widget for a visible layout request, the agent should verify the rendered widget before declaring completion",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/verify_visible_layout_patch_before_done.json",
+          "history_path": "tests/agent_llm_performance/histories/verify_visible_layout_patch_before_done.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Seeing the updated weather widget now.\n\n\n_____javascript\nreturn await space.current.seeWidget(\"iphone-weather\")",
+          "usage": {
+            "prompt_tokens": 5157,
+            "completion_tokens": 38,
+            "total_tokens": 5195,
+            "cost": 0.00075555,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00075555,
+              "upstream_inference_prompt_cost": 0.00058455,
+              "upstream_inference_completions_cost": 0.000171
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "on_screen_widget_complaint_stays_on_known_target",
+          "description": "when a newly rendered current widget is the obvious failing target, the next move must stay on that widget instead of drifting into generic page or space inspection",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/on_screen_widget_complaint_stays_on_known_target.json",
+          "history_path": "tests/agent_llm_performance/histories/on_screen_widget_complaint_stays_on_known_target.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Reading the quotes widget now...\n_____javascript\nreturn await space.current.readWidget(\"quote-board\")",
+          "usage": {
+            "prompt_tokens": 5109,
+            "completion_tokens": 29,
+            "total_tokens": 5138,
+            "cost": 0.00067905,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00067905,
+              "upstream_inference_prompt_cost": 0.00054855,
+              "upstream_inference_completions_cost": 0.0001305
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "silent_widget_failure_reopens_repair",
+          "description": "a rendered widget that shows only empty values is still broken; agreement on that visible failure should reopen source inspection, not completion",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/silent_widget_failure_reopens_repair.json",
+          "history_path": "tests/agent_llm_performance/histories/silent_widget_failure_reopens_repair.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Reading the broken quote widget now...\n_____javascript\nreturn await space.current.readWidget(\"quote-board\")",
+          "usage": {
+            "prompt_tokens": 5119,
+            "completion_tokens": 30,
+            "total_tokens": 5149,
+            "cost": 0.00207345,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 2816,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00207345,
+              "upstream_inference_prompt_cost": 0.00193845,
+              "upstream_inference_completions_cost": 0.000135
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "fresh_widget_read_then_do_it_requires_patch",
+          "description": "after a fresh widget read already returned the source, a user do-it follow-up should patch that same widget now instead of rereading or narrating again",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/fresh_widget_read_then_do_it_requires_patch.json",
+          "history_path": "tests/agent_llm_performance/histories/fresh_widget_read_then_do_it_requires_patch.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Patching the quote widget now...\n_____javascript\nreturn await space.current.patchWidget(\"quote-board\", {\n  edits: [\n    {\n      op: \"replace\",\n      path: \"renderer\",\n      value: async (parent) => {\n        const symbols = [\"AAPL\", \"MSFT\", \"BTC-USD\"]\n        const res = await fetch(\"https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd\").then(r => r.json())\n        parent.innerHTML = `<pre>${JSON.stringify({ symbols, prices: res }, null, 2)}</pre>`\n      }\n    }\n  ]\n})",
+          "usage": {
+            "prompt_tokens": 5140,
+            "completion_tokens": 145,
+            "total_tokens": 5285,
+            "cost": 0.0012243,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0012243,
+              "upstream_inference_prompt_cost": 0.0005718,
+              "upstream_inference_completions_cost": 0.0006525
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "widget_patch_error_then_do_it_requires_recovery_action",
+          "description": "after a widget patch fails on the known target and the user says do it, the next reply must recover with action on that same widget instead of stalling in prose",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/widget_patch_error_then_do_it_requires_recovery_action.json",
+          "history_path": "tests/agent_llm_performance/histories/widget_patch_error_then_do_it_requires_recovery_action.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Repairing the quote widget with the fresh source now...\n\n\n_____javascript\nreturn await space.current.patchWidget(\"quote-board\", {\n  edits: [\n    {\n      find: \"const data = await fetch(\\\"https://api.example.test/quotes\\\").then(r => r.json())\",\n      replace: \"const data = await fetch(\\\"https://api.example.test/quotes/v2\\\").then(r => r.json())\"\n    }\n  ]\n})",
+          "usage": {
+            "prompt_tokens": 5243,
+            "completion_tokens": 107,
+            "total_tokens": 5350,
+            "cost": 0.00113055,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00113055,
+              "upstream_inference_prompt_cost": 0.00064905,
+              "upstream_inference_completions_cost": 0.0004815
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "widget_not_found_error_uses_available_widget_id",
+          "description": "when a widget lookup fails and framework telemetry lists the available widget id, the agent should use that listed id directly instead of drifting or retrying the wrong one",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/widget_not_found_error_uses_available_widget_id.json",
+          "history_path": "tests/agent_llm_performance/histories/widget_not_found_error_uses_available_widget_id.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Reading the iPhone Weather widget source now.\n_____javascript\nreturn await space.current.readWidget(\"iphone-weather\")",
+          "usage": {
+            "prompt_tokens": 5066,
+            "completion_tokens": 32,
+            "total_tokens": 5098,
+            "cost": 0.0006603,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006603,
+              "upstream_inference_prompt_cost": 0.0005163,
+              "upstream_inference_completions_cost": 0.000144
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "weather_omitted_scope",
+          "description": "underspecified weather should use current context rather than bounce a location question to the human",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/weather_omitted_scope.json",
+          "history_path": "tests/agent_llm_performance/histories/weather_omitted_scope.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Checking the current location and weather now...\n\n_____javascript\nconst pos = await new Promise((resolve, reject) =>\n  navigator.geolocation.getCurrentPosition(resolve, reject, {\n    enableHighAccuracy: true,\n    timeout: 10000\n  })\n)\nconst { latitude, longitude } = pos.coords\nreturn await fetch(\n  `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m`\n).then(r => r.json())",
+          "usage": {
+            "prompt_tokens": 4984,
+            "completion_tokens": 123,
+            "total_tokens": 5107,
+            "cost": 0.0010083,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0010083,
+              "upstream_inference_prompt_cost": 0.0004548,
+              "upstream_inference_completions_cost": 0.0005535
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "weather_self_scope_followup",
+          "description": "self-referential follow-up should trigger execution, not another blocker or impossibility report",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/weather_self_scope_followup.json",
+          "history_path": "tests/agent_llm_performance/histories/weather_self_scope_followup.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Checking your current location and weather now...\n_____javascript\nconst pos = await new Promise((resolve, reject) =>\n  navigator.geolocation.getCurrentPosition(resolve, reject, {\n    enableHighAccuracy: true,\n    timeout: 10000\n  })\n)\nconst { latitude, longitude } = pos.coords\nreturn await fetch(\n  `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m`\n).then(r => r.json())\n",
+          "usage": {
+            "prompt_tokens": 5001,
+            "completion_tokens": 136,
+            "total_tokens": 5137,
+            "cost": 0.00107955,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00107955,
+              "upstream_inference_prompt_cost": 0.00046755,
+              "upstream_inference_completions_cost": 0.000612
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "weather_self_scope_after_indirect_fail",
+          "description": "after an indirect current-context attempt fails, the agent should switch to direct browser location and continue through the weather step",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/weather_self_scope_after_indirect_fail.json",
+          "history_path": "tests/agent_llm_performance/histories/weather_self_scope_after_indirect_fail.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Checking your current location and weather now...\n\n\n_____javascript\nconst pos = await new Promise((resolve, reject) =>\n  navigator.geolocation.getCurrentPosition(resolve, reject, {\n    enableHighAccuracy: true,\n    timeout: 10000\n  })\n)\nconst { latitude, longitude } = pos.coords\nreturn await fetch(\n  `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m`\n).then(r => r.json())",
+          "usage": {
+            "prompt_tokens": 5047,
+            "completion_tokens": 123,
+            "total_tokens": 5170,
+            "cost": 0.00105555,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00105555,
+              "upstream_inference_prompt_cost": 0.00050205,
+              "upstream_inference_completions_cost": 0.0005535
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "finish_weather_after_geolocation",
+          "description": "geolocation coordinates are prerequisite data, not the final answer when the user asked for weather",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/finish_weather_after_geolocation.json",
+          "history_path": "tests/agent_llm_performance/histories/finish_weather_after_geolocation.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Fetching the weather for your coordinates now...\n_____javascript\nconst latitude = 49.393813868077764\nconst longitude = 17.22388380435019\nreturn await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m`).then(r => r.json())",
+          "usage": {
+            "prompt_tokens": 5107,
+            "completion_tokens": 86,
+            "total_tokens": 5193,
+            "cost": 0.00093405,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00093405,
+              "upstream_inference_prompt_cost": 0.00054705,
+              "upstream_inference_completions_cost": 0.000387
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "weather_after_place_prerequisite",
+          "description": "if a place lookup happens inside a weather task, the agent should continue to weather instead of stopping on place identity",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/weather_after_place_prerequisite.json",
+          "history_path": "tests/agent_llm_performance/histories/weather_after_place_prerequisite.json",
+          "passed": false,
+          "failures": [
+            "expected thrust but got terminal",
+            "missing staging line before execution separator",
+            "execution separator must appear exactly once on its own line",
+            "execution separator must appear exactly once",
+            "missing code after execution separator",
+            "invalid javascript after execution separator: missing code",
+            "missing required text: _____javascript",
+            "contains forbidden text: Your location is",
+            "missing required pattern: /(?:open-meteo|wttr\\.in)/u"
+          ],
+          "response_type": "terminal",
+          "response": "Your location is near 250, Hnojice, Olomouc Region, Czechia.",
+          "usage": {
+            "prompt_tokens": 5275,
+            "completion_tokens": 23,
+            "total_tokens": 5298,
+            "cost": 0.00077655,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00077655,
+              "upstream_inference_prompt_cost": 0.00067305,
+              "upstream_inference_completions_cost": 0.0001035
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "weather_after_precise_location_fetch_error_keeps_location",
+          "description": "after precise location is already known and one weather source fails, the next weather attempt should stay anchored to that same location instead of falling back to an unscoped weather query",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/weather_after_precise_location_fetch_error_keeps_location.json",
+          "history_path": "tests/agent_llm_performance/histories/weather_after_precise_location_fetch_error_keeps_location.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Retrying weather with the same coordinates now...\n_____javascript\nconst latitude = 49.39374837642957\nconst longitude = 17.22399629876773\nconst url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`\nconst text = await fetch(url).then(r => r.text())\nreturn { text }",
+          "usage": {
+            "prompt_tokens": 5408,
+            "completion_tokens": 102,
+            "total_tokens": 5510,
+            "cost": 0.0012318,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0012318,
+              "upstream_inference_prompt_cost": 0.0007728,
+              "upstream_inference_completions_cost": 0.000459
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "terminal_after_weather_ready",
+          "description": "once the weather data is already present in telemetry, the agent should answer instead of executing again",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/terminal_after_weather_ready.json",
+          "history_path": "tests/agent_llm_performance/histories/terminal_after_weather_ready.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Prague is 12°C and sunny, feels like 10°C, with 30% humidity and wind at 25 km/h.",
+          "usage": {
+            "prompt_tokens": 5147,
+            "completion_tokens": 32,
+            "total_tokens": 5179,
+            "cost": 0.00072105,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00072105,
+              "upstream_inference_prompt_cost": 0.00057705,
+              "upstream_inference_completions_cost": 0.000144
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "reverse_geocode_after_precise_followup",
+          "description": "after weather was fetched for known coordinates and the user asks where that is precisely, the agent should reverse geocode instead of answering vaguely",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/reverse_geocode_after_precise_followup.json",
+          "history_path": "tests/agent_llm_performance/histories/reverse_geocode_after_precise_followup.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Finding the precise place for those coordinates now...\n_____javascript\nconst latitude = 49.71985822231634\nconst longitude = 17.221723412878973\nreturn await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`).then(r => r.json())",
+          "usage": {
+            "prompt_tokens": 5266,
+            "completion_tokens": 81,
+            "total_tokens": 5347,
+            "cost": 0.0024132,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 2816,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0024132,
+              "upstream_inference_prompt_cost": 0.0020487,
+              "upstream_inference_completions_cost": 0.0003645
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "unpack_collapsed_weather_payload",
+          "description": "collapsed payloads should trigger another extraction attempt instead of a stop or offer",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/unpack_collapsed_weather_payload.json",
+          "history_path": "tests/agent_llm_performance/histories/unpack_collapsed_weather_payload.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Extracting the current weather fields now...\n_____javascript\nconst data = await fetch(\"https://wttr.in/?format=j1\").then(r => r.json())\nconst c = data.current_condition?.[0] || {}\nreturn {\n  tempC: c.temp_C,\n  feelsLikeC: c.FeelsLikeC,\n  humidity: c.humidity,\n  desc: c.weatherDesc?.[0]?.value,\n  windKph: c.windspeedKmph\n}",
+          "usage": {
+            "prompt_tokens": 5078,
+            "completion_tokens": 108,
+            "total_tokens": 5186,
+            "cost": 0.0010113,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0010113,
+              "upstream_inference_prompt_cost": 0.0005253,
+              "upstream_inference_completions_cost": 0.000486
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "live_fact_double_check_requires_refetch",
+          "description": "after answering a live fact and the user says double check, the next reply must fetch again instead of restating the stale prior values",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/live_fact_double_check_requires_refetch.json",
+          "history_path": "tests/agent_llm_performance/histories/live_fact_double_check_requires_refetch.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Double-checking the live prices now.\n_____javascript\nconst url = \"https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd\"\nreturn await fetch(url).then(r => r.json())",
+          "usage": {
+            "prompt_tokens": 5106,
+            "completion_tokens": 56,
+            "total_tokens": 5162,
+            "cost": 0.0007983,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0007983,
+              "upstream_inference_prompt_cost": 0.0005463,
+              "upstream_inference_completions_cost": 0.000252
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "create_note_after_user_detail_read",
+          "description": "user detail is prerequisite state for a write task and should lead into fileWrite, not a terminal identity answer",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/create_note_after_user_detail_read.json",
+          "history_path": "tests/agent_llm_performance/histories/create_note_after_user_detail_read.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Writing your note now...\n_____javascript\nreturn await space.api.fileWrite(\"~/notes/whoami.txt\", \"pan\\n\", \"utf8\")",
+          "usage": {
+            "prompt_tokens": 5040,
+            "completion_tokens": 33,
+            "total_tokens": 5073,
+            "cost": 0.0006453,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006453,
+              "upstream_inference_prompt_cost": 0.0004968,
+              "upstream_inference_completions_cost": 0.0001485
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "write_user_yaml_after_read",
+          "description": "after reading a config file for an edit task, the agent should write the edit instead of summarizing the file",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/write_user_yaml_after_read.json",
+          "history_path": "tests/agent_llm_performance/histories/write_user_yaml_after_read.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Updating your full name now...\n_____javascript\nconst current = `full_name: pan\nbio: hello there`\nconst obj = space.utils.yaml.parse(current)\nobj.full_name = \"Pan Example\"\nreturn await space.api.fileWrite(\"~/user.yaml\", space.utils.yaml.stringify(obj), \"utf8\")",
+          "usage": {
+            "prompt_tokens": 5033,
+            "completion_tokens": 70,
+            "total_tokens": 5103,
+            "cost": 0.00080655,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00080655,
+              "upstream_inference_prompt_cost": 0.00049155,
+              "upstream_inference_completions_cost": 0.000315
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "selective_text_edit_requires_read_first",
+          "description": "a selective text-file edit request should read the file first instead of jumping straight to a write",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/selective_text_edit_requires_read_first.json",
+          "history_path": "tests/agent_llm_performance/histories/selective_text_edit_requires_read_first.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Reading the current file first.\n\n_____javascript\nreturn await space.api.fileRead(\"~/people.txt\", \"utf8\")",
+          "usage": {
+            "prompt_tokens": 4999,
+            "completion_tokens": 40,
+            "total_tokens": 5039,
+            "cost": 0.00064605,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00064605,
+              "upstream_inference_prompt_cost": 0.00046605,
+              "upstream_inference_completions_cost": 0.00018
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "selective_yaml_edit_requires_read_first",
+          "description": "a selective yaml edit request should read the file first instead of inventing a blind write",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/selective_yaml_edit_requires_read_first.json",
+          "history_path": "tests/agent_llm_performance/histories/selective_yaml_edit_requires_read_first.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Reading the contacts file first.\n\n_____javascript\nreturn await space.api.fileRead(\"~/contacts.yaml\", \"utf8\")",
+          "usage": {
+            "prompt_tokens": 4999,
+            "completion_tokens": 40,
+            "total_tokens": 5039,
+            "cost": 0.00064605,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00064605,
+              "upstream_inference_prompt_cost": 0.00046605,
+              "upstream_inference_completions_cost": 0.00018
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "selective_widget_fix_requires_read_first",
+          "description": "a selective widget repair request should read the widget first instead of patching blind",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/selective_widget_fix_requires_read_first.json",
+          "history_path": "tests/agent_llm_performance/histories/selective_widget_fix_requires_read_first.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Reading the snake widget source now...\n\n\n_____javascript\nreturn await space.current.readWidget(\"snake-game\")",
+          "usage": {
+            "prompt_tokens": 4989,
+            "completion_tokens": 37,
+            "total_tokens": 5026,
+            "cost": 0.00062505,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00062505,
+              "upstream_inference_prompt_cost": 0.00045855,
+              "upstream_inference_completions_cost": 0.0001665
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "recover_after_combined_widget_read_write_error",
+          "description": "after framework rejects a combined widget read-and-patch turn, recovery should be a pure read turn",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/recover_after_combined_widget_read_write_error.json",
+          "history_path": "tests/agent_llm_performance/histories/recover_after_combined_widget_read_write_error.json",
+          "passed": false,
+          "failures": [
+            "expected thrust but got terminal",
+            "missing staging line before execution separator",
+            "execution separator must appear exactly once on its own line",
+            "execution separator must appear exactly once",
+            "missing code after execution separator",
+            "invalid javascript after execution separator: missing code",
+            "missing required text: _____javascript",
+            "missing required text: snake-game",
+            "missing required pattern: /space\\.current\\.readWidget\\(/u"
+          ],
+          "response_type": "terminal",
+          "response": "",
+          "usage": {
+            "prompt_tokens": 5080,
+            "completion_tokens": 4,
+            "total_tokens": 5084,
+            "cost": 0.0005448,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005448,
+              "upstream_inference_prompt_cost": 0.0005268,
+              "upstream_inference_completions_cost": 0.000018
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "space_navigation_after_current_helper_error_switches_family",
+          "description": "after a current-space helper fails, the agent should switch helper families instead of retrying the same bad path",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/space_navigation_after_current_helper_error_switches_family.json",
+          "history_path": "tests/agent_llm_performance/histories/space_navigation_after_current_helper_error_switches_family.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Listing your spaces to find the weather space now...\n_____javascript\nreturn await space.spaces.listSpaces()",
+          "usage": {
+            "prompt_tokens": 5036,
+            "completion_tokens": 25,
+            "total_tokens": 5061,
+            "cost": 0.0006063,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006063,
+              "upstream_inference_prompt_cost": 0.0004938,
+              "upstream_inference_completions_cost": 0.0001125
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "space_navigation_read_is_not_completion",
+          "description": "reading a space metadata file is not the same as actually navigating there",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/space_navigation_read_is_not_completion.json",
+          "history_path": "tests/agent_llm_performance/histories/space_navigation_read_is_not_completion.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Opening your weather space now...\n_____javascript\nreturn await space.spaces.openSpace(\"space-1\")",
+          "usage": {
+            "prompt_tokens": 5192,
+            "completion_tokens": 31,
+            "total_tokens": 5223,
+            "cost": 0.0007503,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0007503,
+              "upstream_inference_prompt_cost": 0.0006108,
+              "upstream_inference_completions_cost": 0.0001395
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "space_navigation_after_take_me_there_uses_open_helper",
+          "description": "after the user says take me there, the agent should call the open-space helper instead of rereading metadata",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/space_navigation_after_take_me_there_uses_open_helper.json",
+          "history_path": "tests/agent_llm_performance/histories/space_navigation_after_take_me_there_uses_open_helper.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Opening the weather space now...\n_____javascript\nreturn await space.spaces.openSpace(\"space-1\")",
+          "usage": {
+            "prompt_tokens": 5108,
+            "completion_tokens": 31,
+            "total_tokens": 5139,
+            "cost": 0.0006873,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006873,
+              "upstream_inference_prompt_cost": 0.0005478,
+              "upstream_inference_completions_cost": 0.0001395
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "space_navigation_after_user_push_uses_open_helper",
+          "description": "after wrongly claiming the space cannot be opened, the agent should switch to the real open-space helper when the user pushes back",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/space_navigation_after_user_push_uses_open_helper.json",
+          "history_path": "tests/agent_llm_performance/histories/space_navigation_after_user_push_uses_open_helper.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Opening the weather space now...\n_____javascript\nreturn await space.spaces.openSpace(\"space-1\")",
+          "usage": {
+            "prompt_tokens": 5129,
+            "completion_tokens": 31,
+            "total_tokens": 5160,
+            "cost": 0.00070305,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00070305,
+              "upstream_inference_prompt_cost": 0.00056355,
+              "upstream_inference_completions_cost": 0.0001395
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "recover_known_file_after_write_error",
+          "description": "after a known file write error, recovery should stay on the exact file target instead of broad discovery or fake success",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/recover_known_file_after_write_error.json",
+          "history_path": "tests/agent_llm_performance/histories/recover_known_file_after_write_error.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Fixing the YAML and writing it now...\n_____javascript\nconst current = await space.api.fileRead(\"~/user.yaml\", \"utf8\")\nconst obj = space.utils.yaml.parse(current)\nobj.full_name = \"Pan Example\"\nreturn await space.api.fileWrite(\"~/user.yaml\", space.utils.yaml.stringify(obj), \"utf8\")",
+          "usage": {
+            "prompt_tokens": 5045,
+            "completion_tokens": 75,
+            "total_tokens": 5120,
+            "cost": 0.00083805,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00083805,
+              "upstream_inference_prompt_cost": 0.00050055,
+              "upstream_inference_completions_cost": 0.0003375
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "full_widget_rewrite_after_patch_rewrite_error_uses_renderwidget",
+          "description": "when framework says the change is a full renderer rewrite, the next recovery move should switch to renderWidget on the same widget",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/full_widget_rewrite_after_patch_rewrite_error_uses_renderwidget.json",
+          "history_path": "tests/agent_llm_performance/histories/full_widget_rewrite_after_patch_rewrite_error_uses_renderwidget.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Rewriting the teapot widget now.\n_____javascript\nreturn await space.current.renderWidget({\n  id: \"teapot\",\n  name: \"Teapot\",\n  cols: 8,\n  rows: 6,\n  renderer: async (parent) => {\n    parent.innerHTML = `\n      <div style=\"display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-family:sans-serif;\">\n        <pre style=\"margin:0;font-size:18px;line-height:1.1;text-align:center;\">  (\\n   )\\n  ( )\\n   H\\n  / \\\\\\n |   |\\n  \\\\_=/</pre>\n      </div>\n    `\n  }\n})",
+          "usage": {
+            "prompt_tokens": 5109,
+            "completion_tokens": 156,
+            "total_tokens": 5265,
+            "cost": 0.00125055,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00125055,
+              "upstream_inference_prompt_cost": 0.00054855,
+              "upstream_inference_completions_cost": 0.000702
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "full_rewrite_contract_error_continues_without_user_push",
+          "description": "when framework explicitly corrects a full widget rewrite from patchWidget to renderWidget, the assistant should continue execution immediately instead of stopping in prose",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/full_rewrite_contract_error_continues_without_user_push.json",
+          "history_path": "tests/agent_llm_performance/histories/full_rewrite_contract_error_continues_without_user_push.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Rewriting the analog clock widget now...\n_____javascript\nreturn await space.current.renderWidget({\n  id: \"starter-widget\",\n  name: \"Analog Clock\",\n  cols: 4,\n  rows: 4,\n  renderer: async (parent) => {\n    parent.innerHTML = `\n      <div style=\"display:flex;align-items:center;justify-content:center;height:100%;background:#111;color:#fff;font-family:sans-serif;\">\n        <div style=\"text-align:center\">\n          <div style=\"font-size:18px;font-weight:600;margin-bottom:8px;\">Analog Clock</div>\n          <div id=\"clock-time\" style=\"font-size:28px;letter-spacing:1px;\"></div>\n        </div>\n      </div>\n    `\n    const el = parent.querySelector(\"#clock-time\")\n    const tick = () => {\n      const now = new Date()\n      el.textContent = now.toLocaleTimeString([], { hour: \"2-digit\", minute: \"2-digit\", second: \"2-digit\" })\n    }\n    tick()\n    setInterval(tick, 1000)\n  }\n})",
+          "usage": {
+            "prompt_tokens": 5078,
+            "completion_tokens": 236,
+            "total_tokens": 5314,
+            "cost": 0.0015873,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0015873,
+              "upstream_inference_prompt_cost": 0.0005253,
+              "upstream_inference_completions_cost": 0.001062
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "widget_missing_without_replacement_requires_terminal_truth",
+          "description": "when the requested widget lookup failed and framework lists no replacement widgets, the next reply should truthfully report that failure instead of fabricating stale code-state",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/widget_missing_without_replacement_requires_terminal_truth.json",
+          "history_path": "tests/agent_llm_performance/histories/widget_missing_without_replacement_requires_terminal_truth.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "The widget lookup failed and there’s no replacement target here.",
+          "usage": {
+            "prompt_tokens": 5059,
+            "completion_tokens": 16,
+            "total_tokens": 5075,
+            "cost": 0.00058305,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00058305,
+              "upstream_inference_prompt_cost": 0.00051105,
+              "upstream_inference_completions_cost": 0.000072
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "followup_edit_requires_well_formed_thrust",
+          "description": "a follow-up edit request should produce one well-formed execution reply, not a staging sentence with a malformed separator",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/followup_edit_requires_well_formed_thrust.json",
+          "history_path": "tests/agent_llm_performance/histories/followup_edit_requires_well_formed_thrust.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Patching the snake tail cap now...\n_____javascript\nreturn await space.current.patchWidget(\"snake-game\", { edits: [] })",
+          "usage": {
+            "prompt_tokens": 5100,
+            "completion_tokens": 30,
+            "total_tokens": 5130,
+            "cost": 0.0006768,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006768,
+              "upstream_inference_prompt_cost": 0.0005418,
+              "upstream_inference_completions_cost": 0.000135
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "terminal_after_successful_widget_patch",
+          "description": "after a successful patch that satisfies the request, the agent should stop executing and answer once",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/terminal_after_successful_widget_patch.json",
+          "history_path": "tests/agent_llm_performance/histories/terminal_after_successful_widget_patch.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Done.",
+          "usage": {
+            "prompt_tokens": 5065,
+            "completion_tokens": 6,
+            "total_tokens": 5071,
+            "cost": 0.00054255,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00054255,
+              "upstream_inference_prompt_cost": 0.00051555,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "terminal_after_successful_retry_patch",
+          "description": "after a retry succeeds, the agent should stop and answer rather than narrate readiness for more work",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/terminal_after_successful_retry_patch.json",
+          "history_path": "tests/agent_llm_performance/histories/terminal_after_successful_retry_patch.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Done.",
+          "usage": {
+            "prompt_tokens": 5152,
+            "completion_tokens": 6,
+            "total_tokens": 5158,
+            "cost": 0.0006078,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006078,
+              "upstream_inference_prompt_cost": 0.0005808,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "protocol_correction_after_successful_open_requires_terminal",
+          "description": "after a successful space open, a later protocol-correction message about the previous empty response should not trigger another open; the next reply should be terminal",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/protocol_correction_after_successful_open_requires_terminal.json",
+          "history_path": "tests/agent_llm_performance/histories/protocol_correction_after_successful_open_requires_terminal.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Done.",
+          "usage": {
+            "prompt_tokens": 5068,
+            "completion_tokens": 6,
+            "total_tokens": 5074,
+            "cost": 0.0005448,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005448,
+              "upstream_inference_prompt_cost": 0.0005178,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "partial_layout_fix_followup_requires_same_widget_repair",
+          "description": "after a claimed layout fix and a concrete follow-up that more values are still wrong, the agent must reopen repair on that same widget",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/partial_layout_fix_followup_requires_same_widget_repair.json",
+          "history_path": "tests/agent_llm_performance/histories/partial_layout_fix_followup_requires_same_widget_repair.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Patching the weather widget to lay out all value rows and summary fields now.\n_____javascript\nreturn await space.current.patchWidget(\"iphone-weather\", { edits: [] })",
+          "usage": {
+            "prompt_tokens": 5099,
+            "completion_tokens": 44,
+            "total_tokens": 5143,
+            "cost": 0.00073905,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00073905,
+              "upstream_inference_prompt_cost": 0.00054105,
+              "upstream_inference_completions_cost": 0.000198
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "terminal_after_framework_no_result_info",
+          "description": "informational no-result success telemetry should close the exact-run task instead of triggering another execution or empty reply",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/terminal_after_framework_no_result_info.json",
+          "history_path": "tests/agent_llm_performance/histories/terminal_after_framework_no_result_info.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Done.",
+          "usage": {
+            "prompt_tokens": 5029,
+            "completion_tokens": 6,
+            "total_tokens": 5035,
+            "cost": 0.00051555,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00051555,
+              "upstream_inference_prompt_cost": 0.00048855,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "terminal_after_framework_no_result_continue",
+          "description": "success telemetry that incidentally contains the word continue should still be treated as information, not as a command to execute again",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/terminal_after_framework_no_result_continue.json",
+          "history_path": "tests/agent_llm_performance/histories/terminal_after_framework_no_result_continue.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Done.",
+          "usage": {
+            "prompt_tokens": 5034,
+            "completion_tokens": 6,
+            "total_tokens": 5040,
+            "cost": 0.0005193,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005193,
+              "upstream_inference_prompt_cost": 0.0004923,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "terminal_after_result_continue_literal",
+          "description": "a tool result that literally says continue should be treated as result data, not as an instruction to continue executing",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/terminal_after_result_continue_literal.json",
+          "history_path": "tests/agent_llm_performance/histories/terminal_after_result_continue_literal.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Done.",
+          "usage": {
+            "prompt_tokens": 5022,
+            "completion_tokens": 6,
+            "total_tokens": 5028,
+            "cost": 0.0005103,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005103,
+              "upstream_inference_prompt_cost": 0.0004833,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "terminal_after_result_commandlike_literal",
+          "description": "command-like result text from a tool should be treated as data, not as an order to perform that command",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/terminal_after_result_commandlike_literal.json",
+          "history_path": "tests/agent_llm_performance/histories/terminal_after_result_commandlike_literal.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Done.",
+          "usage": {
+            "prompt_tokens": 5034,
+            "completion_tokens": 6,
+            "total_tokens": 5040,
+            "cost": 0.0005193,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005193,
+              "upstream_inference_prompt_cost": 0.0004923,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "terminal_after_result_retry_literal",
+          "description": "retry-looking result text from a tool should not trigger a repeat execution when the exact run task already succeeded",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/terminal_after_result_retry_literal.json",
+          "history_path": "tests/agent_llm_performance/histories/terminal_after_result_retry_literal.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "terminal",
+          "response": "Done.",
+          "usage": {
+            "prompt_tokens": 5028,
+            "completion_tokens": 6,
+            "total_tokens": 5034,
+            "cost": 0.0005148,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0005148,
+              "upstream_inference_prompt_cost": 0.0004878,
+              "upstream_inference_completions_cost": 0.000027
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "repeat_do_it_requires_execution",
+          "description": "if the assistant previously sent staging-only prose and the user says do it, the next reply must execute instead of narrating again",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/repeat_do_it_requires_execution.json",
+          "history_path": "tests/agent_llm_performance/histories/repeat_do_it_requires_execution.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Patching the snake widget now...\n_____javascript\nreturn await space.current.patchWidget(\"snake-game\", { edits: [] })",
+          "usage": {
+            "prompt_tokens": 5091,
+            "completion_tokens": 29,
+            "total_tokens": 5120,
+            "cost": 0.00066555,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00066555,
+              "upstream_inference_prompt_cost": 0.00053505,
+              "upstream_inference_completions_cost": 0.0001305
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "post_success_followup_requires_execution_or_completion",
+          "description": "after a successful patch and a concrete user complaint, the agent must execute a fix instead of falling into staging-only repetition",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/post_success_followup_requires_execution_or_completion.json",
+          "history_path": "tests/agent_llm_performance/histories/post_success_followup_requires_execution_or_completion.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "I’m fixing that visible bulge placement now.\n_____javascript\nreturn await space.current.readWidget(\"snake-game\")",
+          "usage": {
+            "prompt_tokens": 5178,
+            "completion_tokens": 33,
+            "total_tokens": 5211,
+            "cost": 0.0007488,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0007488,
+              "upstream_inference_prompt_cost": 0.0006003,
+              "upstream_inference_completions_cost": 0.0001485
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "protocol_nudge_requires_real_thrust",
+          "description": "after staging-only hesitation and a user reminder about the execution gate, the next reply must be one real thrust response",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/protocol_nudge_requires_real_thrust.json",
+          "history_path": "tests/agent_llm_performance/histories/protocol_nudge_requires_real_thrust.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Patching the snake widget now...\n_____javascript\nreturn await space.current.patchWidget(\"snake-game\", { edits: [] })",
+          "usage": {
+            "prompt_tokens": 5095,
+            "completion_tokens": 35,
+            "total_tokens": 5130,
+            "cost": 0.00069555,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00069555,
+              "upstream_inference_prompt_cost": 0.00053805,
+              "upstream_inference_completions_cost": 0.0001575
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "continue_after_widget_load_success",
+          "description": "after widget load success with the task still open, the agent must execute the next continuation step instead of sending staging-only prose",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/continue_after_widget_load_success.json",
+          "history_path": "tests/agent_llm_performance/histories/continue_after_widget_load_success.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Patching the snake game background now...\n\n_____javascript\nreturn await space.current.patchWidget(\"snake-game\", {\n  edits: [\n    {\n      op: \"replace\",\n      path: \"/renderer\",\n      value: async (parent) => {\n        parent.style.background = \"#9bbc0f\"\n        parent.style.color = \"#0f380f\"\n        parent.style.fontFamily = '\"Press Start 2P\", monospace'\n        parent.style.imageRendering = \"pixelated\"\n        parent.innerHTML = `\n          <div style=\"\n            width: 100%;\n            height: 100%;\n            box-sizing: border-box;\n            background: #9bbc0f;\n            color: #0f380f;\n            font-family: monospace;\n            border: 6px solid #0f380f;\n            padding: 8px;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            text-align: center;\n            text-shadow: 1px 1px 0 #8bac0f;\n          \">\n            <div>\n              <div style=\"font-size: 18px; line-height: 1.2; margin-bottom: 8px;\">SNAKE</div>\n              <div style=\"font-size: 10px; line-height: 1.4;\">GREEN NOKIA MODE</div>\n            </div>\n          </div>\n        `\n      }\n    }\n  ]\n})",
+          "usage": {
+            "prompt_tokens": 5057,
+            "completion_tokens": 307,
+            "total_tokens": 5364,
+            "cost": 0.00189105,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.00189105,
+              "upstream_inference_prompt_cost": 0.00050955,
+              "upstream_inference_completions_cost": 0.0013815
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "continue_after_widget_read",
+          "description": "after a widget read that unlocks the next write, the agent should continue with execution",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/continue_after_widget_read.json",
+          "history_path": "tests/agent_llm_performance/histories/continue_after_widget_read.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Patching the Snake background greener now...\n_____javascript\nreturn await space.current.patchWidget(\"snake-game\", {\n  edits: [\n    { op: \"replace\", path: \"/renderer\", value: async (parent, spaceRef) => {\n      parent.style.background = \"#8aa35a\"\n      const screen = document.createElement(\"div\")\n      screen.style.background = \"#8aa35a\"\n      parent.appendChild(screen)\n    } }\n  ]\n})",
+          "usage": {
+            "prompt_tokens": 5134,
+            "completion_tokens": 103,
+            "total_tokens": 5237,
+            "cost": 0.0010308,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0010308,
+              "upstream_inference_prompt_cost": 0.0005673,
+              "upstream_inference_completions_cost": 0.0004635
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "no_false_success_after_error",
+          "description": "after execution error the agent must recover, not claim success",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/no_false_success_after_error.json",
+          "history_path": "tests/agent_llm_performance/histories/no_false_success_after_error.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Fixing the Snake widget renderer now...\n_____javascript\nreturn await space.current.readWidget(\"snake-game\")",
+          "usage": {
+            "prompt_tokens": 5062,
+            "completion_tokens": 31,
+            "total_tokens": 5093,
+            "cost": 0.0006528,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006528,
+              "upstream_inference_prompt_cost": 0.0005133,
+              "upstream_inference_completions_cost": 0.0001395
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "direct_repair_after_known_widget_error",
+          "description": "after a widget patch error with a known current widget target, the agent should continue on that exact target instead of broad rediscovery",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/direct_repair_after_known_widget_error.json",
+          "history_path": "tests/agent_llm_performance/histories/direct_repair_after_known_widget_error.json",
+          "passed": false,
+          "failures": [
+            "missing required pattern: /space\\.current\\.(?:readWidget|patchWidget|writeWidget|updateWidget)/u"
+          ],
+          "response_type": "thrust",
+          "response": "Fixing the Snake renderer declaration now...\n_____javascript\nreturn await space.current.renderWidget({\n  id: \"snake-game\",\n  name: \"Snake\",\n  cols: 20,\n  rows: 20,\n  renderer: async (parent, spaceRef) => {\n    const dir = { x: 1, y: 0 }\n    return () => {}\n  }\n})",
+          "usage": {
+            "prompt_tokens": 5156,
+            "completion_tokens": 82,
+            "total_tokens": 5238,
+            "cost": 0.0009528,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0009528,
+              "upstream_inference_prompt_cost": 0.0005838,
+              "upstream_inference_completions_cost": 0.000369
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "remove_space_by_title_requires_discovery_first",
+          "description": "when the user names a space by title rather than exact id, the first step should discover the exact target instead of removing blindly",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/remove_space_by_title_requires_discovery_first.json",
+          "history_path": "tests/agent_llm_performance/histories/remove_space_by_title_requires_discovery_first.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Listing spaces to find the game room target now...\n_____javascript\nreturn await space.spaces.listSpaces()\n",
+          "usage": {
+            "prompt_tokens": 4984,
+            "completion_tokens": 45,
+            "total_tokens": 5029,
+            "cost": 0.0006573,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006573,
+              "upstream_inference_prompt_cost": 0.0004548,
+              "upstream_inference_completions_cost": 0.0002025
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        },
+        {
+          "case_id": "followup_after_wrong_space_removal_requires_discovery_execution",
+          "description": "after removing the wrong space and receiving a title-based correction, the next reply should execute discovery for the corrected target instead of staging-only narration or another blind removal",
+          "prompt_id": "086A_082A_no_half_thrust_onboarding",
+          "model_id": "openai/gpt-5.4-mini",
+          "prompt_path": "tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md",
+          "case_path": "tests/agent_llm_performance/cases/followup_after_wrong_space_removal_requires_discovery_execution.json",
+          "history_path": "tests/agent_llm_performance/histories/followup_after_wrong_space_removal_requires_discovery_execution.json",
+          "passed": true,
+          "failures": [],
+          "response_type": "thrust",
+          "response": "Listing your spaces now...\n_____javascript\nreturn await space.spaces.listSpaces()",
+          "usage": {
+            "prompt_tokens": 5066,
+            "completion_tokens": 26,
+            "total_tokens": 5092,
+            "cost": 0.0006333,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 4864,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0.0006333,
+              "upstream_inference_prompt_cost": 0.0005163,
+              "upstream_inference_completions_cost": 0.000117
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

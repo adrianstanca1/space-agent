@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "content": "_____user\ncreate a widget"
+  },
+  {
+    "role": "assistant",
+    "content": "Creating a new widget now...\n_____javascript\nconst widgets = await space.current.listWidgets()\nreturn widgets"
+  },
+  {
+    "role": "user",
+    "content": "_____framework\nexecution success\nresult↓\nwidgets (id|name|description)↓\n[empty]"
+  },
+  {
+    "role": "user",
+    "content": "_____user\ncreate one"
+  }
+]

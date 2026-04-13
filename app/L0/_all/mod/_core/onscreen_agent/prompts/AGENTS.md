@@ -46,7 +46,7 @@ This scope owns:
 - prompt promotion requires both automated harness success and manual review of the nominal passes; raw leaderboard position alone is not enough
 - before replacing `system-prompt.md` with a promoted test variant, back up the previous live file in this folder and record the promotion source in docs
 - when several prompts hit the same strict matrix score, prefer the prompt with better full-suite repeat stability over the prompt with the newest one-shot clean run
-- as of 2026-04-07, the current live firmware prompt was promoted from `tests/agent_llm_performance/prompts/069A_handoff_no_copy.md` after the `070` through `075` sweep because it remained the best overall prompt on the 57-case suite: strongest one-shot score and best full-suite repeat stability among the finalists on `openai/gpt-5.4-mini`; the previous live prompt was backed up as `prompts/system-prompt.backup-before-069A-handoff-no-copy-2026-04-07.md`
+- as of 2026-04-13, the current live firmware prompt was promoted from `tests/agent_llm_performance/prompts/086A_082A_no_half_thrust_onboarding.md` after the `084` through `087` sweep because it posted the best observed strict result on the expanded 68-case suite on `openai/gpt-5.4-mini` at `67/68`; manual review accepted the promotion despite residual rerun drift, and the previous live prompt was backed up as `prompts/system-prompt.backup-before-086A-082A-no-half-thrust-onboarding-2026-04-13.md`
 - both compaction prompts must require one plain-text block starting with `Conversation summary:`
 - when prompt file paths change, update `../llm.js` and `../AGENTS.md` in the same session
 - whenever these prompt files change, also update the matching docs under `app/L0/_all/mod/_core/documentation/docs/agent/`

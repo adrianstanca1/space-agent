@@ -929,18 +929,10 @@ export function createAgentThreadView(config = {}) {
     const attachmentList = createAttachmentList(message.attachments);
 
     if (hasTextContent) {
-      if (renderMarkdownWithMarked && !message.streaming) {
-        const textBlock = createFormattedMessageBlock(message.content || "", "message-content message-markdown");
-
-        if (textBlock) {
-          bubble.append(textBlock);
-        }
-      } else {
-        const textBlock = document.createElement("p");
-        textBlock.className = "message-content";
-        textBlock.textContent = message.content || (message.streaming ? "Streaming..." : "");
-        bubble.append(textBlock);
-      }
+      const textBlock = document.createElement("p");
+      textBlock.className = "message-content";
+      textBlock.textContent = message.content || (message.streaming ? "Streaming..." : "");
+      bubble.append(textBlock);
     }
 
     if (attachmentList) {

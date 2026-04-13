@@ -72,7 +72,7 @@ Pages:
 - `/login` is public
 - `/enter` serves the firmware-backed launcher shell for launcher-eligible sessions: always in `SINGLE_USER_APP=true`, and also for authenticated multi-user requests; unauthenticated multi-user requests are redirected to `/login`
 - `pages_handler.js` injects a pre-module page-shell guard into `/` and `/admin` whenever the current request already has launcher access, so a new browser-opened tab or window is redirected to `/enter?next=<current-url>` while reloads in the same tab keep loading normally; the framework may pre-grant that same access marker for its own same-origin `_blank` opens before the guarded page loads
-- page shells that declare the `SPACE_PROJECT_VERSION` placeholder receive the resolved project version string from `server/lib/utils/project_version.js`; `/enter` uses this for the centered launcher version label
+- page shells that declare the `SPACE_PROJECT_VERSION` placeholder receive the resolved project version string from `server/lib/utils/project_version.js`; `/login` and `/enter` use this for the centered public-shell version label
 - root requests for `/favicon.ico`, `/favicon-16x16.png`, `/favicon-32x32.png`, `/apple-touch-icon.png`, `/android-chrome-192x192.png`, `/android-chrome-512x512.png`, and `/site.webmanifest` are served from `server/pages/res/` without authentication so page heads can use platform-standard asset URLs
 - `/logout` redirects to `/login`
 - `/` and `/admin` require authentication

@@ -1,0 +1,26 @@
+[
+  {
+    "role": "user",
+    "content": "_____framework\ncheck user detail"
+  },
+  {
+    "role": "assistant",
+    "content": "Fetching user detail...\n_____javascript\nreturn await space.api.userSelfInfo()"
+  },
+  {
+    "role": "user",
+    "content": "_____framework\nexecution success\nresult↓\nfullName: guest_nxexoy\ngroups: []\nmanagedGroups: []\nusername: guest_nxexoy"
+  },
+  {
+    "role": "user",
+    "content": "_____user\nshow me something"
+  },
+  {
+    "role": "assistant",
+    "content": "I can show you a few useful things right away:\n\n- your current account details\n- the current page or route\n- a screenshot of what’s on screen\n- a widget’s source or live rendering, if you’re in a space\n\nIf you want, say one of:\n- “show my account”\n- “show the page”\n- “take a screenshot”\n- “show the widget snake-game”"
+  },
+  {
+    "role": "user",
+    "content": "_____user\ndo something impressive"
+  }
+]

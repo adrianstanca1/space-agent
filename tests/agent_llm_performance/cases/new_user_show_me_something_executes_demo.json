@@ -1,0 +1,44 @@
+{
+  "id": "new_user_show_me_something_executes_demo",
+  "description": "after new-user context is known, a vague show-me-something request should trigger one concrete demo action instead of a menu of options",
+  "history": "../histories/new_user_show_me_something_executes_demo.json",
+  "expect": {
+    "response_type": "thrust",
+    "require_staging_line": true,
+    "require_separator_line": true,
+    "require_single_separator": true,
+    "require_code_after_separator": true,
+    "require_valid_javascript": true,
+    "must_contain": [
+      "_____javascript"
+    ],
+    "must_match_any": [
+      {
+        "pattern": "renderWidget\\(",
+        "flags": "u"
+      },
+      {
+        "pattern": "document\\.title|location\\.href|window\\.location\\.href",
+        "flags": "u"
+      },
+      {
+        "pattern": "screenshotDownload\\(|takeScreenshot\\(|html2canvas",
+        "flags": "u"
+      },
+      {
+        "pattern": "document\\.createElement|appendChild\\(|animate\\(",
+        "flags": "u"
+      },
+      {
+        "pattern": "document\\.documentElement|style\\.transform|rotate\\(180deg\\)",
+        "flags": "u"
+      }
+    ],
+    "must_not_match": [
+      {
+        "pattern": "If you want|say one of|Pick one|I can do one of these|tell me what|show you a few useful things",
+        "flags": "iu"
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "id": "full_rewrite_contract_error_continues_without_user_push",
+  "description": "when framework explicitly corrects a full widget rewrite from patchWidget to renderWidget, the assistant should continue execution immediately instead of stopping in prose",
+  "history": "../histories/full_rewrite_contract_error_continues_without_user_push.json",
+  "expect": {
+    "response_type": "thrust",
+    "require_staging_line": true,
+    "require_separator_line": true,
+    "require_single_separator": true,
+    "require_code_after_separator": true,
+    "require_valid_javascript": true,
+    "must_contain": [
+      "_____javascript",
+      "starter-widget"
+    ],
+    "must_match": [
+      {
+        "pattern": "renderWidget\\(",
+        "flags": "u"
+      }
+    ],
+    "must_not_match": [
+      {
+        "pattern": "patchWidget\\(\"starter-widget\"",
+        "flags": "u"
+      },
+      {
+        "pattern": "^I.?ve got the live source|^I can do the interaction cleanly|^Fixing the widget source now\\.?$",
+        "flags": "imu"
+      }
+    ]
+  }
+}

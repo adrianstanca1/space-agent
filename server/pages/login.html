@@ -107,11 +107,17 @@
         animation-delay: 1150ms;
       }
 
+      .instance-version {
+        animation: login-fadeup 0.7s ease-out both;
+        animation-delay: 1320ms;
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .intro-art,
         h1,
         .intro-copy,
-        .login-panel {
+        .login-panel,
+        .instance-version {
           animation: none;
         }
       }
@@ -619,6 +625,23 @@
         color: var(--color-status-success);
       }
 
+      .instance-version {
+        grid-column: 1 / -1;
+        justify-self: center;
+        margin: 0;
+        color: #ffffff;
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.4;
+        text-align: center;
+        opacity: 0.9;
+        pointer-events: none;
+        text-shadow:
+          0 1px 18px rgba(255, 255, 255, 0.22),
+          0 9px 24px rgba(0, 0, 0, 0.38);
+        user-select: none;
+      }
+
       @media (max-width: 760px) {
         body.space-theme-canvas {
           display: block;
@@ -838,6 +861,10 @@
         </button>
         <div id="status" class="status" role="status" aria-live="polite"></div>
       </section>
+
+      <p class="instance-version" aria-label="Instance version">
+        Version <span><!-- SPACE_PROJECT_VERSION --></span>
+      </p>
     </main>
     <div
       id="run-options-modal"

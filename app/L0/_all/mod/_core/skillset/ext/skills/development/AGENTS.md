@@ -64,6 +64,7 @@ Source-doc mirror map:
 - `frontend-runtime/SKILL.md` and `extensions-components/SKILL.md` must keep the framework-managed `_core/framework/head/end` seam aligned with the imperative `_core/framework/initializer.js/initialize/end` fallback guidance
 - `skills/SKILL.md` should tell authors to prefer small module-local helper imports over long inlined browser scripts when that keeps skill text shorter and more stable
 - `skills/SKILL.md` must keep the shared skill metadata rules current, including `metadata.when.tags`, `metadata.just_loaded`, and the live `<x-skill-context>` tag contract
+- `skills/SKILL.md` must keep the first-party tag examples current: the overlay emits `agent`, the admin shell emits `admin`, and feature modules may add route or state tags such as `route:<current-path>` or `space:open`
 - prompt-facing skill text must stay token-budgeted; keep catalog-facing descriptions terse and keep just-loaded skill guidance compact
 - when a complex area grows, add another nested skill instead of bloating the router skill
 - if a mirrored contract changes in a source doc, update the affected development skills in the same session even if this subtree itself was not directly edited

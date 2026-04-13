@@ -1,8 +1,8 @@
-import { DEFAULT_ROUTE_PATH, parseRouteTarget } from "../router/route-path.js";
-import { SPACES_ROUTE_PATH } from "./constants.js";
-import { installExampleSpace, listSpaces } from "./storage.js";
+import { DEFAULT_ROUTE_PATH, parseRouteTarget } from "../../router/route-path.js";
+import { SPACES_ROUTE_PATH } from "../constants.js";
+import { installExampleSpace, listSpaces } from "../storage.js";
 
-export const FIRST_LOGIN_SPACE_SOURCE_PATH = "L0/_all/mod/_core/spaces/onboarding_space/";
+export const FIRST_LOGIN_SPACE_SOURCE_PATH = "L0/_all/mod/_core/spaces/onboarding/onboarding_space/";
 
 function normalizePathname(pathname) {
   const normalizedPathname = String(pathname || "").trim();

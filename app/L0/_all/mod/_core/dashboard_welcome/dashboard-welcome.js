@@ -1,12 +1,16 @@
 import "/mod/_core/spaces/store.js";
 import { showToast } from "/mod/_core/visual/chrome/toast.js";
 import {
+  loadDashboardPrefs,
+  setDashboardWelcomeHidden,
+  subscribeDashboardWelcomeHiddenChange
+} from "/mod/_core/dashboard_welcome/dashboard-prefs.js";
+import {
   getSpaceDisplayIcon,
   getSpaceDisplayIconColor,
   getSpaceDisplayTitle
 } from "/mod/_core/spaces/space-metadata.js";
 
-const DASHBOARD_CONFIG_PATH = "~/conf/dashboard.yaml";
 const EXAMPLE_MANIFEST_PATTERN = "mod/_core/dashboard_welcome/examples/*/space.yaml";
 
 function getRuntime() {
@@ -40,76 +44,6 @@ function getRuntime() {
   }
 
   return runtime;
-}
-
-function isMissingFileError(error) {
-  const message = String(error?.message || "");
-  return /\bstatus 404\b/u.test(message) || /File not found\./u.test(message) || /Path not found\./u.test(message);
-}
-
-function parseStoredBoolean(value) {
-  if (value === true || value === false) {
-    return value;
-  }
-
-  const normalizedValue = String(value ?? "").trim().toLowerCase();
-
-  if (["1", "true", "yes", "on"].includes(normalizedValue)) {
-    return true;
-  }
-
-  if (["0", "false", "no", "off"].includes(normalizedValue)) {
-    return false;
-  }
-
-  return false;
-}
-
-function normalizeDashboardPrefs(parsedConfig) {
-  const storedConfig = parsedConfig && typeof parsedConfig === "object" ? parsedConfig : {};
-
-  return {
-    welcomeHidden: parseStoredBoolean(storedConfig.welcome_hidden ?? storedConfig.welcomeHidden)
-  };
-}
-
-function buildDashboardPrefsPayload(prefs = {}) {
-  return {
-    welcome_hidden: prefs.welcomeHidden === true
-  };
-}
-
-async function loadDashboardPrefs() {
-  const runtime = getRuntime();
-
-  try {
-    const result = await runtime.api.fileRead(DASHBOARD_CONFIG_PATH);
-    return normalizeDashboardPrefs(runtime.utils.yaml.parse(String(result?.content || "")));
-  } catch (error) {
-    if (isMissingFileError(error)) {
-      return normalizeDashboardPrefs({});
-    }
-
-    throw new Error(`Unable to load dashboard settings: ${error.message}`);
-  }
-}
-
-async function saveDashboardPrefs(nextPrefs) {
-  const runtime = getRuntime();
-  const expectedPrefs = buildDashboardPrefsPayload(nextPrefs);
-  const content = runtime.utils.yaml.stringify(expectedPrefs);
-
-  try {
-    await runtime.api.fileWrite(DASHBOARD_CONFIG_PATH, `${content}\n`);
-    const result = await runtime.api.fileRead(DASHBOARD_CONFIG_PATH);
-    const savedPrefs = normalizeDashboardPrefs(runtime.utils.yaml.parse(String(result?.content || "")));
-
-    if (savedPrefs.welcomeHidden !== (expectedPrefs.welcome_hidden === true)) {
-      throw new Error("Saved dashboard settings did not match the requested value.");
-    }
-  } catch (error) {
-    throw new Error(`Unable to save dashboard settings: ${error.message}`);
-  }
 }
 
 function logDashboardWelcomeError(context, error) {
@@ -194,6 +128,7 @@ async function loadExamples() {
 
 globalThis.dashboardWelcome = function dashboardWelcome() {
   return {
+    dashboardWelcomeHiddenChangeCleanup: null,
     examples: [],
     hidden: false,
     installingExampleId: "",
@@ -201,6 +136,10 @@ globalThis.dashboardWelcome = function dashboardWelcome() {
     savingPreference: false,
 
     async init() {
+      this.dashboardWelcomeHiddenChangeCleanup = subscribeDashboardWelcomeHiddenChange((nextHidden) => {
+        this.hidden = nextHidden;
+      });
+
       try {
         const [prefs, examples] = await Promise.all([loadDashboardPrefs(), loadExamples()]);
         this.hidden = prefs.welcomeHidden;
@@ -213,6 +152,14 @@ globalThis.dashboardWelcome = function dashboardWelcome() {
       } finally {
         this.ready = true;
       }
+    },
+
+    destroy() {
+      if (typeof this.dashboardWelcomeHiddenChangeCleanup === "function") {
+        this.dashboardWelcomeHiddenChangeCleanup();
+      }
+
+      this.dashboardWelcomeHiddenChangeCleanup = null;
     },
 
     get isInstalling() {
@@ -229,9 +176,7 @@ globalThis.dashboardWelcome = function dashboardWelcome() {
       this.savingPreference = true;
 
       try {
-        await saveDashboardPrefs({
-          welcomeHidden: requestedHidden
-        });
+        await setDashboardWelcomeHidden(requestedHidden);
         this.hidden = requestedHidden;
       } catch (error) {
         logDashboardWelcomeError("setHidden failed", error);
@@ -245,10 +190,6 @@ globalThis.dashboardWelcome = function dashboardWelcome() {
 
     async hideWelcome() {
       await this.setHidden(true);
-    },
-
-    async showWelcome() {
-      await this.setHidden(false);
     },
 
     async installExample(exampleId) {

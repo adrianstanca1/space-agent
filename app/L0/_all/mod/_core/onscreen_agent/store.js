@@ -33,8 +33,7 @@ const HIDDEN_EDGE_RIGHT = config.ONSCREEN_AGENT_HIDDEN_EDGE.RIGHT;
 const HIDDEN_EDGE_TOP = config.ONSCREEN_AGENT_HIDDEN_EDGE.TOP;
 const HIDDEN_EDGE_REVEAL_THRESHOLD_MIN_PX = 8;
 const HIDDEN_EDGE_SNAP_DEAD_ZONE_MIN_PX = 4;
-const HIDDEN_EDGE_VISIBLE_RATIO = 0.55;
-const HIDDEN_EDGE_OFFSCREEN_RATIO = 1 - HIDDEN_EDGE_VISIBLE_RATIO;
+const HIDDEN_EDGE_VISIBLE_RATIO = 0.6;
 const HIDDEN_EDGE_REVEAL_THRESHOLD_RATIO = 0.17;
 const HISTORY_MIN_HEIGHT_PX = 80;
 const HISTORY_OFFSET_PX = 12;
@@ -151,32 +150,18 @@ function ensureOnscreenAgentRuntimeNamespace(store) {
         persist: options.persist !== false
       });
 
-      if (store.shouldShowApiKeyWarning) {
-        store.showUiBubble("Don't forget to configure your LLM first.");
-        return {
-          prompt: normalizedPrompt,
-          queued: false,
-          reason: "llm-not-configured",
-          submitted: false
-        };
-      }
+      const examplePromptBlock = resolveOnscreenAgentExamplePromptBlock(store);
 
-      if (store.isSending || store.isLoadingDefaultSystemPrompt || store.isCompactingHistory) {
-        store.showUiBubble("I'm in the middle of something...");
+      if (examplePromptBlock.reason) {
+        await showOnscreenAgentExamplePromptInactiveBubble(store, {
+          focusInput: options.focusInput,
+          mode: options.mode,
+          persist: options.persist
+        });
         return {
           prompt: normalizedPrompt,
           queued: false,
-          reason: "busy",
-          submitted: false
-        };
-      }
-
-      if (store.isComposerInputDisabled || store.refs.input?.disabled) {
-        store.showUiBubble("I'm in the middle of something...");
-        return {
-          prompt: normalizedPrompt,
-          queued: false,
-          reason: "composer-disabled",
+          reason: examplePromptBlock.reason,
           submitted: false
         };
       }
@@ -190,11 +175,60 @@ function ensureOnscreenAgentRuntimeNamespace(store) {
         reason: "",
         submitted: true
       };
+    },
+    async showExamplePromptInactiveBubble(options = {}) {
+      await store.init();
+      return showOnscreenAgentExamplePromptInactiveBubble(store, options);
     }
   };
 
   runtime.onscreenAgent = namespace;
   return namespace;
+}
+
+function resolveOnscreenAgentExamplePromptBlock(store) {
+  if (store.shouldShowApiKeyWarning) {
+    return {
+      noticeText: "Don't forget to configure your LLM first.",
+      reason: "llm-not-configured"
+    };
+  }
+
+  if (store.isSending || store.isLoadingDefaultSystemPrompt || store.isCompactingHistory) {
+    return {
+      noticeText: "I'm working on something...",
+      reason: "busy"
+    };
+  }
+
+  return {
+    noticeText: "",
+    reason: ""
+  };
+}
+
+async function showOnscreenAgentExamplePromptInactiveBubble(store, options = {}) {
+  const examplePromptBlock = resolveOnscreenAgentExamplePromptBlock(store);
+
+  if (!examplePromptBlock.reason) {
+    return false;
+  }
+
+  const runtime = getRuntime();
+
+  if (runtime?.onscreenAgent && typeof runtime.onscreenAgent.show === "function") {
+    await runtime.onscreenAgent.show({
+      focusInput: options.focusInput === true,
+      hideBubble: true,
+      mode: options.mode,
+      persist: options.persist !== false
+    });
+  } else {
+    await store.init();
+  }
+
+  store.showNoticeUiBubble(examplePromptBlock.noticeText);
+  return true;
 }
 
 function resolveDialogRef(refs, refKey, elementId) {
@@ -742,6 +776,192 @@ function getRootFontSizePx() {
   return Number.isFinite(fontSize) && fontSize > 0 ? fontSize : 16;
 }
 
+function resolveCssLength(value, contextElement, fallback = 0) {
+  const normalizedValue = String(value || "").trim();
+
+  if (!normalizedValue) {
+    return fallback;
+  }
+
+  if (/^-?\d+(\.\d+)?$/u.test(normalizedValue) || /^-?\d+(\.\d+)?px$/u.test(normalizedValue)) {
+    return Number.parseFloat(normalizedValue);
+  }
+
+  const probe = document.createElement("div");
+  const host = contextElement instanceof Element ? contextElement : document.body || document.documentElement;
+  probe.style.position = "absolute";
+  probe.style.visibility = "hidden";
+  probe.style.pointerEvents = "none";
+  probe.style.inlineSize = "0";
+  probe.style.blockSize = normalizedValue;
+  host.appendChild(probe);
+  const height = probe.getBoundingClientRect().height;
+  probe.remove();
+
+  return Number.isFinite(height) && height > 0 ? height : fallback;
+}
+
+function resolveElementLineHeight(contextElement = document.documentElement) {
+  if (!(contextElement instanceof Element)) {
+    return 16;
+  }
+
+  const computedStyle = window.getComputedStyle(contextElement);
+  const explicitLineHeight = Number.parseFloat(computedStyle.lineHeight || "");
+
+  if (Number.isFinite(explicitLineHeight) && explicitLineHeight > 0) {
+    return explicitLineHeight;
+  }
+
+  const fallbackFontSize = Number.parseFloat(computedStyle.fontSize || "");
+  return Number.isFinite(fallbackFontSize) && fallbackFontSize > 0 ? fallbackFontSize : 16;
+}
+
+function resolveWheelDeltaPixels(event, contextElement = document.documentElement, viewportElement = null) {
+  const viewportWidth = Math.max(1, viewportElement?.clientWidth || window.innerWidth || 1);
+  const viewportHeight = Math.max(1, viewportElement?.clientHeight || window.innerHeight || 1);
+
+  if (event.deltaMode === 1) {
+    const lineHeight = resolveElementLineHeight(contextElement);
+    return {
+      x: event.deltaX * lineHeight,
+      y: event.deltaY * lineHeight
+    };
+  }
+
+  if (event.deltaMode === 2) {
+    return {
+      x: event.deltaX * viewportWidth,
+      y: event.deltaY * viewportHeight
+    };
+  }
+
+  return {
+    x: event.deltaX,
+    y: event.deltaY
+  };
+}
+
+function canElementScrollInDirection(element, axis, delta) {
+  if (!(element instanceof HTMLElement) || Math.abs(delta) < 0.01) {
+    return false;
+  }
+
+  const computedStyle = window.getComputedStyle(element);
+  const overflowValue = axis === "x" ? computedStyle.overflowX : computedStyle.overflowY;
+
+  if (!/(auto|scroll|overlay)/u.test(overflowValue)) {
+    return false;
+  }
+
+  if (axis === "x") {
+    const maxScrollLeft = element.scrollWidth - element.clientWidth;
+
+    if (maxScrollLeft <= 1) {
+      return false;
+    }
+
+    return delta < 0 ? element.scrollLeft > 0 : element.scrollLeft < (maxScrollLeft - 1);
+  }
+
+  const maxScrollTop = element.scrollHeight - element.clientHeight;
+
+  if (maxScrollTop <= 1) {
+    return false;
+  }
+
+  return delta < 0 ? element.scrollTop > 0 : element.scrollTop < (maxScrollTop - 1);
+}
+
+function findWheelScrollTarget(startElement, deltaX, deltaY) {
+  let element = startElement instanceof Element ? startElement : null;
+
+  while (element) {
+    if (
+      canElementScrollInDirection(element, "x", deltaX) ||
+      canElementScrollInDirection(element, "y", deltaY)
+    ) {
+      return element;
+    }
+
+    element = element.parentElement;
+  }
+
+  const scrollingElement = document.scrollingElement;
+
+  if (
+    canElementScrollInDirection(scrollingElement, "x", deltaX) ||
+    canElementScrollInDirection(scrollingElement, "y", deltaY)
+  ) {
+    return scrollingElement;
+  }
+
+  return null;
+}
+
+function scrollElementByDelta(element, deltaX, deltaY) {
+  if (!(element instanceof HTMLElement)) {
+    return false;
+  }
+
+  const previousScrollLeft = element.scrollLeft;
+  const previousScrollTop = element.scrollTop;
+
+  if (Math.abs(deltaX) >= 0.01) {
+    element.scrollLeft += deltaX;
+  }
+
+  if (Math.abs(deltaY) >= 0.01) {
+    element.scrollTop += deltaY;
+  }
+
+  return previousScrollLeft !== element.scrollLeft || previousScrollTop !== element.scrollTop;
+}
+
+function resolveUnderlyingElementFromPoint(clientX, clientY, ignoredElement) {
+  if (!(ignoredElement instanceof HTMLElement)) {
+    return document.elementFromPoint(clientX, clientY);
+  }
+
+  const previousPointerEvents = ignoredElement.style.pointerEvents;
+  ignoredElement.style.pointerEvents = "none";
+
+  try {
+    return document.elementFromPoint(clientX, clientY);
+  } finally {
+    ignoredElement.style.pointerEvents = previousPointerEvents;
+  }
+}
+
+function dispatchWheelToElement(sourceEvent, targetElement) {
+  if (!(targetElement instanceof Element)) {
+    return false;
+  }
+
+  const forwardedEvent = new WheelEvent("wheel", {
+    altKey: sourceEvent.altKey,
+    bubbles: true,
+    button: sourceEvent.button,
+    buttons: sourceEvent.buttons,
+    cancelable: true,
+    clientX: sourceEvent.clientX,
+    clientY: sourceEvent.clientY,
+    composed: true,
+    ctrlKey: sourceEvent.ctrlKey,
+    deltaMode: sourceEvent.deltaMode,
+    deltaX: sourceEvent.deltaX,
+    deltaY: sourceEvent.deltaY,
+    deltaZ: sourceEvent.deltaZ,
+    metaKey: sourceEvent.metaKey,
+    screenX: sourceEvent.screenX,
+    screenY: sourceEvent.screenY,
+    shiftKey: sourceEvent.shiftKey
+  });
+
+  targetElement.dispatchEvent(forwardedEvent);
+  return forwardedEvent.defaultPrevented;
+}
+
 function normalizeClientRect(rect) {
   if (
     !rect ||
@@ -910,9 +1130,32 @@ function extractAssistantBubbleText(content) {
   return normalizeUiBubbleText(normalizedContent);
 }
 
+let nextUiBubbleId = 0;
+
+function createUiBubbleId() {
+  nextUiBubbleId += 1;
+  return `onscreen-agent-ui-bubble-${nextUiBubbleId}`;
+}
+
+function getUiBubbleId(bubble) {
+  return typeof bubble?.uiBubbleId === "string" ? bubble.uiBubbleId : "";
+}
+
+function isSameUiBubble(leftBubble, rightBubble) {
+  const leftId = getUiBubbleId(leftBubble);
+  const rightId = getUiBubbleId(rightBubble);
+
+  if (leftId && rightId) {
+    return leftId === rightId;
+  }
+
+  return leftBubble === rightBubble;
+}
+
 class UiBubble {
   constructor(store) {
     this.store = store;
+    this.uiBubbleId = createUiBubbleId();
   }
 
   update(text, hideAfterMs = 0) {
@@ -1048,6 +1291,7 @@ const model = {
   refs: {
     actionMenu: null,
     avatar: null,
+    avatarVisual: null,
     attachmentInput: null,
     historyDialog: null,
     historyShell: null,
@@ -1076,6 +1320,7 @@ const model = {
   viewportVisibilityCheckTimer: 0,
   viewportVisibilityHandler: null,
   uiBubbleAutoHideTimer: 0,
+  uiBubbleAssistantSuppressUntil: 0,
   uiBubbleEnterTimer: 0,
   uiBubbleExitTimer: 0,
   uiBubblePhase: "",
@@ -1184,6 +1429,22 @@ const model = {
       !String(this.settings.apiKey || "").trim() &&
       config.isDefaultOnscreenAgentLlmSettings(this.settings)
     );
+  },
+
+  get examplePromptInactiveReason() {
+    return resolveOnscreenAgentExamplePromptBlock(this).reason;
+  },
+
+  get examplePromptNoticeText() {
+    return resolveOnscreenAgentExamplePromptBlock(this).noticeText;
+  },
+
+  get isExamplePromptInactive() {
+    return Boolean(this.examplePromptInactiveReason);
+  },
+
+  get canSubmitExamplePrompt() {
+    return !this.isExamplePromptInactive;
   },
 
   get isCompactMode() {
@@ -1660,11 +1921,54 @@ const model = {
     return Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0, 320);
   },
 
+  getViewportTopClearance() {
+    const menuBarRect = document.querySelector(".onscreen-menu-bar")?.getBoundingClientRect?.();
+
+    if (Number.isFinite(menuBarRect?.bottom) && menuBarRect.bottom > 0) {
+      return Math.max(POSITION_MARGIN, Math.round(menuBarRect.bottom + POSITION_MARGIN));
+    }
+
+    const root = document.body || document.documentElement;
+    const rootStyle = root ? globalThis.getComputedStyle?.(root) : null;
+    const routerShellStartClearance = resolveCssLength(
+      rootStyle?.getPropertyValue("--router-shell-start-clearance"),
+      root,
+      0
+    );
+
+    if (routerShellStartClearance > 0) {
+      return Math.max(POSITION_MARGIN, Math.round(routerShellStartClearance + POSITION_MARGIN));
+    }
+
+    return POSITION_MARGIN;
+  },
+
+  getAvatarVisualRect() {
+    const avatarVisual =
+      this.refs.avatarVisual ||
+      this.refs.shell?.querySelector?.(".onscreen-agent-cluster") ||
+      this.refs.avatar?.querySelector?.(".onscreen-agent-avatar-orbit") ||
+      this.refs.avatar ||
+      null;
+    const avatarRect = avatarVisual?.getBoundingClientRect?.();
+
+    if (
+      Number.isFinite(avatarRect?.width) &&
+      avatarRect.width > 0 &&
+      Number.isFinite(avatarRect?.height) &&
+      avatarRect.height > 0
+    ) {
+      return avatarRect;
+    }
+
+    return null;
+  },
+
   getAvatarSize() {
-    const avatarRect = this.refs.avatar?.getBoundingClientRect?.();
+    const avatarRect = this.getAvatarVisualRect();
 
     if (Number.isFinite(avatarRect?.width) && avatarRect.width > 0) {
-      return Math.round(avatarRect.width);
+      return Math.round(Math.max(avatarRect.width, avatarRect.height || 0));
     }
 
     const shellStyle = this.refs.shell ? globalThis.getComputedStyle?.(this.refs.shell) : null;
@@ -1682,7 +1986,7 @@ const model = {
   },
 
   getHiddenEdgeHiddenOffset() {
-    return Math.max(1, Math.round(this.getAvatarSize() * HIDDEN_EDGE_OFFSCREEN_RATIO));
+    return Math.max(1, Math.round(this.getAvatarSize() * (1 - HIDDEN_EDGE_VISIBLE_RATIO)));
   },
 
   getHiddenEdgeRevealThreshold() {
@@ -1701,7 +2005,6 @@ const model = {
     return {
       [HIDDEN_EDGE_LEFT]: Math.max(0, -normalizedX),
       [HIDDEN_EDGE_RIGHT]: Math.max(0, normalizedX + avatarSize - this.getViewportWidth()),
-      [HIDDEN_EDGE_TOP]: Math.max(0, -normalizedY),
       [HIDDEN_EDGE_BOTTOM]: Math.max(0, normalizedY + avatarSize - this.getViewportHeight())
     };
   },
@@ -1821,8 +2124,10 @@ const model = {
   getVisibleOverlayRect() {
     const rects = [];
 
-    if (this.refs.avatar?.getBoundingClientRect) {
-      rects.push(this.refs.avatar.getBoundingClientRect());
+    const avatarRect = this.getAvatarVisualRect();
+
+    if (avatarRect) {
+      rects.push(avatarRect);
     }
 
     if (!this.hiddenEdge && this.refs.panel?.getBoundingClientRect) {
@@ -1886,6 +2191,7 @@ const model = {
       return null;
     }
 
+    const viewportTopClearance = this.getViewportTopClearance();
     const panelRect = this.refs.panel?.getBoundingClientRect ? this.refs.panel.getBoundingClientRect() : null;
     const hasPanelMetrics =
       Number.isFinite(panelRect?.top) && Number.isFinite(panelRect?.bottom) && Number.isFinite(panelRect?.height);
@@ -1908,7 +2214,7 @@ const model = {
 
       const availableHeight = this.isHistoryBelow
         ? this.getViewportHeight() - POSITION_MARGIN - historyRect.top
-        : historyRect.bottom - POSITION_MARGIN;
+        : historyRect.bottom - viewportTopClearance;
 
       if (!Number.isFinite(availableHeight) || availableHeight <= 0) {
         return null;
@@ -1923,7 +2229,7 @@ const model = {
 
     const availableHeight = this.isHistoryBelow
       ? this.getViewportHeight() - POSITION_MARGIN - (panelRect.bottom + HISTORY_OFFSET_PX)
-      : panelRect.top - HISTORY_OFFSET_PX - POSITION_MARGIN;
+      : panelRect.top - HISTORY_OFFSET_PX - viewportTopClearance;
 
     if (!Number.isFinite(availableHeight) || availableHeight <= 0) {
       return null;
@@ -2002,7 +2308,7 @@ const model = {
   },
 
   isAvatarVisible() {
-    const avatarRect = this.refs.avatar?.getBoundingClientRect?.();
+    const avatarRect = this.getAvatarVisualRect();
 
     if (
       !Number.isFinite(avatarRect?.left) ||
@@ -2242,6 +2548,33 @@ const model = {
     this.displayModeTransitionTimer = clearTimer(this.displayModeTransitionTimer);
   },
 
+  isCompactAssistantBubbleSuppressed() {
+    return this.uiBubbleAssistantSuppressUntil > Date.now();
+  },
+
+  showNoticeUiBubble(text, hideAfterMs = 0) {
+    const normalizedText = normalizeUiBubbleText(text);
+
+    if (!normalizedText.trim()) {
+      this.uiBubbleAssistantSuppressUntil = 0;
+      return this.showUiBubble("", hideAfterMs);
+    }
+
+    const nextHideAfterMs =
+      normalizeUiBubbleHideDelay(hideAfterMs) || getAutoUiBubbleHideDelay(normalizedText);
+    const bubble = this.showUiBubble(normalizedText, nextHideAfterMs);
+
+    this.uiBubbleAssistantSuppressUntil = bubble
+      ? Date.now() + UI_BUBBLE_ENTER_DURATION_MS + nextHideAfterMs
+      : 0;
+
+    return bubble;
+  },
+
+  async showExamplePromptInactiveBubble(options = {}) {
+    return showOnscreenAgentExamplePromptInactiveBubble(this, options);
+  },
+
   startDisplayModeTransition(phase = "") {
     const normalizedPhase = phase === "expanding" || phase === "collapsing" ? phase : "";
     this.clearDisplayModeTransitionTimer();
@@ -2258,7 +2591,7 @@ const model = {
   },
 
   showCompactAssistantReplyBubble(assistantContent, options = {}) {
-    if (!this.isCompactMode) {
+    if (!this.isCompactMode || this.isCompactAssistantBubbleSuppressed()) {
       return null;
     }
 
@@ -2271,7 +2604,13 @@ const model = {
 
     if (messageId && this.compactAssistantBubbleMessageId === messageId && this.compactAssistantBubble) {
       const didUpdate = this.compactAssistantBubble.update(bubbleText);
-      return didUpdate ? this.compactAssistantBubble : null;
+
+      if (didUpdate) {
+        return this.compactAssistantBubble;
+      }
+
+      this.compactAssistantBubble = null;
+      this.compactAssistantBubbleMessageId = "";
     }
 
     const bubble = this.showUiBubble(bubbleText);
@@ -2327,7 +2666,7 @@ const model = {
   },
 
   updateUiBubble(bubble, text, hideAfterMs = 0) {
-    if (!bubble || this.activeUiBubble !== bubble) {
+    if (!bubble || !isSameUiBubble(this.activeUiBubble, bubble)) {
       return false;
     }
 
@@ -2360,7 +2699,11 @@ const model = {
       this.uiBubbleEnterTimer = window.setTimeout(() => {
         this.uiBubbleEnterTimer = 0;
 
-        if (!this.isUiBubbleMounted || this.activeUiBubble !== bubble || this.uiBubblePhase !== "entering") {
+        if (
+          !this.isUiBubbleMounted ||
+          !isSameUiBubble(this.activeUiBubble, bubble) ||
+          this.uiBubblePhase !== "entering"
+        ) {
           return;
         }
 
@@ -2378,7 +2721,7 @@ const model = {
       this.uiBubbleAutoHideTimer = window.setTimeout(() => {
         this.uiBubbleAutoHideTimer = 0;
 
-        if (this.activeUiBubble !== bubble) {
+        if (!isSameUiBubble(this.activeUiBubble, bubble)) {
           return;
         }
 
@@ -2394,11 +2737,11 @@ const model = {
   dismissUiBubble(options = {}) {
     const bubble = options.bubble || null;
 
-    if (bubble && this.activeUiBubble !== bubble) {
+    if (bubble && !isSameUiBubble(this.activeUiBubble, bubble)) {
       return false;
     }
 
-    if (options.clearActive === true && (!bubble || this.activeUiBubble === bubble)) {
+    if (options.clearActive === true && (!bubble || isSameUiBubble(this.activeUiBubble, bubble))) {
       this.activeUiBubble = null;
     }
 
@@ -2408,6 +2751,7 @@ const model = {
 
     this.clearUiBubbleEnterTimer();
     this.clearUiBubbleAutoHideTimer();
+    this.uiBubbleAssistantSuppressUntil = 0;
     this.uiBubblePhase = "leaving";
     this.uiBubbleExitTimer = window.setTimeout(() => {
       this.uiBubbleExitTimer = 0;
@@ -2852,6 +3196,11 @@ const model = {
     this.refs = {
       actionMenu: refs.actionMenu || null,
       avatar: refs.avatar || null,
+      avatarVisual:
+        refs.avatarVisual ||
+        refs.shell?.querySelector?.(".onscreen-agent-cluster") ||
+        refs.avatar?.querySelector?.(".onscreen-agent-avatar-orbit") ||
+        null,
       attachmentInput: refs.attachmentInput || null,
       historyDialog: refs.historyDialog || null,
       historyShell: refs.historyShell || null,
@@ -3014,6 +3363,7 @@ const model = {
     this.compactAssistantBubbleMessageId = "";
     this.isStartupHintVisible = false;
     this.isUiBubbleMounted = false;
+    this.uiBubbleAssistantSuppressUntil = 0;
     this.uiBubblePhase = "";
     this.uiBubbleText = "";
 
@@ -3045,6 +3395,7 @@ const model = {
     this.refs = {
       actionMenu: null,
       avatar: null,
+      avatarVisual: null,
       attachmentInput: null,
       historyDialog: null,
       historyShell: null,
@@ -3092,6 +3443,32 @@ const model = {
     window.addEventListener("pointerup", this.dragEndHandler);
     window.addEventListener("pointercancel", this.dragEndHandler);
     event.preventDefault();
+  },
+
+  handleAvatarWheel(event) {
+    if (!event || event.ctrlKey || this.dragState) {
+      return;
+    }
+
+    const avatar = event.currentTarget instanceof HTMLElement ? event.currentTarget : this.refs.avatar;
+    const delta = resolveWheelDeltaPixels(event, avatar, document.scrollingElement);
+
+    if (Math.abs(delta.x) < 0.01 && Math.abs(delta.y) < 0.01) {
+      return;
+    }
+
+    const underlyingElement = resolveUnderlyingElementFromPoint(event.clientX, event.clientY, avatar);
+
+    if (dispatchWheelToElement(event, underlyingElement)) {
+      event.preventDefault();
+      return;
+    }
+
+    const scrollTarget = findWheelScrollTarget(underlyingElement, delta.x, delta.y);
+
+    if (scrollTarget && scrollElementByDelta(scrollTarget, delta.x, delta.y)) {
+      event.preventDefault();
+    }
   },
 
   handleAgentPointerMove(event) {

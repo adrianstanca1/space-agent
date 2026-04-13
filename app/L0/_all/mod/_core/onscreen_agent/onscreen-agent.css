@@ -423,6 +423,12 @@
   touch-action: none;
 }
 
+@media (pointer: fine) {
+  .onscreen-agent-avatar-button {
+    touch-action: auto;
+  }
+}
+
 .onscreen-agent-avatar-button:active {
   cursor: grabbing;
 }
@@ -472,6 +478,10 @@
 
 .onscreen-agent-shell.is-edge-hidden .onscreen-agent-avatar-orbit {
   animation: none;
+}
+
+.onscreen-agent-shell.is-edge-hidden .onscreen-agent-avatar-image {
+  filter: none;
 }
 
 .onscreen-agent-shell.is-edge-hidden-left {

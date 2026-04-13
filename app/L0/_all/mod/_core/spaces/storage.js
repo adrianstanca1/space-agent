@@ -855,6 +855,12 @@ function buildWidgetWriteResult(spaceRecord, widgetId) {
   };
 }
 
+function buildWidgetWriteResults(spaceRecord, widgetIds = []) {
+  return normalizeWidgetIdList(widgetIds)
+    .filter((widgetId) => spaceRecord?.widgets?.[widgetId])
+    .map((widgetId) => buildWidgetWriteResult(spaceRecord, widgetId));
+}
+
 function serializeWidgetRecord(widgetRecord) {
   const runtime = ensureSpaceRuntime();
   const yamlSource = {
@@ -1877,6 +1883,89 @@ export async function upsertWidget(options = {}) {
   await runtime.api.fileWrite({ files });
 
   return buildWidgetWriteResult(nextSpace, widgetId);
+}
+
+export async function upsertWidgets(options = {}) {
+  const runtime = ensureSpaceRuntime();
+  const spaceId = normalizeOptionalSpaceId(options.spaceId);
+  const requestedWidgets = Array.isArray(options.widgets) ? options.widgets : [];
+
+  if (!spaceId) {
+    throw new Error("A target spaceId is required to upsert widgets.");
+  }
+
+  if (!requestedWidgets.length) {
+    throw new Error("At least one widget definition is required to upsert widgets.");
+  }
+
+  const currentSpace = cloneSpaceRecord(await readSpace(spaceId));
+  const nextSpace = cloneSpaceRecord(currentSpace);
+  const upsertedWidgetIds = [];
+  const files = [];
+
+  requestedWidgets.forEach((requestedWidget) => {
+    const widgetOptions =
+      requestedWidget && typeof requestedWidget === "object" && !Array.isArray(requestedWidget)
+        ? requestedWidget
+        : {};
+    const widgetFallbackId = normalizeWidgetId(
+      widgetOptions.widgetId || widgetOptions.id || widgetOptions.name || widgetOptions.title || "widget"
+    );
+    const existingWidget = nextSpace.widgets[widgetFallbackId] || null;
+    const widgetRecord = validateWidgetRendererSourceForWrite(
+      previewWidgetRecord(widgetOptions, {
+        ...existingWidget,
+        defaultPosition: existingWidget?.defaultPosition || DEFAULT_WIDGET_POSITION,
+        defaultSize: existingWidget?.defaultSize || DEFAULT_WIDGET_SIZE,
+        id: existingWidget?.id || widgetFallbackId,
+        name: widgetOptions.name || widgetOptions.title || existingWidget?.name || formatTitleFromId(widgetFallbackId),
+        path: buildSpaceWidgetFilePath(spaceId, widgetFallbackId),
+        rendererSource: existingWidget?.rendererSource || createDefaultRendererSource()
+      }),
+      "save"
+    );
+    const widgetId = widgetRecord.id;
+    const hasExistingWidget = nextSpace.widgetIds.includes(widgetId);
+
+    nextSpace.widgets[widgetId] = {
+      ...widgetRecord,
+      path: buildSpaceWidgetFilePath(spaceId, widgetId)
+    };
+
+    if (!hasExistingWidget) {
+      nextSpace.widgetIds.push(widgetId);
+    }
+
+    if (!hasExistingWidget && currentSpace.widgetIds.length === 0 && !normalizeSpaceTitle(currentSpace.title)) {
+      nextSpace.title = normalizeSpaceTitle(widgetRecord.name);
+    }
+
+    upsertedWidgetIds.push(widgetId);
+    files.push({
+      content: serializeWidgetRecord(nextSpace.widgets[widgetId]),
+      path: buildSpaceWidgetFilePath(spaceId, widgetId)
+    });
+  });
+
+  nextSpace.widgetPositions = pickWidgetMap(nextSpace.widgetPositions, nextSpace.widgetIds);
+  nextSpace.widgetSizes = pickWidgetMap(nextSpace.widgetSizes, nextSpace.widgetIds);
+  nextSpace.updatedAt = new Date().toISOString();
+
+  await runtime.api.fileWrite({
+    files: [
+      {
+        content: serializeManifest(nextSpace),
+        path: buildSpaceManifestPath(spaceId)
+      },
+      ...files
+    ]
+  });
+
+  return {
+    space: nextSpace,
+    widgetIds: normalizeWidgetIdList(upsertedWidgetIds),
+    widgetResults: buildWidgetWriteResults(nextSpace, upsertedWidgetIds)
+  };
 }
 
 export async function patchWidget(options = {}) {

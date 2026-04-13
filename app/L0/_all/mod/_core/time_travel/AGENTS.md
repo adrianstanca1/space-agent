@@ -4,7 +4,7 @@
 
 `_core/time_travel/` owns the user-facing Time Travel page for writable-layer local history.
 
-It is a routed first-party feature module that lets the authenticated user inspect writable `L2` or managed `L1` history, filter by changed file, review file diffs, travel to another commit, and revert a commit as a new history point. The page defaults to the authenticated user's `~` history and uses a write-permission-aware repository picker before opening any other owner root.
+It is a routed first-party feature module that lets the authenticated user inspect writable `L2` or managed `L1` history, filter by changed file, review file diffs, travel to another commit, and revert a commit as a new history point. The page defaults to the authenticated user's `~` history, uses a write-permission-aware repository picker before opening any other owner root, and teleports its route-owned topbar controls into the shared onscreen-menu left header container.
 
 Documentation is top priority for this module. After any change under `_core/time_travel/`, update this file and any affected parent or supplemental docs in the same session.
 
@@ -12,18 +12,20 @@ Documentation is top priority for this module. After any change under `_core/tim
 
 This module owns:
 
-- `view.html`: routed Time Travel page markup, repository-picker modal markup, and Alpine bindings
+- `view.html`: routed Time Travel page markup, repository-picker modal markup, route-owned header-control teleport markup, and Alpine bindings
 - `store.js`: page-local writable-repository discovery, selected history-path state, paginated history loading, file filtering, selection preservation, timestamp formatting, diff loading, operation-preview loading, rollback calls, and revert calls
 - `time-travel.css`: page-local layout and visual styling
 - `ext/pages/time_travel.yaml`: dashboard page manifest for the `#/time_travel` route
-- `ext/html/_core/onscreen_menu/items/time-travel.html`: top-right menu item adapter for the Time Travel route
+- `ext/html/_core/onscreen_menu/items/time-travel.html`: routed header-menu item adapter for the Time Travel route
 
 ## Local Contracts
 
 - the route is `#/time_travel`
-- the Time Travel action in the top-right onscreen menu is owned here through `_core/onscreen_menu/items` with `data-order="300"`
+- the Time Travel action in the routed header menu is owned here through `_core/onscreen_menu/items` with `data-order="300"`
 - history defaults to the authenticated user's L2 root via `space.api.gitHistoryList({ path: "~", limit, offset, fileFilter })`
-- the header keeps Refresh before the folder repository button; the repository button label is always the last folder name from the selected Git path, such as the username or group id
+- the route teleports its topbar controls into `[id="_core/onscreen_menu/bar_start"]`; the header keeps a text-labeled Refresh button before the folder repository button there, both controls should rely on the shared shell chrome and stay borderless or background-free unless a state-specific override is necessary, and the repository button label is always the last folder name from the selected Git path, such as the username or group id
+- the routed page header itself keeps the `Time Travel` title on the left and the descriptive subtitle on the right at wider widths, then stacks them naturally on smaller screens
+- the page background stays plain; do not add decorative gradient or glow backdrops behind the shell, because the panels already carry the module chrome
 - the folder button opens a repository-picker dialog with the subtitle `Select Time Travel scope (git repository folder)` and calls `space.api.call("file_paths", { method: "POST", body: { patterns: ["**/.git/"], gitRepositories: true, access: "write" } })`
 - repository discovery must list writable local-history owner roots such as `L1/<group>/` and `L2/<user>/` without exposing `.git` metadata paths to the browser
 - selecting a repository switches `historyPath` to that app-relative owner root and reloads the first history page; `~` remains the default on fresh page load
@@ -50,4 +52,5 @@ This module owns:
 
 - keep this page as a frontend client for the server-owned Git history API; do not add direct file-system semantics here
 - keep errors visible in the page because `CUSTOMWARE_GIT_HISTORY` may be disabled at runtime
+- keep page-level title copy in the routed header itself, but move ephemeral route actions such as Refresh and repository selection into the shared onscreen-menu left header container through route-owned `x-teleport` markup so those controls disappear automatically when the route unmounts
 - if the route, dashboard manifest, onscreen menu item, default `~` scope, or repository-picker contract changes, update `app/AGENTS.md` and the relevant docs under `_core/documentation/docs/`

@@ -95,7 +95,7 @@ Current behavior:
 - `skills.js` must keep admin skill discovery L0-clamped even though admin execution still uses normal cross-layer app-file APIs for operational tasks such as moving or editing files, and it must evaluate `metadata.when.tags` plus `metadata.just_loaded` against the admin page's live `<x-skill-context>` tags
 - the surface uses the shared visual dialog helpers and shared thread renderer from `_core/visual`
 - `agent.css` may customize shared visual button primitives only under `.admin-agent-root`; the admin shell mounts tab components together, so unscoped `.secondary-button`, `.primary-button`, or `.confirm-button` rules leak into other admin surfaces such as the shared Files explorer
-- `view.js` enables the shared marked-backed chat-bubble markdown renderer so settled admin chat bubbles render markdown consistently with the onscreen agent
+- `view.js` enables the shared marked-backed chat-bubble markdown renderer for settled admin assistant responses while keeping submitted user bubbles on plain pre-wrapped text so typed blank lines stay literal, matching the shared thread-view contract used by the onscreen agent
 - `store.js` publishes the active admin thread snapshot at `space.chat`, including `messages` and live `attachments` helpers for the current surface
 - assistant streaming is patched into the existing DOM at animation-frame cadence instead of full-thread rerenders
 - prompt history token counts are tracked, shown in the UI, and used for compaction decisions

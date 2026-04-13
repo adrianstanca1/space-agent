@@ -4,7 +4,7 @@ description: Create, update, remove, and explain user accounts, password verifie
 metadata:
   when:
     tags:
-      - onscreen
+      - agent
 ---
 
 Use this skill for concrete user-account work.

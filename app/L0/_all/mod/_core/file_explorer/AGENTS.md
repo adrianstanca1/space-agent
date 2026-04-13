@@ -17,7 +17,7 @@ This module owns:
 - `store.js`: navigation, selection, clipboard, dialogs, path memory, and file API orchestration
 - `file-explorer.css`: component and routed-page layout on top of shared visual primitives
 - `ext/pages/file_explorer.yaml`: dashboard page manifest for the routed Files page
-- `ext/html/_core/onscreen_menu/items/file-explorer.html`: top-right menu item adapter for the Files route
+- `ext/html/_core/onscreen_menu/items/file-explorer.html`: routed header-menu item adapter for the Files route
 
 ## Runtime And API Contract
 
@@ -26,7 +26,7 @@ This module talks to the shared server file APIs through `space.api`.
 Current behavior:
 
 - the route is `#/file_explorer`
-- the top-right menu action is owned here through `_core/onscreen_menu/items` with `data-order="200"`
+- the routed header-menu action is owned here through `_core/onscreen_menu/items` with `data-order="200"`
 - the starting path is the authenticated user's home path `~/`
 - paths are app-rooted and may use `~` shorthand where supported
 - directory listing uses `space.api.fileList(...)`

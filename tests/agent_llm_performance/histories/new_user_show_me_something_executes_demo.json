@@ -1,0 +1,26 @@
+[
+  {
+    "role": "user",
+    "content": "_____framework\ncheck user detail"
+  },
+  {
+    "role": "assistant",
+    "content": "Fetching user detail...\n_____javascript\nreturn await space.api.userSelfInfo()"
+  },
+  {
+    "role": "user",
+    "content": "_____framework\nexecution success\nresult↓\nfullName: guest_nxexoy\ngroups: []\nmanagedGroups: []\nusername: guest_nxexoy"
+  },
+  {
+    "role": "user",
+    "content": "_____user\nhi there"
+  },
+  {
+    "role": "assistant",
+    "content": "Hi there!"
+  },
+  {
+    "role": "user",
+    "content": "_____user\nshow me something"
+  }
+]

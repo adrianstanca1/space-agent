@@ -12,7 +12,7 @@ Documentation is top priority for this module. After any change under `_core/das
 
 This module owns:
 
-- `view.html`: routed dashboard shell and extension anchors
+- `view.html`: routed dashboard shell, route-owned topbar teleport cluster, and extension anchors
 - `dashboard.css`: dashboard-local layout styling
 
 ## Local Contracts
@@ -20,24 +20,27 @@ This module owns:
 Current route contract:
 
 - the dashboard is routed at `#/dashboard`
-- the top-right menu Home button intentionally routes to the empty route, not directly here; the router default-route contract currently resolves that empty route to the dashboard
+- the routed header Home button intentionally routes to the empty route, not directly here; the router default-route contract currently resolves that empty route to the dashboard
 - it should stay a small landing surface, not a second app shell
 - the dashboard must own its own page padding because the router shell no longer injects shared route padding
 
 Current extension seams:
 
+- `_core/dashboard/topbar_primary`: the first dashboard-owned topbar slot inside the route-owned cluster teleported into `[id="_core/onscreen_menu/bar_start"]`
+- `_core/dashboard/topbar_secondary`: the second dashboard-owned topbar slot inside that teleported cluster for auxiliary restore or secondary actions
 - `_core/dashboard/content_start`: content injected directly below the dashboard heading
 - `_core/dashboard/content_middle`: main dashboard sections injected between the top and bottom dashboard stacks
 - `_core/dashboard/content_end`: lower dashboard sections injected after the main dashboard sections
 
 Rules:
 
+- the dashboard route owns the teleport into `[id="_core/onscreen_menu/bar_start"]`, but feature modules own the actual dashboard-only buttons through `_core/dashboard/topbar_primary` and `_core/dashboard/topbar_secondary`
 - feature modules may inject dashboard content through the dashboard-owned seam
 - dashboard should not import feature-specific state or persistence helpers directly when the extension system can own the composition
 - dashboard should keep its own styling minimal so injected modules can own the richer UI below
 - dashboard should not add its own route-local gradient or backdrop wash; the shared router canvas is the only background layer for this route
-- on desktop and tablet widths, the dashboard shell should keep broad side gutters of about `8em` instead of collapsing early, so injected controls do not collide with fixed global overlay chrome near the viewport edges
-- ordering between dashboard sections should be expressed with explicit seams here rather than relying on same-anchor extension filename order
+- on desktop and tablet widths, the dashboard shell should keep broad side gutters of about `8em` instead of collapsing early, so injected controls do not crowd the reserved global shell chrome
+- ordering between dashboard topbar controls and dashboard sections should be expressed with explicit seams here rather than relying on same-anchor extension filename order
 
 ## Development Guidance
 

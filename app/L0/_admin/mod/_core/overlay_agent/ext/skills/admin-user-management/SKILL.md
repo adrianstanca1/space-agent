@@ -4,7 +4,7 @@ description: Admin-only router skill for users, groups, passwords, and account s
 metadata:
   when:
     tags:
-      - onscreen
+      - agent
 ---
 
 Use this skill when the user asks to create or remove users, reset passwords, revoke sessions, manage groups, explain admin membership, or describe where account data is stored.

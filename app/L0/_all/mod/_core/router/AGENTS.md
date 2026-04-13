@@ -62,9 +62,13 @@ The routed overlay anchors are the correct place for floating routed UI such as 
 
 Current shell layout note:
 
+- `_core/router/shell_start` can mount viewport-fixed shell chrome without consuming routed layout height, so shell affordances stay pinned while route content continues to own the page flow underneath
 - `.router-stage-inner` is the default centered content column for routed pages
+- `.router-stage-inner` should keep a router-owned fixed top inset through `--router-shell-start-clearance` so normal routes clear fixed shell chrome; full-bleed routes such as `spaces` should explicitly zero that inset
+- `--router-shell-start-clearance` is the router-owned fallback top-clearance budget for routed overlays that need to avoid shell chrome while remaining viewport-fixed; overlays may prefer the live shell chrome bounds when that rendered measurement is available, and `_core/onscreen_agent` uses the fixed onscreen-menu bar bottom first when fitting full-mode history above the avatar
 - the router-owned canvas backdrop stays on fixed viewport layers behind `.router-stage`, so route-content scrolling must not move the shared background
 - the router shell does not provide shared route padding; routed pages must own their own content padding
+- the default authenticated shell should let the document scroll naturally beneath any viewport-fixed shell chrome instead of hiding page overflow at `body` and forcing all routes into an inner scrollbox; route-specific inner scroll ownership should be an explicit router-owned override, not the default
 - the shell currently marks the active route path on both `.router-stage` and `.router-stage-inner` via `data-route-path`
 - the shell also exports the active route path through a hidden `<x-skill-context>` tag in the form `route:<path>` so skill discovery can follow the live route without a separate registry
 - route-specific shell layout overrides that affect routed frame width, routed height, or routed scroll ownership belong here in router-owned CSS; `_core/spaces` uses a zero-padding, full-height, overflow-hidden stage override keyed by `data-route-path="spaces"`, and the routed frame wrappers should keep stretching to full width and full height so full-bleed routes are not trapped by intermediate grid items
@@ -78,4 +82,5 @@ Current shell layout note:
 - routed feature modules should ship their own `view.html` and let the router mount them
 - if route resolution or stable router seams change, also update `app/L0/_all/mod/_core/skillset/ext/skills/development/` because the shared development skill mirrors this contract
 - if route resolution or stable router seams change, also update the matching docs under `app/L0/_all/mod/_core/documentation/docs/app/`
+- if shell-row layout changes, update `_core/onscreen_menu/AGENTS.md` and any routed shell docs that depend on reserved chrome space
 - if you add or rename a stable router seam, update this file and `/app/AGENTS.md`

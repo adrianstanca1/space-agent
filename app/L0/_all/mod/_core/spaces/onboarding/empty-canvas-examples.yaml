@@ -1,0 +1,85 @@
+examples:
+  - text: What's the weather here?
+    kind: chat
+    icon: chat_bubble
+    color: "#7dc6ff"
+    code: |
+      await helpers.submitPrompt(example.text)
+  - text: Retro Arcade
+    kind: widget
+    icon: gamepad
+    color: "#00ffd5"
+    code: |
+      const currentSpace = helpers.getSpaceRuntime().current
+      const spacesRuntime = helpers.getSpacesRuntime()
+      const shouldRenameSpace = currentSpace && !String(currentSpace.title || "").trim()
+      if (shouldRenameSpace && currentSpace?.id) {
+        await spacesRuntime.saveSpaceMeta({ id: currentSpace.id, title: example.text, refresh: false })
+      }
+      await helpers.installOnboardingExampleWidgets([
+        "retro-arcade/tetris-game.yaml",
+        "retro-arcade/minesweeper-game.yaml",
+        "retro-arcade/snake-game.yaml",
+        "retro-arcade/retro-marquee.yaml"
+      ])
+  - text: Agent Zero Videos
+    kind: widget
+    icon: smart_display
+    color: "#ff5a4f"
+    code: |
+      const currentSpace = helpers.getSpaceRuntime().current
+      const spacesRuntime = helpers.getSpacesRuntime()
+      const shouldRenameSpace = currentSpace && !String(currentSpace.title || "").trim()
+      if (shouldRenameSpace && currentSpace?.id) {
+        await spacesRuntime.saveSpaceMeta({ id: currentSpace.id, title: example.text, refresh: false })
+      }
+      await helpers.installOnboardingExampleWidgets([
+        "agent-zero-videos/yt-video-list.yaml",
+        "agent-zero-videos/yt-video-player.yaml"
+      ])
+  - text: Rickroll me
+    kind: widget
+    icon: play_circle
+    color: "#ff7566"
+    code: |
+      await helpers.installOnboardingExampleWidget("rickroll-player.yaml")
+  - text: Daily News
+    kind: widget
+    icon: newspaper
+    color: "#93c5ff"
+    code: |
+      const currentSpace = helpers.getSpaceRuntime().current
+      const spacesRuntime = helpers.getSpacesRuntime()
+      const shouldRenameSpace = currentSpace && !String(currentSpace.title || "").trim()
+      if (shouldRenameSpace && currentSpace?.id) {
+        await spacesRuntime.saveSpaceMeta({ id: currentSpace.id, title: example.text, refresh: false })
+      }
+      await helpers.installOnboardingExampleWidgets([
+        "daily-news/news-feed.yaml",
+        "daily-news/top-news.yaml",
+        "daily-news/weather.yaml"
+      ])
+  - text: Add a weather widget
+    kind: widget
+    icon: partly_cloudy_day
+    color: "#7ad8ff"
+    code: |
+      await helpers.installOnboardingExampleWidget("weather.yaml")
+  - text: Add crypto prices
+    kind: widget
+    icon: monitoring
+    color: "#7fd97a"
+    code: |
+      await helpers.installOnboardingExampleWidget("crypto-prices.yaml")
+  - text: Flip the space upside down slowly
+    kind: chat
+    icon: chat_bubble
+    color: "#ff9bc9"
+    code: |
+      await helpers.submitPrompt(example.text)
+  - text: What's the Bitcoin and ETH price?
+    kind: chat
+    icon: chat_bubble
+    color: "#f3c46c"
+    code: |
+      await helpers.submitPrompt(example.text)

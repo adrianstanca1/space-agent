@@ -49,7 +49,7 @@ This file keeps shell-wide behavior and skill loading. Child view docs own the c
 This module owns:
 
 - `ext/html/page/admin/body/start/admin-shell.html`: thin adapter that mounts the admin shell into `server/pages/admin.html`
-- `ext/html/_core/onscreen_menu/items/admin.html`: top-right app menu item adapter, ordered with `data-order="400"`, that opens the admin shell for the current app URL
+- `ext/html/_core/onscreen_menu/items/admin.html`: routed header-menu item adapter, ordered with `data-order="400"`, that opens the admin shell for the current app URL
 - `views/shell/`: split shell layout, tab state, and iframe orchestration
 - `views/dashboard/`: dashboard and launch surface inside the admin pane
 - `views/agent/`: admin-side agent surface
@@ -73,7 +73,7 @@ Current shell responsibilities:
 - `views/shell/shell.js` owns split sizing, drag-resize behavior, orientation-dependent layout, `?url=` startup handling, and leave-admin navigation back into the current iframe URL
 - `views/shell/page.js` owns admin tabs, quick actions, tab keyboard behavior, cached `space.api.userSelfInfo()` state, and `_admin` membership checks derived from `groups`
 - the admin topbar keeps tab controls in a real tablist and ends with a non-tab leave-admin icon button that calls the same `adminShell.leaveAdminArea()` action as the dashboard card
-- `ext/html/_core/onscreen_menu/items/admin.html` owns the app-menu Admin action, orders it with `data-order="400"`, and builds `/admin?url=<current-path-search-hash>` so the admin iframe opens on the current app location
+- `ext/html/_core/onscreen_menu/items/admin.html` owns the routed header-menu Admin action, orders it with `data-order="400"`, and builds `/admin?url=<current-path-search-hash>` so the admin iframe opens on the current app location
 - the active admin tab is remembered in `sessionStorage`
 - iframe-local routed navigation such as the onscreen menu Dashboard action should keep the right-hand pane inside the iframe unless the action explicitly leaves `/admin`
 

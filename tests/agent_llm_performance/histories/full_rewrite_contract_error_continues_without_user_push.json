@@ -1,0 +1,14 @@
+[
+  {
+    "role": "user",
+    "content": "_____user\ncreate an analog clock"
+  },
+  {
+    "role": "assistant",
+    "content": "Creating an analog clock widget now...\n_____javascript\nreturn await space.current.patchWidget(\"starter-widget\", {\n  edits: [\n    {\n      from: 0,\n      to: 39,\n      content: \"async (parent) => {}\"\n    }\n  ]\n})"
+  },
+  {
+    "role": "user",
+    "content": "_____framework\nexecution error\nerror: Error: patchWidget(...) is for partial renderer edits only; use renderWidget(...) for a full renderer rewrite."
+  }
+]

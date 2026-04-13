@@ -4,7 +4,7 @@ description: Frontend development router. Load deeper skills before editing
 metadata:
   when:
     tags:
-      - onscreen
+      - agent
 ---
 
 Use this skill first for any development task. This is a routing skill: it tells you which deeper development skills to load next. Do not rely on this file alone as the full contract.

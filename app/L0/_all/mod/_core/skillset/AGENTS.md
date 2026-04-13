@@ -52,6 +52,7 @@ This module owns:
 - this module owns repo-owned shared first-party top-level skills such as `development`, `file-download`, `screenshots`, and `user-management`; module-specific skills that describe one module's private contracts may still live under that owning module
 - `skills.js` is the shared owner of the browser-side skill-discovery contract across agent surfaces: skill ids come from `ext/skills/.../SKILL.md`, live page tags come from `<x-skill-context>` elements in the current document, `metadata.when.tags` gates catalog eligibility, and `metadata.just_loaded` controls automatic prompt injection after the catalog
 - `metadata.just_loaded` may be `true` or another `{ tags: [...] }` condition; unset means the skill is only loadable on demand
+- current first-party surface-tag examples are `agent` from `_core/onscreen_agent`, `admin` from `_core/admin`, and feature-owned tags such as `route:<current-path>` or `space:open`
 - helper files in this module must stay importable through stable `/mod/_core/skillset/...` paths from skill instructions
 - `screenshots.js` is browser-only and should keep its public API small and explicit
 - `screenshots.js` lazy-loads the module-local vendored `html2canvas@1.4.1` bundle from `/mod/_core/skillset/vendor/html2canvas.min.js` on first use and reuses the loaded global afterward

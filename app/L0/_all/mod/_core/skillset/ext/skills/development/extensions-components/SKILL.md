@@ -13,7 +13,7 @@ Use this skill when the task needs `ext/html/`, `ext/js/`, `x-extension`, `x-com
 - Keep extension files thin. They should usually mount a real component with `<x-component path="/mod/...">`.
 - `_core/framework` also creates `_core/framework/head/end` in `document.head` during bootstrap when a layer needs head-side HTML or inline bootstrap code without editing page shells.
 - Dynamic discovery watches the whole document tree, so `head` seams and the `x-component` nodes they insert are loaded the same way as body content.
-- The top-right routed menu owns Home itself and points it at the empty route `#/`; feature modules add non-Home menu-action buttons under `_core/onscreen_menu/items` with numeric `data-order` values such as `100`, `200`, `300`, and `400`, `_core/onscreen_menu` sorts them automatically, and `_core/onscreen_menu` keeps only the auth exit action after that seam.
+- The routed shell header owns Home itself and points it at the empty route `#/`; `_core/onscreen_menu/bar_start` and `_core/onscreen_menu/bar_end` are the left and right shell-control seams, and feature modules add non-Home dropdown menu-action buttons under `_core/onscreen_menu/items` with numeric `data-order` values such as `100`, `200`, `300`, and `400`; `_core/onscreen_menu` sorts contributed controls or items automatically and keeps only the auth exit action after the dropdown seam.
 
 Example:
 

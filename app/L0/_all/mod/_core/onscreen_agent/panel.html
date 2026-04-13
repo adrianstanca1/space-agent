@@ -32,10 +32,10 @@
           @pointerdown.capture="$store.onscreenAgent.handleShellPointerDown($event)"
           @dragend.window="$store.onscreenAgent.resetAttachmentDragState()"
           @drop.window="$store.onscreenAgent.resetAttachmentDragState()"
-          x-init="$nextTick(() => $store.onscreenAgent.mount({ actionMenu: $refs.actionMenu, avatar: $refs.avatar, attachmentInput: $refs.attachmentInput, historyDialog: $refs.historyDialog, input: $refs.input, panel: $refs.panel, rawDialog: $refs.rawDialog, scroller: $refs.scroller, settingsDialog: $refs.settingsDialog, shell: $refs.shell, uiBubbleContent: $refs.uiBubbleContent }))"
+          x-init="$nextTick(() => $store.onscreenAgent.mount({ actionMenu: $refs.actionMenu, avatar: $refs.avatar, avatarVisual: $refs.avatarVisual, attachmentInput: $refs.attachmentInput, historyDialog: $refs.historyDialog, input: $refs.input, panel: $refs.panel, rawDialog: $refs.rawDialog, scroller: $refs.scroller, settingsDialog: $refs.settingsDialog, shell: $refs.shell, uiBubbleContent: $refs.uiBubbleContent }))"
           x-destroy="$store.onscreenAgent.unmount()"
         >
-          <div class="onscreen-agent-cluster">
+          <div class="onscreen-agent-cluster" x-ref="avatarVisual">
             <div
               class="onscreen-agent-ui-bubble onscreen-agent-startup-hint-bubble is-visible"
               x-show="$store.onscreenAgent.isStartupHintVisible"
@@ -78,6 +78,7 @@
               :aria-label="$store.onscreenAgent.avatarButtonLabel"
               :title="$store.onscreenAgent.avatarButtonLabel"
               @pointerdown="$store.onscreenAgent.handleAgentPointerDown($event)"
+              @wheel="$store.onscreenAgent.handleAvatarWheel($event)"
             >
               <span class="onscreen-agent-avatar-orbit">
                 <span class="onscreen-agent-avatar-flip">

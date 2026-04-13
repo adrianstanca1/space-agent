@@ -36,7 +36,13 @@ import {
   saveSpaceMeta,
   upsertWidget
 } from "/mod/_core/spaces/storage.js";
-import { loadEmptyCanvasExamples } from "/mod/_core/spaces/empty-canvas-examples.js";
+import {
+  createEmptyCanvasState,
+  createLoadingCanvasState,
+  loadEmptyCanvasExamples,
+  startEmptyCanvasAnimations,
+  startLoadingCanvasAnimation
+} from "/mod/_core/spaces/onboarding/empty-canvas.js";
 import {
   DEFAULT_SPACE_ICON,
   DEFAULT_SPACE_ICON_COLOR,
@@ -48,6 +54,7 @@ import {
   normalizeSpaceIconColor,
   normalizeSpaceTitle
 } from "/mod/_core/spaces/space-metadata.js";
+import { positionPopover } from "/mod/_core/visual/chrome/popover.js";
 import { openIconColorSelector } from "/mod/_core/visual/icons/icon-color-selector.js";
 import {
   DEFAULT_WIDGET_SIZE,
@@ -59,66 +66,94 @@ import { renderWidgetOutput } from "/mod/_core/spaces/widget-render.js";
 
 let activeSpacesStore = null;
 const SPACES_STORE_NAME = "spacesPage";
-const TAU = Math.PI * 2;
 const GRID_BASE_HALF_COLS = 0;
 const GRID_BASE_HALF_ROWS = 0;
 const GRID_CONTENT_BUFFER_COLS = 6;
 const GRID_CONTENT_BUFFER_ROWS = 6;
 const GRID_CAMERA_BUFFER_COLS = 2;
 const GRID_CAMERA_BUFFER_ROWS = 2;
+const GRID_SPARSE_CAMERA_SIDE_WIGGLE_COLS = 12;
+const GRID_SPARSE_CAMERA_MIN_VERTICAL_WIGGLE_ROWS = 4;
+const GRID_SPARSE_CAMERA_MAX_TOP_HEADROOM_ROWS = 5.5;
+const GRID_SPARSE_CAMERA_MIN_TOP_HEADROOM_ROWS = 0.25;
+const GRID_SPARSE_CAMERA_PREFERRED_TOP_HEADROOM_ROWS = 0.75;
 const GRID_EDGE_SCROLL_THRESHOLD = 72;
 const GRID_EDGE_SCROLL_SPEED = 8;
 const SPACE_META_PERSIST_DELAY_MS = 320;
 const CURRENT_WIDGET_TRANSIENT_KEY = "spaces/current-widget";
-const EMPTY_SPACE_FLOAT_PROFILE = Object.freeze({
-  orbitPeriodMs: 12400,
-  rotationAmplitude: 3.2,
-  rotationPeriodMs: 17600,
-  xRadius: 7.2,
-  yRadius: 8.2
-});
-const EMPTY_SPACE_TEXT_FLOAT_PROFILES = Object.freeze([
-  {
-    orbitPeriodMs: 13600,
-    phase: 0.2,
-    rotationAmplitude: 1.4,
-    rotationPeriodMs: 18800,
-    xRadius: 5.8,
-    yRadius: 6.2
-  },
-  {
-    orbitPeriodMs: 14900,
-    phase: 1.35,
-    rotationAmplitude: 1.1,
-    rotationPeriodMs: 17100,
-    xRadius: 4.4,
-    yRadius: 5.1
-  },
-  {
-    orbitPeriodMs: 14300,
-    phase: 2.45,
-    rotationAmplitude: 1.35,
-    rotationPeriodMs: 19400,
-    xRadius: 5.4,
-    yRadius: 6
-  },
-  {
-    orbitPeriodMs: 15500,
-    phase: 3.1,
-    rotationAmplitude: 1,
-    rotationPeriodMs: 18200,
-    xRadius: 4.2,
-    yRadius: 4.8
+const EMPTY_CANVAS_SEEN_STORAGE_KEY_PREFIX = "space.spaces.emptyCanvasSeen";
+const EMPTY_CANVAS_SEEN_STORAGE_AREAS = Object.freeze(["sessionStorage", "localStorage"]);
+
+function getStorageArea(storageName) {
+  const storageArea = globalThis[storageName];
+  return storageArea && typeof storageArea.getItem === "function" && typeof storageArea.setItem === "function"
+    ? storageArea
+    : null;
+}
+
+function buildEmptyCanvasSeenStorageKey(username = "") {
+  const normalizedUsername = String(username || "").trim() || "anonymous";
+  return `${EMPTY_CANVAS_SEEN_STORAGE_KEY_PREFIX}.${encodeURIComponent(normalizedUsername)}`;
+}
+
+function normalizeStoredEmptyCanvasSeenSpaceIds(rawValue) {
+  if (typeof rawValue !== "string" || !rawValue.trim()) {
+    return [];
   }
-]);
-const EMPTY_SPACE_SEQUENCE_PROFILE = Object.freeze({
-  buttonsDelayMs: 2400,
-  examplesLineDelayMs: 2400,
-  firstLineDelayMs: 500,
-  introGapDelayMs: 2400,
-  lineSwapGapDelayMs: 3600,
-  promptLineDelayMs: 2200
-});
+
+  try {
+    const parsedValue = JSON.parse(rawValue);
+    const values = Array.isArray(parsedValue) ? parsedValue : [];
+    return [...new Set(values.map((value) => normalizeOptionalSpaceId(value)).filter(Boolean))];
+  } catch {
+    return [];
+  }
+}
+
+function readEmptyCanvasSeenSpaceIdsFromStorage(storageKey) {
+  for (const storageName of EMPTY_CANVAS_SEEN_STORAGE_AREAS) {
+    try {
+      const rawValue = getStorageArea(storageName)?.getItem(storageKey);
+
+      if (!rawValue) {
+        continue;
+      }
+
+      return new Set(normalizeStoredEmptyCanvasSeenSpaceIds(rawValue));
+    } catch {
+      continue;
+    }
+  }
+
+  return new Set();
+}
+
+function persistEmptyCanvasSeenSpaceIdsToStorage(storageKey, spaceIds) {
+  const normalizedSpaceIds = [...new Set(
+    Array.from(spaceIds || [])
+      .map((spaceId) => normalizeOptionalSpaceId(spaceId))
+      .filter(Boolean)
+  )];
+  const payload = JSON.stringify(normalizedSpaceIds);
+
+  EMPTY_CANVAS_SEEN_STORAGE_AREAS.forEach((storageName) => {
+    try {
+      getStorageArea(storageName)?.setItem(storageKey, payload);
+    } catch {
+      // Ignore browser storage failures and keep the in-memory marker.
+    }
+  });
+}
+
+function isPristineEmptySpace(spaceRecord) {
+  if (spaceRecord?.widgetIds?.length) {
+    return false;
+  }
+
+  const createdAt = String(spaceRecord?.createdAt || "").trim();
+  const updatedAt = String(spaceRecord?.updatedAt || "").trim();
+  return Boolean(createdAt && updatedAt && createdAt === updatedAt);
+}
 
 function positiveModulo(value, divisor) {
   if (!Number.isFinite(divisor) || divisor === 0) {
@@ -128,8 +163,20 @@ function positiveModulo(value, divisor) {
   return ((value % divisor) + divisor) % divisor;
 }
 
-function clampNumber(value, min, max) {
+function clampNumber(value, min, max, options = {}) {
+  const overflowBias = options?.overflowBias === "start" || options?.overflowBias === "end"
+    ? options.overflowBias
+    : "center";
+
   if (min > max) {
+    if (overflowBias === "start") {
+      return min;
+    }
+
+    if (overflowBias === "end") {
+      return max;
+    }
+
     return (min + max) / 2;
   }
 
@@ -666,7 +713,7 @@ function ensureSpacesRuntimeNamespace() {
     saveSpaceLayout: async (options = {}) => {
       const savedSpace = await saveSpaceLayout(options);
 
-      if (activeSpacesStore) {
+      if (activeSpacesStore && options.refresh !== false) {
         await activeSpacesStore.handleExternalMutation(savedSpace.id);
       }
 
@@ -675,7 +722,7 @@ function ensureSpacesRuntimeNamespace() {
     saveSpaceMeta: async (options = {}) => {
       const savedSpace = await saveSpaceMeta(options);
 
-      if (activeSpacesStore) {
+      if (activeSpacesStore && options.refresh !== false) {
         await activeSpacesStore.handleExternalMutation(savedSpace.id);
       }
 
@@ -712,7 +759,7 @@ function ensureSpacesRuntimeNamespace() {
         spaceId: targetSpaceId
       });
 
-      if (activeSpacesStore) {
+      if (activeSpacesStore && options.refresh !== false) {
         await activeSpacesStore.handleExternalMutation(targetSpaceId, {
           widgetId: result.widgetId
         });
@@ -1619,415 +1666,6 @@ function createGridStateCard(titleValue, bodyValue, tone = "info") {
   return root;
 }
 
-function createLoadingCanvasState() {
-  const root = createElement("section", "spaces-empty-canvas spaces-loading-canvas");
-  const content = createElement("div", "spaces-empty-canvas-content spaces-loading-canvas-content");
-  const title = createElement("h2", "spaces-empty-canvas-title spaces-loading-canvas-title");
-
-  title.appendChild(createElement("span", "spaces-empty-canvas-line", "Loading space..."));
-  content.appendChild(title);
-  root.appendChild(content);
-
-  return { root, title };
-}
-
-function createEmptyCanvasState(exampleDefinitions = []) {
-  const root = createElement("section", "spaces-empty-canvas");
-  const content = createElement("div", "spaces-empty-canvas-content");
-  const copy = createElement("div", "spaces-empty-canvas-copy");
-  const primarySlot = createElement("div", "spaces-empty-canvas-copy-slot spaces-empty-canvas-copy-slot-primary");
-  const secondarySlot = createElement("div", "spaces-empty-canvas-copy-slot spaces-empty-canvas-copy-slot-secondary");
-  const firstFloater = createElement("div", "spaces-empty-canvas-floater spaces-empty-canvas-floater-intro-primary");
-  const secondFloater = createElement("div", "spaces-empty-canvas-floater spaces-empty-canvas-floater-intro-secondary");
-  const thirdFloater = createElement("div", "spaces-empty-canvas-floater spaces-empty-canvas-floater-prompt");
-  const fourthFloater = createElement("div", "spaces-empty-canvas-floater spaces-empty-canvas-floater-examples-copy");
-  const firstText = createElement("p", "spaces-empty-canvas-text spaces-empty-canvas-text-intro-primary", "Just an empty space here");
-  const secondText = createElement("p", "spaces-empty-canvas-text spaces-empty-canvas-text-intro-secondary", "for now");
-  const thirdText = createElement(
-    "p",
-    "spaces-empty-canvas-text spaces-empty-canvas-text-prompt",
-    "Tell your agent what to create"
-  );
-  const fourthText = createElement(
-    "p",
-    "spaces-empty-canvas-text spaces-empty-canvas-text-examples-copy",
-    "or try one of the examples above"
-  );
-  const examples = createElement("div", "spaces-empty-canvas-examples");
-
-  copy.tabIndex = 0;
-  copy.setAttribute("role", "button");
-  copy.setAttribute("aria-label", "Show all empty space guidance");
-  content.dataset.emptyCanvasStage = "boot";
-  firstFloater.appendChild(firstText);
-  secondFloater.appendChild(secondText);
-  thirdFloater.appendChild(thirdText);
-  fourthFloater.appendChild(fourthText);
-  primarySlot.append(firstFloater, thirdFloater);
-  secondarySlot.append(secondFloater, fourthFloater);
-  copy.append(primarySlot, secondarySlot);
-  exampleDefinitions.forEach((exampleDefinition) => {
-    const button = createElement("button", "spaces-empty-canvas-example", exampleDefinition.text);
-    button.type = "button";
-    button.addEventListener("click", async (event) => {
-      button.disabled = true;
-
-      try {
-        await exampleDefinition.execute(event);
-      } catch (error) {
-        logSpacesError("empty canvas example click failed", error, {
-          exampleId: exampleDefinition.id,
-          promptText: exampleDefinition.text
-        });
-      } finally {
-        button.disabled = false;
-      }
-    });
-    examples.appendChild(button);
-  });
-
-  content.append(examples, copy);
-  root.appendChild(content);
-
-  return {
-    copy,
-    content,
-    floaters: [firstFloater, secondFloater, thirdFloater, fourthFloater],
-    root
-  };
-}
-
-function startEmptyCanvasSequenceAnimation(elements, motionQuery = null) {
-  const stageHost = elements?.content || elements || null;
-  const skipTarget = elements?.copy || null;
-
-  if (!stageHost) {
-    return () => {};
-  }
-
-  const stageSteps = [
-    ["intro-primary", EMPTY_SPACE_SEQUENCE_PROFILE.firstLineDelayMs],
-    ["intro-secondary", EMPTY_SPACE_SEQUENCE_PROFILE.introGapDelayMs],
-    ["swap-gap", EMPTY_SPACE_SEQUENCE_PROFILE.lineSwapGapDelayMs],
-    ["prompt", EMPTY_SPACE_SEQUENCE_PROFILE.promptLineDelayMs],
-    ["examples-copy", EMPTY_SPACE_SEQUENCE_PROFILE.examplesLineDelayMs],
-    ["buttons", EMPTY_SPACE_SEQUENCE_PROFILE.buttonsDelayMs]
-  ];
-  let stageTimeouts = [];
-
-  const clearTimers = () => {
-    stageTimeouts.forEach((timeoutId) => {
-      window.clearTimeout(timeoutId);
-    });
-    stageTimeouts = [];
-  };
-
-  const setStage = (stage) => {
-    if (!stageHost.isConnected) {
-      return;
-    }
-
-    stageHost.dataset.emptyCanvasStage = stage;
-  };
-
-  const jumpToFinalStage = () => {
-    clearTimers();
-    setStage("buttons");
-  };
-
-  const start = () => {
-    clearTimers();
-
-    if (!stageHost.isConnected) {
-      return;
-    }
-
-    if (motionQuery?.matches) {
-      jumpToFinalStage();
-      return;
-    }
-
-    let elapsedMs = 0;
-    stageSteps.forEach(([stageName, delayMs], index) => {
-      elapsedMs += delayMs;
-      const timeoutId = window.setTimeout(() => {
-        setStage(stageName);
-      }, elapsedMs);
-      stageTimeouts.push(timeoutId);
-
-      if (index === 0 && delayMs === 0) {
-        setStage(stageName);
-      }
-    });
-  };
-
-  const handleMotionPreferenceChange = () => {
-    start();
-  };
-  const handleSkipClick = () => {
-    jumpToFinalStage();
-  };
-  const handleSkipKeydown = (event) => {
-    if (event.key !== "Enter" && event.key !== " ") {
-      return;
-    }
-
-    event.preventDefault();
-    jumpToFinalStage();
-  };
-
-  if (motionQuery) {
-    if (typeof motionQuery.addEventListener === "function") {
-      motionQuery.addEventListener("change", handleMotionPreferenceChange);
-    } else if (typeof motionQuery.addListener === "function") {
-      motionQuery.addListener(handleMotionPreferenceChange);
-    }
-  }
-
-  if (skipTarget) {
-    skipTarget.addEventListener("click", handleSkipClick);
-    skipTarget.addEventListener("keydown", handleSkipKeydown);
-  }
-
-  start();
-
-  return () => {
-    clearTimers();
-
-    if (motionQuery) {
-      if (typeof motionQuery.removeEventListener === "function") {
-        motionQuery.removeEventListener("change", handleMotionPreferenceChange);
-      } else if (typeof motionQuery.removeListener === "function") {
-        motionQuery.removeListener(handleMotionPreferenceChange);
-      }
-    }
-
-    if (skipTarget) {
-      skipTarget.removeEventListener("click", handleSkipClick);
-      skipTarget.removeEventListener("keydown", handleSkipKeydown);
-    }
-  };
-}
-
-function combineCleanupFunctions(...cleanups) {
-  return () => {
-    cleanups.forEach((cleanup) => {
-      if (typeof cleanup === "function") {
-        cleanup();
-      }
-    });
-  };
-}
-
-function applyEmptyCanvasTextPose(element, x, y, rotation) {
-  if (!element) {
-    return;
-  }
-
-  element.style.setProperty("--spaces-empty-text-float-x", `${x.toFixed(1)}px`);
-  element.style.setProperty("--spaces-empty-text-float-y", `${y.toFixed(1)}px`);
-  element.style.setProperty("--spaces-empty-text-float-rotate", `${rotation.toFixed(1)}deg`);
-}
-
-function startEmptyCanvasTextFloatAnimation(elements, motionQuery = null) {
-  const floaters = Array.isArray(elements)
-    ? elements.filter(Boolean).map((element, index) => ({
-      element,
-      profile: EMPTY_SPACE_TEXT_FLOAT_PROFILES[index % EMPTY_SPACE_TEXT_FLOAT_PROFILES.length]
-    }))
-    : [];
-
-  if (!floaters.length) {
-    return () => {};
-  }
-
-  let frame = 0;
-  let startTime = 0;
-
-  const resetPose = () => {
-    floaters.forEach(({ element }) => {
-      applyEmptyCanvasTextPose(element, 0, 0, 0);
-    });
-  };
-
-  const step = (timestamp) => {
-    const hasConnectedElement = floaters.some(({ element }) => element.isConnected);
-
-    if (!hasConnectedElement) {
-      frame = 0;
-      return;
-    }
-
-    if (motionQuery?.matches) {
-      frame = 0;
-      startTime = 0;
-      resetPose();
-      return;
-    }
-
-    if (!startTime) {
-      startTime = timestamp;
-    }
-
-    const elapsed = timestamp - startTime;
-    floaters.forEach(({ element, profile }) => {
-      if (!element.isConnected) {
-        return;
-      }
-
-      const orbitAngle = ((elapsed / profile.orbitPeriodMs) * TAU) + profile.phase;
-      const rotationAngle = ((elapsed / profile.rotationPeriodMs) * TAU) + (profile.phase * 0.75);
-
-      applyEmptyCanvasTextPose(
-        element,
-        Math.cos(orbitAngle) * profile.xRadius,
-        Math.sin(orbitAngle) * profile.yRadius,
-        Math.sin(rotationAngle) * profile.rotationAmplitude
-      );
-    });
-
-    frame = window.requestAnimationFrame(step);
-  };
-
-  const start = () => {
-    window.cancelAnimationFrame(frame);
-    frame = 0;
-    startTime = 0;
-    resetPose();
-
-    if (motionQuery?.matches) {
-      return;
-    }
-
-    frame = window.requestAnimationFrame(step);
-  };
-
-  const handleMotionPreferenceChange = () => {
-    start();
-  };
-
-  if (motionQuery) {
-    if (typeof motionQuery.addEventListener === "function") {
-      motionQuery.addEventListener("change", handleMotionPreferenceChange);
-    } else if (typeof motionQuery.addListener === "function") {
-      motionQuery.addListener(handleMotionPreferenceChange);
-    }
-  }
-
-  start();
-
-  return () => {
-    window.cancelAnimationFrame(frame);
-    frame = 0;
-
-    if (motionQuery) {
-      if (typeof motionQuery.removeEventListener === "function") {
-        motionQuery.removeEventListener("change", handleMotionPreferenceChange);
-      } else if (typeof motionQuery.removeListener === "function") {
-        motionQuery.removeListener(handleMotionPreferenceChange);
-      }
-    }
-
-    resetPose();
-  };
-}
-
-function applyFloatingTitlePose(element, x, y, rotation) {
-  if (!element) {
-    return;
-  }
-
-  element.style.setProperty("--spaces-empty-title-float-x", `${x.toFixed(1)}px`);
-  element.style.setProperty("--spaces-empty-title-float-y", `${y.toFixed(1)}px`);
-  element.style.setProperty("--spaces-empty-title-rotate", `${rotation.toFixed(1)}deg`);
-}
-
-function startFloatingTitleAnimation(element, motionQuery = null) {
-  if (!element) {
-    return () => {};
-  }
-
-  let frame = 0;
-  let startTime = 0;
-
-  const resetPose = () => {
-    applyFloatingTitlePose(element, 0, 0, 0);
-  };
-
-  const step = (timestamp) => {
-    if (!element.isConnected) {
-      frame = 0;
-      return;
-    }
-
-    if (motionQuery?.matches) {
-      frame = 0;
-      startTime = 0;
-      resetPose();
-      return;
-    }
-
-    if (!startTime) {
-      startTime = timestamp;
-    }
-
-    const elapsed = timestamp - startTime;
-    const orbitAngle = ((elapsed / EMPTY_SPACE_FLOAT_PROFILE.orbitPeriodMs) * TAU) + 0.45;
-    const rotationAngle = ((elapsed / EMPTY_SPACE_FLOAT_PROFILE.rotationPeriodMs) * TAU) + 1.1;
-
-    applyFloatingTitlePose(
-      element,
-      Math.cos(orbitAngle) * EMPTY_SPACE_FLOAT_PROFILE.xRadius,
-      Math.sin(orbitAngle) * EMPTY_SPACE_FLOAT_PROFILE.yRadius,
-      Math.sin(rotationAngle) * EMPTY_SPACE_FLOAT_PROFILE.rotationAmplitude
-    );
-
-    frame = window.requestAnimationFrame(step);
-  };
-
-  const start = () => {
-    window.cancelAnimationFrame(frame);
-    frame = 0;
-    startTime = 0;
-    resetPose();
-
-    if (!element.isConnected || motionQuery?.matches) {
-      return;
-    }
-
-    frame = window.requestAnimationFrame(step);
-  };
-
-  const handleMotionPreferenceChange = () => {
-    start();
-  };
-
-  if (motionQuery) {
-    if (typeof motionQuery.addEventListener === "function") {
-      motionQuery.addEventListener("change", handleMotionPreferenceChange);
-    } else if (typeof motionQuery.addListener === "function") {
-      motionQuery.addListener(handleMotionPreferenceChange);
-    }
-  }
-
-  start();
-
-  return () => {
-    window.cancelAnimationFrame(frame);
-    frame = 0;
-
-    if (motionQuery) {
-      if (typeof motionQuery.removeEventListener === "function") {
-        motionQuery.removeEventListener("change", handleMotionPreferenceChange);
-      } else if (typeof motionQuery.removeListener === "function") {
-        motionQuery.removeListener(handleMotionPreferenceChange);
-      }
-    }
-
-    resetPose();
-  };
-}
-
 function playGridFadeIn(gridElement, motionQuery = null) {
   if (!gridElement || motionQuery?.matches) {
     return () => {};
@@ -2358,6 +1996,83 @@ function resolveLogicalContentBounds(resolvedLayout) {
   return hasContent ? bounds : null;
 }
 
+function resolveSparseVerticalCameraRange(contentBounds, metrics) {
+  if (!contentBounds) {
+    return null;
+  }
+
+  const visibleHalfRows = metrics.viewportHeight / (2 * Math.max(metrics.rowStep, 1));
+  const naturalMinCenterRow = (contentBounds.minRow - GRID_CAMERA_BUFFER_ROWS) + visibleHalfRows;
+  const naturalMaxCenterRow = (contentBounds.maxRow + GRID_CAMERA_BUFFER_ROWS) - visibleHalfRows;
+  const naturalWiggleRows = naturalMaxCenterRow - naturalMinCenterRow;
+
+  if (naturalMinCenterRow <= naturalMaxCenterRow && naturalWiggleRows >= GRID_SPARSE_CAMERA_MIN_VERTICAL_WIGGLE_ROWS) {
+    return null;
+  }
+
+  const minCenterRow = (contentBounds.minRow - GRID_SPARSE_CAMERA_MAX_TOP_HEADROOM_ROWS) + visibleHalfRows;
+  const maxCenterRow = (contentBounds.minRow - GRID_SPARSE_CAMERA_MIN_TOP_HEADROOM_ROWS) + visibleHalfRows;
+  const preferredCenterRow = clampNumber(
+    (contentBounds.minRow - GRID_SPARSE_CAMERA_PREFERRED_TOP_HEADROOM_ROWS) + visibleHalfRows,
+    minCenterRow,
+    maxCenterRow
+  );
+
+  return {
+    maxCenterRow,
+    minCenterRow,
+    preferredCenterRow
+  };
+}
+
+function resolveSparseHorizontalCameraRange(contentBounds, metrics) {
+  if (!contentBounds) {
+    return null;
+  }
+
+  const visibleHalfCols = metrics.viewportWidth / (2 * Math.max(metrics.colStep, 1));
+  const naturalMinCenterCol = (contentBounds.minCol - GRID_CAMERA_BUFFER_COLS) + visibleHalfCols;
+  const naturalMaxCenterCol = (contentBounds.maxCol + GRID_CAMERA_BUFFER_COLS) - visibleHalfCols;
+
+  if (naturalMinCenterCol <= naturalMaxCenterCol) {
+    return null;
+  }
+
+  const minCenterCol = (contentBounds.minCol - GRID_SPARSE_CAMERA_SIDE_WIGGLE_COLS) + visibleHalfCols;
+  const maxCenterCol = (contentBounds.maxCol + GRID_SPARSE_CAMERA_SIDE_WIGGLE_COLS) - visibleHalfCols;
+  const preferredCenterCol = clampNumber(
+    (contentBounds.minCol + contentBounds.maxCol) / 2,
+    minCenterCol,
+    maxCenterCol
+  );
+
+  return {
+    maxCenterCol,
+    minCenterCol,
+    preferredCenterCol
+  };
+}
+
+function resolvePreferredSparseCameraOffset(cameraOffset, resolvedLayout, metrics) {
+  const contentBounds = resolveLogicalContentBounds(resolvedLayout);
+  const sparseHorizontalRange = resolveSparseHorizontalCameraRange(contentBounds, metrics);
+  const sparseVerticalRange = resolveSparseVerticalCameraRange(contentBounds, metrics);
+
+  if (!sparseHorizontalRange && !sparseVerticalRange) {
+    return null;
+  }
+
+  const currentCenterCol = -(Number.isFinite(cameraOffset?.x) ? cameraOffset.x : 0) / Math.max(metrics.colStep, 1);
+  const preferredCenterCol = sparseHorizontalRange?.preferredCenterCol ?? currentCenterCol;
+  const currentCenterRow = -(Number.isFinite(cameraOffset?.y) ? cameraOffset.y : 0) / Math.max(metrics.rowStep, 1);
+  const preferredCenterRow = sparseVerticalRange?.preferredCenterRow ?? currentCenterRow;
+
+  return {
+    x: -preferredCenterCol * metrics.colStep,
+    y: -preferredCenterRow * metrics.rowStep
+  };
+}
+
 function clampCameraOffsetToContent(cameraOffset, resolvedLayout, metrics) {
   const contentBounds = resolveLogicalContentBounds(resolvedLayout);
 
@@ -2370,10 +2085,16 @@ function clampCameraOffsetToContent(cameraOffset, resolvedLayout, metrics) {
 
   const visibleHalfCols = metrics.viewportWidth / (2 * Math.max(metrics.colStep, 1));
   const visibleHalfRows = metrics.viewportHeight / (2 * Math.max(metrics.rowStep, 1));
-  const minCenterCol = (contentBounds.minCol - GRID_CAMERA_BUFFER_COLS) + visibleHalfCols;
-  const maxCenterCol = (contentBounds.maxCol + GRID_CAMERA_BUFFER_COLS) - visibleHalfCols;
-  const minCenterRow = (contentBounds.minRow - GRID_CAMERA_BUFFER_ROWS) + visibleHalfRows;
-  const maxCenterRow = (contentBounds.maxRow + GRID_CAMERA_BUFFER_ROWS) - visibleHalfRows;
+  const sparseHorizontalRange = resolveSparseHorizontalCameraRange(contentBounds, metrics);
+  const minCenterCol = sparseHorizontalRange?.minCenterCol ??
+    ((contentBounds.minCol - GRID_CAMERA_BUFFER_COLS) + visibleHalfCols);
+  const maxCenterCol = sparseHorizontalRange?.maxCenterCol ??
+    ((contentBounds.maxCol + GRID_CAMERA_BUFFER_COLS) - visibleHalfCols);
+  const sparseVerticalRange = resolveSparseVerticalCameraRange(contentBounds, metrics);
+  const minCenterRow = sparseVerticalRange?.minCenterRow ??
+    ((contentBounds.minRow - GRID_CAMERA_BUFFER_ROWS) + visibleHalfRows);
+  const maxCenterRow = sparseVerticalRange?.maxCenterRow ??
+    ((contentBounds.maxRow + GRID_CAMERA_BUFFER_ROWS) - visibleHalfRows);
   const currentCenterCol = -cameraOffset.x / Math.max(metrics.colStep, 1);
   const currentCenterRow = -cameraOffset.y / Math.max(metrics.rowStep, 1);
   const clampedCenterCol = clampNumber(currentCenterCol, minCenterCol, maxCenterCol);
@@ -2841,6 +2562,7 @@ const spacesModel = {
   },
   creatingSpace: false,
   currentCanvasBounds: null,
+  currentUsername: "",
   currentSpace: null,
   currentSpaceIconColorDraft: "",
   currentSpaceIconDraft: "",
@@ -2849,12 +2571,26 @@ const spacesModel = {
   currentResolvedLayout: null,
   currentSpaceTitleDraft: "",
   emptyCanvasCleanup: null,
+  emptyCanvasIdentityPromise: null,
+  emptyCanvasSeenSpaceIds: new Set(),
+  emptyCanvasSeenStorageKey: "",
+  emptyCanvasSeenStorageLoaded: false,
   hasCenteredCurrentSpace: false,
+  canvasViewportSyncToken: 0,
+  configPanelAnchor: null,
+  configPanelPosition: {
+    left: 12,
+    maxHeight: 360,
+    top: 12
+  },
+  configPanelRenderToken: 0,
   isConfigPanelOpen: false,
+  isConfigPanelVisible: false,
   layoutInteraction: null,
   layoutPersistPromise: Promise.resolve(),
   layoutPointerMoveHandler: null,
   layoutPointerUpHandler: null,
+  clearingCurrentSpaceWidgets: false,
   loaded: false,
   loadingList: false,
   loadingSpace: false,
@@ -2879,6 +2615,7 @@ const spacesModel = {
   mount(refs = {}) {
     this.refs = refs;
     this.motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    this.queueCanvasViewportHeightSync();
     this.viewportResizeHandler = () => {
       this.handleViewportResize();
     };
@@ -2893,6 +2630,7 @@ const spacesModel = {
     this.refs.canvas?.addEventListener("wheel", this.canvasWheelHandler, { passive: false });
     activeSpacesStore = this;
     syncSpacesRuntimeState();
+    void this.ensureEmptyCanvasSeenStorageLoaded();
     void this.refreshFromRoute();
   },
 
@@ -2925,11 +2663,28 @@ const spacesModel = {
     this.currentSpaceInstructionsDraft = "";
     this.currentSpace = null;
     this.currentSpaceTitleDraft = "";
+    this.currentUsername = "";
+    this.clearingCurrentSpaceWidgets = false;
+    this.configPanelAnchor = null;
+    this.configPanelPosition = {
+      left: 12,
+      maxHeight: 360,
+      top: 12
+    };
+    this.configPanelRenderToken = 0;
+    this.canvasViewportSyncToken += 1;
     this.isConfigPanelOpen = false;
+    this.isConfigPanelVisible = false;
     this.spaceMetaPersistQueued = false;
     this.refs.grid?.replaceChildren();
+    this.refs.canvas?.style.removeProperty("height");
+    this.refs.canvas?.style.removeProperty("min-height");
     this.motionQuery = null;
     this.hasCenteredCurrentSpace = false;
+    this.emptyCanvasIdentityPromise = null;
+    this.emptyCanvasSeenSpaceIds = new Set();
+    this.emptyCanvasSeenStorageKey = "";
+    this.emptyCanvasSeenStorageLoaded = false;
 
     if (this.viewportResizeHandler) {
       window.removeEventListener("resize", this.viewportResizeHandler);
@@ -2950,6 +2705,96 @@ const spacesModel = {
     this.refs = {};
     this.renderFadeCleanup = null;
     syncSpacesRuntimeState();
+  },
+
+  resolveCanvasViewportHeight() {
+    const canvas = this.refs.canvas;
+
+    if (!canvas) {
+      return 0;
+    }
+
+    const candidateElements = [
+      canvas.closest(".router-stage"),
+      canvas.closest(".router-route-frame"),
+      canvas.closest(".router-route-outlet"),
+      canvas.closest(".router-route-mount"),
+      canvas.parentElement
+    ].filter(Boolean);
+    let resolvedHeight = 0;
+
+    for (const candidate of candidateElements) {
+      const nextHeight = Math.round(
+        candidate.getBoundingClientRect?.().height || candidate.clientHeight || 0
+      );
+
+      if (nextHeight > resolvedHeight) {
+        resolvedHeight = nextHeight;
+      }
+    }
+
+    if (resolvedHeight > 0) {
+      return resolvedHeight;
+    }
+
+    return Math.max(0, Math.round(window.innerHeight || 0));
+  },
+
+  syncCanvasViewportHeight() {
+    const canvas = this.refs.canvas;
+
+    if (!canvas) {
+      return 0;
+    }
+
+    const nextHeight = this.resolveCanvasViewportHeight();
+
+    if (nextHeight > 0) {
+      const nextHeightPx = `${nextHeight}px`;
+      canvas.style.setProperty("height", nextHeightPx);
+      canvas.style.setProperty("min-height", nextHeightPx);
+      return nextHeight;
+    }
+
+    canvas.style.removeProperty("height");
+    canvas.style.removeProperty("min-height");
+    return 0;
+  },
+
+  queueCanvasViewportHeightSync() {
+    const syncToken = this.canvasViewportSyncToken + 1;
+    this.canvasViewportSyncToken = syncToken;
+
+    const runSync = () => {
+      if (this.canvasViewportSyncToken !== syncToken) {
+        return;
+      }
+
+      const previousCanvasHeight = this.refs.canvas?.clientHeight || 0;
+      const nextCanvasHeight = this.syncCanvasViewportHeight();
+
+      if (
+        nextCanvasHeight > 0 &&
+        Math.abs(nextCanvasHeight - previousCanvasHeight) > 0.5 &&
+        this.currentResolvedLayout &&
+        this.currentSpace &&
+        this.refs.grid
+      ) {
+        this.applyResolvedLayoutToCards(this.currentResolvedLayout, this.currentSpace, {
+          skipAnimation: true
+        });
+      }
+    };
+
+    runSync();
+
+    globalThis.requestAnimationFrame(() => {
+      runSync();
+
+      globalThis.requestAnimationFrame(() => {
+        runSync();
+      });
+    });
   },
 
   get hasCurrentSpace() {
@@ -2990,7 +2835,17 @@ const spacesModel = {
   },
 
   get currentSpaceMetaToggleLabel() {
-    return this.isConfigPanelOpen ? "Collapse space settings" : "Expand space settings";
+    return this.isConfigPanelOpen ? "Close space settings" : "Open space settings";
+  },
+
+  get currentSpaceClearAllWidgetsLabel() {
+    return "Clear all widgets";
+  },
+
+  get currentSpaceClearAllWidgetsConfirmMessage() {
+    const widgetCount = this.currentSpace?.widgetIds?.length || 0;
+    const widgetLabel = widgetCount === 1 ? "the only widget" : `all ${widgetCount} widgets`;
+    return `Clear ${widgetLabel} from "${this.currentSpaceDisplayTitle}"? This removes every widget in the current space.`;
   },
 
   get currentSpaceIconPickerLabel() {
@@ -3003,12 +2858,58 @@ const spacesModel = {
     return "Change space icon";
   },
 
+  get currentSpaceConfigPopoverStyle() {
+    const { left, maxHeight, top } = this.configPanelPosition || {};
+    const resolvedLeft = Number.isFinite(left) ? left : 12;
+    const resolvedTop = Number.isFinite(top) ? top : 12;
+    const resolvedMaxHeight = Number.isFinite(maxHeight) ? maxHeight : 360;
+
+    return `left:${resolvedLeft}px;top:${resolvedTop}px;max-height:${resolvedMaxHeight}px;visibility:${this.isConfigPanelVisible ? "visible" : "hidden"};`;
+  },
+
   async goBackToDashboard() {
     if (!globalThis.space.router) {
       return;
     }
 
     await globalThis.space.router.replaceTo("dashboard", { scrollMode: "auto" });
+  },
+
+  async clearCurrentSpaceWidgets() {
+    const targetSpaceId = this.currentSpaceId;
+    const widgetCount = this.currentSpace?.widgetIds?.length || 0;
+
+    if (!targetSpaceId || widgetCount < 1 || this.clearingCurrentSpaceWidgets) {
+      return null;
+    }
+
+    if (!globalThis.confirm(this.currentSpaceClearAllWidgetsConfirmMessage)) {
+      return null;
+    }
+
+    this.clearingCurrentSpaceWidgets = true;
+
+    try {
+      const removeAllWidgets = globalThis.space?.spaces?.removeAllWidgets;
+
+      if (typeof removeAllWidgets !== "function") {
+        throw new Error("The spaces runtime is not available.");
+      }
+
+      const result = await removeAllWidgets({
+        spaceId: targetSpaceId
+      });
+      this.clearNotice();
+      return result;
+    } catch (error) {
+      logSpacesError("clearCurrentSpaceWidgets failed", error, {
+        spaceId: targetSpaceId
+      });
+      this.setNotice(formatErrorMessage(error, "Unable to clear all widgets."), "error");
+      return null;
+    } finally {
+      this.clearingCurrentSpaceWidgets = false;
+    }
   },
 
   get hasPendingCurrentSpaceMetaChanges() {
@@ -3035,6 +2936,74 @@ const spacesModel = {
     this.noticeTone = "info";
   },
 
+  async ensureEmptyCanvasSeenStorageLoaded() {
+    if (this.emptyCanvasSeenStorageLoaded) {
+      return;
+    }
+
+    if (!this.currentUsername && !this.emptyCanvasIdentityPromise) {
+      this.emptyCanvasIdentityPromise = (async () => {
+        try {
+          const identity = await globalThis.space?.api?.userSelfInfo?.();
+          this.currentUsername = String(identity?.username || "").trim();
+        } catch {
+          this.currentUsername = "";
+        } finally {
+          this.emptyCanvasIdentityPromise = null;
+        }
+      })();
+    }
+
+    if (this.emptyCanvasIdentityPromise) {
+      await this.emptyCanvasIdentityPromise;
+    }
+
+    this.emptyCanvasSeenStorageKey = buildEmptyCanvasSeenStorageKey(this.currentUsername);
+    this.emptyCanvasSeenSpaceIds = readEmptyCanvasSeenSpaceIdsFromStorage(this.emptyCanvasSeenStorageKey);
+    this.emptyCanvasSeenStorageLoaded = true;
+  },
+
+  hasSeenEmptyCanvasSequence(spaceId) {
+    const targetSpaceId = normalizeOptionalSpaceId(spaceId);
+    return Boolean(targetSpaceId) && this.emptyCanvasSeenSpaceIds.has(targetSpaceId);
+  },
+
+  markEmptyCanvasSequenceSeen(spaceId) {
+    const targetSpaceId = normalizeOptionalSpaceId(spaceId);
+
+    if (!targetSpaceId) {
+      return;
+    }
+
+    if (!this.emptyCanvasSeenStorageLoaded) {
+      this.emptyCanvasSeenStorageKey = buildEmptyCanvasSeenStorageKey(this.currentUsername);
+      this.emptyCanvasSeenSpaceIds = new Set(this.emptyCanvasSeenSpaceIds || []);
+      this.emptyCanvasSeenStorageLoaded = true;
+    }
+
+    if (this.emptyCanvasSeenSpaceIds.has(targetSpaceId)) {
+      return;
+    }
+
+    this.emptyCanvasSeenSpaceIds.add(targetSpaceId);
+    persistEmptyCanvasSeenSpaceIdsToStorage(
+      this.emptyCanvasSeenStorageKey || buildEmptyCanvasSeenStorageKey(this.currentUsername),
+      this.emptyCanvasSeenSpaceIds
+    );
+  },
+
+  async shouldPlayEmptyCanvasSequence(spaceRecord, options = {}) {
+    await this.ensureEmptyCanvasSeenStorageLoaded();
+    const becameEmptyAgain = Array.isArray(options.previousSpace?.widgetIds) && options.previousSpace.widgetIds.length > 0;
+    const shouldPlaySequence =
+      isPristineEmptySpace(spaceRecord) &&
+      !becameEmptyAgain &&
+      !this.hasSeenEmptyCanvasSequence(spaceRecord?.id);
+
+    this.markEmptyCanvasSequenceSeen(spaceRecord?.id);
+    return shouldPlaySequence;
+  },
+
   clearSpaceMetaPersistTimer() {
     if (this.spaceMetaPersistTimer) {
       window.clearTimeout(this.spaceMetaPersistTimer);
@@ -3042,17 +3011,65 @@ const spacesModel = {
     }
   },
 
-  toggleConfigPanel() {
+  queueConfigPanelPosition() {
+    if (!this.isConfigPanelOpen || !this.configPanelAnchor) {
+      return;
+    }
+
+    this.isConfigPanelVisible = false;
+    this.configPanelRenderToken += 1;
+    const renderToken = this.configPanelRenderToken;
+
+    globalThis.requestAnimationFrame(() => {
+      if (!this.isConfigPanelOpen || this.configPanelRenderToken !== renderToken) {
+        return;
+      }
+
+      this.positionConfigPanel();
+
+      globalThis.requestAnimationFrame(() => {
+        if (!this.isConfigPanelOpen || this.configPanelRenderToken !== renderToken) {
+          return;
+        }
+
+        this.positionConfigPanel();
+        this.isConfigPanelVisible = true;
+      });
+    });
+  },
+
+  positionConfigPanel() {
+    const configPanel = document.getElementById("spaces-config-popover");
+
+    if (!this.isConfigPanelOpen || !configPanel || !this.configPanelAnchor) {
+      return;
+    }
+
+    this.configPanelPosition = positionPopover(configPanel, this.configPanelAnchor, {
+      align: "start",
+      gap: 10,
+      placement: "bottom"
+    });
+  },
+
+  toggleConfigPanel(anchor = null) {
     if (this.isConfigPanelOpen) {
       this.closeConfigPanel();
       return;
     }
 
+    if (anchor) {
+      this.configPanelAnchor = anchor;
+    }
+
     this.isConfigPanelOpen = true;
+    this.queueConfigPanelPosition();
   },
 
   closeConfigPanel() {
     this.isConfigPanelOpen = false;
+    this.isConfigPanelVisible = false;
+    this.configPanelRenderToken += 1;
     void this.flushCurrentSpaceMetaSave({
       suppressErrors: true
     });
@@ -3162,6 +3179,7 @@ const spacesModel = {
 
     this.updateSpaceListEntry(spaceRecord);
     syncSpacesRuntimeState();
+    this.queueCanvasViewportHeightSync();
   },
 
   async persistCurrentSpaceMeta() {
@@ -3336,6 +3354,14 @@ const spacesModel = {
 
     if (options.centerOrigin) {
       this.centerCanvasOnOrigin(true);
+    }
+
+    if (options.preferSparseInitialOffset) {
+      const preferredSparseCameraOffset = resolvePreferredSparseCameraOffset(this.cameraOffsetPx, resolvedLayout, metrics);
+
+      if (preferredSparseCameraOffset) {
+        this.cameraOffsetPx = preferredSparseCameraOffset;
+      }
     }
 
     this.cameraOffsetPx = clampCameraOffsetToContent(this.cameraOffsetPx, resolvedLayout, metrics);
@@ -3537,6 +3563,12 @@ const spacesModel = {
   },
 
   handleViewportResize() {
+    this.syncCanvasViewportHeight();
+
+    if (this.isConfigPanelOpen) {
+      this.positionConfigPanel();
+    }
+
     if (!this.currentResolvedLayout || !this.currentSpace || !this.refs.grid) {
       return;
     }
@@ -4083,7 +4115,9 @@ const spacesModel = {
       this.currentSpaceId = "";
       this.currentSpaceInstructionsDraft = "";
       this.currentSpaceTitleDraft = "";
+      this.configPanelAnchor = null;
       this.isConfigPanelOpen = false;
+      this.isConfigPanelVisible = false;
       syncSpacesRuntimeState();
       this.renderGridState("No spaces yet.", "Create a space to start building persisted widgets.");
     } catch (error) {
@@ -4094,7 +4128,9 @@ const spacesModel = {
       this.currentSpaceId = "";
       this.currentSpaceInstructionsDraft = "";
       this.currentSpaceTitleDraft = "";
+      this.configPanelAnchor = null;
       this.isConfigPanelOpen = false;
+      this.isConfigPanelVisible = false;
       syncSpacesRuntimeState();
       this.renderGridState("Unable to load spaces.", formatErrorMessage(error, "Unknown spaces error."), "error");
       this.setNotice(formatErrorMessage(error, "Unable to load spaces."), "error");
@@ -4156,6 +4192,7 @@ const spacesModel = {
       return;
     }
 
+    this.queueCanvasViewportHeightSync();
     grid.replaceChildren(createGridStateCard(titleValue, bodyValue, tone));
     syncSpacesRuntimeState();
   },
@@ -4191,9 +4228,10 @@ const spacesModel = {
       return;
     }
 
+    this.queueCanvasViewportHeightSync();
     const loadingCanvas = createLoadingCanvasState();
     grid.appendChild(loadingCanvas.root);
-    this.emptyCanvasCleanup = startFloatingTitleAnimation(loadingCanvas.title, this.motionQuery);
+    this.emptyCanvasCleanup = startLoadingCanvasAnimation(loadingCanvas, this.motionQuery);
     syncSpacesRuntimeState();
   },
 
@@ -4217,6 +4255,9 @@ const spacesModel = {
     this.currentSpaceIconDraft = "";
     this.currentSpaceInstructionsDraft = "";
     this.currentSpaceTitleDraft = "";
+    this.configPanelAnchor = null;
+    this.isConfigPanelOpen = false;
+    this.isConfigPanelVisible = false;
     this.hasCenteredCurrentSpace = false;
     this.widgetCards = {};
     this.widgetErrorCount = 0;
@@ -4242,7 +4283,9 @@ const spacesModel = {
       this.currentSpaceIconDraft = "";
       this.currentSpaceInstructionsDraft = "";
       this.currentSpaceTitleDraft = "";
+      this.configPanelAnchor = null;
       this.isConfigPanelOpen = false;
+      this.isConfigPanelVisible = false;
       syncSpacesRuntimeState();
       this.renderGridState(
         "Unable to open this space.",
@@ -4265,6 +4308,7 @@ const spacesModel = {
       return;
     }
 
+    this.queueCanvasViewportHeightSync();
     this.cleanupEmptyCanvas();
     this.cleanupRenderFade();
     cleanupWidgetCards(this.widgetCards);
@@ -4282,18 +4326,37 @@ const spacesModel = {
         });
       }
 
-      const emptyCanvas = createEmptyCanvasState(exampleDefinitions);
+      if (loadToken !== this.widgetLoadToken) {
+        return;
+      }
+
+      const playEmptyCanvasSequence = await this.shouldPlayEmptyCanvasSequence(spaceRecord, options);
+
+      if (loadToken !== this.widgetLoadToken) {
+        return;
+      }
+
+      const emptyCanvas = createEmptyCanvasState(exampleDefinitions, {
+        initialStage: playEmptyCanvasSequence ? "boot" : "buttons",
+        onExampleError: (error, details = {}) => {
+          logSpacesError("empty canvas example click failed", error, details);
+        }
+      });
 
       this.currentCanvasBounds = null;
       this.currentResolvedLayout = null;
       this.hasCenteredCurrentSpace = false;
+      this.cameraOffsetPx = {
+        x: 0,
+        y: 0
+      };
       this.resetWidgetRenderChecks();
       grid.style.removeProperty("width");
       grid.style.removeProperty("height");
       grid.appendChild(emptyCanvas.root);
-      const floatingCleanup = startEmptyCanvasTextFloatAnimation(emptyCanvas.floaters, this.motionQuery);
-      const sequenceCleanup = startEmptyCanvasSequenceAnimation(emptyCanvas, this.motionQuery);
-      this.emptyCanvasCleanup = combineCleanupFunctions(floatingCleanup, sequenceCleanup);
+      this.emptyCanvasCleanup = startEmptyCanvasAnimations(emptyCanvas, this.motionQuery, {
+        playSequence: playEmptyCanvasSequence
+      });
       this.renderFadeCleanup = playGridFadeIn(grid, this.motionQuery);
       syncSpacesRuntimeState();
       return;
@@ -4330,6 +4393,7 @@ const spacesModel = {
     this.applyResolvedLayoutToCards(resolvedLayout, spaceRecord, {
       animateEntering: options.animateEntering,
       centerOrigin: options.centerOrigin !== false,
+      preferSparseInitialOffset: true,
       previousRects: options.previousRects || null
     });
     this.renderFadeCleanup = playGridFadeIn(grid, this.motionQuery);
@@ -4384,6 +4448,7 @@ const spacesModel = {
     this.applyResolvedLayoutToCards(resolvedLayout, spaceRecord, {
       animateEntering: options.animateEntering !== false && addedWidgetIds.length > 0,
       centerOrigin: options.centerOrigin === true,
+      preferSparseInitialOffset: options.centerOrigin === true || !previousSpace?.widgetIds?.length,
       previousRects
     });
 
@@ -4482,7 +4547,9 @@ const spacesModel = {
     this.currentSpaceId = "";
     this.currentSpaceInstructionsDraft = "";
     this.currentSpaceTitleDraft = "";
+    this.configPanelAnchor = null;
     this.isConfigPanelOpen = false;
+    this.isConfigPanelVisible = false;
     syncSpacesRuntimeState();
 
     if (this.spaceList.length > 0) {

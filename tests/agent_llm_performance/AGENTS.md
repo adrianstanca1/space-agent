@@ -84,6 +84,7 @@ This scope owns:
 
 - prefer adding new failures as prepared histories and assertions before changing scoring code
 - when a real conversation exposes a logic bug, distill it into the shortest history that still reproduces the control-flow mistake
+- when a real trace shows the agent ignoring route-specific or space-specific system instructions, distill that mismatch into prepared cases instead of assuming the generic prompt already covers it
 - keep case assertions aimed at behavior class, continuation logic, target reuse, and stop conditions rather than exact domain phrasing
 - avoid overfitting the suite to one domain; keep a mix of live facts, widget edits, file edits, and recovery cases
 - when adding cases, check `case-coverage.md` first so the suite grows by problem-family signal rather than by random accumulation
@@ -133,3 +134,4 @@ This scope owns:
 - do not merge score history across models under one prompt id; model id is part of the leaderboard identity
 - during manual review, reject a nominally good `C` if it is not actually wild enough to expand the search space
 - when a prompt variant wins, sync the proven changes back into the live onscreen firmware prompt deliberately rather than implicitly, and only after manual review agrees with the automated score
+- if a full matrix run shows widespread `request error: fetch failed` across otherwise unrelated cases, treat that as likely transport saturation and rerun with lower prompt or case concurrency before treating it as prompt signal

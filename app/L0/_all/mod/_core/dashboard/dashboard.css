@@ -22,6 +22,24 @@
   gap: clamp(1rem, 2vw, 1.35rem);
 }
 
+.dashboard-topbar-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dashboard-topbar-controls > x-extension {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dashboard-topbar-controls > x-extension:empty {
+  display: none;
+}
+
 @media (max-width: 720px) {
   .dashboard-view {
     padding-top: 18px;

@@ -8,15 +8,16 @@ each case should have one primary category in this file even if it touches secon
 
 ## Current Balance
 
-- total problem groups: `11`
-- total active cases: `64`
+- total problem groups: `12`
+- total active cases: `68`
 - heaviest coverage:
   - `current-context and live facts`: `10`
   - `staged edits and handoffs`: `8`
 - lighter coverage:
+  - `onboarding and proactive guidance`: `3`
   - `conversation vs execution boundary`: `3`
   - `direct runtime control without helper`: `7`
-  - `error recovery and telemetry truth`: `6`
+  - `error recovery and telemetry truth`: `7`
   - `verification and runtime ownership`: `7`
   - `active target anchoring and repair momentum`: `4`
   - `completion and reopen logic`: `5`
@@ -35,6 +36,16 @@ cases:
 - `smalltalk_hi_terminal`
 - `page_title_requires_execution`
 - `time_requires_execution`
+
+### Onboarding And Proactive Guidance — `3`
+
+goal: when new-user or vague demo intent is clear, execute one concrete helpful demo or starter creation instead of offering menus, re-discovering, or asking what kind
+
+cases:
+
+- `new_user_show_me_something_executes_demo`
+- `new_user_impressive_followup_executes_demo`
+- `empty_space_create_one_uses_renderwidget`
 
 ### Direct Runtime Control Without Helper — `7`
 
@@ -107,7 +118,7 @@ cases:
 - `selective_widget_fix_requires_read_first`
 - `recover_after_combined_widget_read_write_error`
 
-### Error Recovery And Telemetry Truth — `6`
+### Error Recovery And Telemetry Truth — `7`
 
 goal: stay truthful after failures and recover on the known target instead of drifting or claiming success
 
@@ -118,6 +129,7 @@ cases:
 - `direct_repair_after_known_widget_error`
 - `widget_not_found_error_uses_available_widget_id`
 - `full_widget_rewrite_after_patch_rewrite_error_uses_renderwidget`
+- `full_rewrite_contract_error_continues_without_user_push`
 - `widget_missing_without_replacement_requires_terminal_truth`
 
 ### Completion And Reopen Logic — `5`

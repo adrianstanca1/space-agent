@@ -48,6 +48,7 @@ Current public shell assets:
 
 - is public and must not depend on authenticated `/mod/...` assets
 - owns the login flow, guest creation flow, and pre-auth layout
+- renders the injected instance version as centered white floating text below the main shell content, using the page-shell `SPACE_PROJECT_VERSION` placeholder
 - reads injected `meta[name="space-config"]` tags directly so guest-login UI can follow backend runtime parameters without authenticated module imports
 - declares the shared Space Agent favicon set and the `Login | Space Agent` document title
 - detects when the browser does not expose the Web Crypto APIs needed for password login, blocks the broken sign-in and guest-account path, and shows an explicit HTTPS-or-localhost requirement instead of surfacing raw `crypto.subtle` errors
@@ -67,7 +68,7 @@ Current public shell assets:
 - is served for launcher-eligible sessions; in multi-user mode, unauthenticated requests are redirected to `/login` before this shell loads
 - owns the firmware-backed launcher UI that links to `/` and `/admin`, labeled as Enter Space and Admin Mode
 - declares the shared Space Agent favicon set and the `Enter Space | Space Agent` document title
-- renders the injected instance version as centered white floating text below the launcher content, using the page-shell `SPACE_PROJECT_VERSION` placeholder
+- renders the injected instance version as centered white floating text below the main shell content, using the page-shell `SPACE_PROJECT_VERSION` placeholder
 - accepts an optional `next` query param, grants per-tab launcher access through `sessionStorage`, and routes the Enter or Admin buttons back to the original target when appropriate
 - mirrors the login-shell intro layout, floating astronaut, and public backdrop while replacing the right-side form card with direct launcher actions
 - keeps extra small-screen side spacing around the launcher shell and a generous top and inter-button gap when the launcher actions collapse below the intro copy
