@@ -54,8 +54,9 @@ When a job needs to change app files:
 - it should call the shared helper that owns the behavior, such as `server/lib/auth/user_manage.js`
 - it should run that helper through the runner's tracked-mutation wrapper
 - the changed logical app paths are then committed through the normal watchdog mutation path so file, user, and session indexes refresh correctly in both single-process and clustered runtime
+- that mutation commit flow is the normal index-refresh path; jobs should not assume a frequent full-tree reconcile will pick their writes up later
 
-Jobs should not invent their own filesystem refresh loop, direct worker broadcast, or lockfile protocol.
+Jobs should not invent their own filesystem refresh loop, direct worker broadcast, or lockfile protocol, and they should not rely on the watchdog's rare backstop reconcile for routine freshness.
 
 ## Current Guest Jobs
 

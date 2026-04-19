@@ -60,7 +60,7 @@ Current contract:
 - when a user folder is already over cap, only mutations that reduce that folder's net byte size are allowed
 - quota accounting is cached per resolved L2 owner root and updated by mutation deltas instead of rescanning on every write
 - other backend app-path mutation callers invalidate affected user quota cache entries through `recordAppPathMutations`, and Git history operations invalidate the affected cache when `.git` metadata may have changed
-- clustered workers still perform the filesystem mutation locally, but they must publish the exact changed logical paths back to the primary so quota, user, and group derived state stays aligned across workers
+- clustered workers still perform the filesystem mutation locally, but they must publish the exact changed logical paths back to the primary so quota, user, and group derived state stays aligned across workers; those direct path reports are the normal freshness path, while the watchdog's full reconcile is only an infrequent completion-anchored backstop for missed external or CLI changes
 
 ## Optional Git History
 
@@ -101,6 +101,8 @@ Current fields:
 
 CLI group writes go through `group_files.js`. `node space group add` and `node space user create --groups ...` create the target writable `L1/<group>/` root when it is missing, then write membership to `group.yaml`. This also works for predefined runtime group ids such as `_admin`, whose group identity exists even before a writable `L1/_admin/group.yaml` file is created.
 
+CLI user and group commands are out-of-process filesystem writers. A running server observes those writes through watchdog file watching and the rare backstop reconcile rather than through the clustered worker mutation-reporting path.
+
 When `CUSTOMWARE_PATH` is configured, run `node space set CUSTOMWARE_PATH=<path>` before creating users or groups so those CLI writes land under the configured `CUSTOMWARE_PATH/L1` and `CUSTOMWARE_PATH/L2` roots.
 
 ## Override Order
@@ -139,4 +141,4 @@ This model explains why:
 - a stable `/mod/...` import may resolve to different backing files for different users
 - docs and skills can be delivered by normal modules
 - direct app-file reads and writes use logical layer paths even when writable storage is moved outside the repo
-- concrete changed file paths matter for incremental index rebuilds; publishing only a parent directory can leave derived state stale until a later reconcile
+- concrete changed file paths matter for incremental index rebuilds; publishing only a parent directory can leave derived state stale until a targeted sync or later backstop reconcile

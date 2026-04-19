@@ -63,8 +63,16 @@ function concatBytes(...parts) {
 }
 
 export function encodeBase64Url(value) {
-  if (typeof Buffer === "function") {
-    return Buffer.from(toUint8Array(value)).toString("base64url");
+  if (typeof Buffer?.from === "function") {
+    try {
+      return Buffer.from(toUint8Array(value))
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "");
+    } catch {
+      // Fall back to browser-native base64 helpers when a partial Buffer polyfill exists.
+    }
   }
 
   let text = "";
@@ -75,12 +83,17 @@ export function encodeBase64Url(value) {
 }
 
 export function decodeBase64Url(value) {
-  if (typeof Buffer === "function") {
-    return new Uint8Array(Buffer.from(String(value || ""), "base64url"));
-  }
-
   const normalized = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
   const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
+
+  if (typeof Buffer?.from === "function") {
+    try {
+      return new Uint8Array(Buffer.from(normalized + padding, "base64"));
+    } catch {
+      // Fall back to browser-native base64 helpers when a partial Buffer polyfill exists.
+    }
+  }
+
   const decoded = atob(normalized + padding);
   return Uint8Array.from(decoded, (char) => char.charCodeAt(0));
 }

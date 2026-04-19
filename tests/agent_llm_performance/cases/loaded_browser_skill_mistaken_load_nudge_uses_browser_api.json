@@ -1,0 +1,37 @@
+{
+  "id": "loaded_browser_skill_mistaken_load_nudge_uses_browser_api",
+  "description": "after the browser skill already loaded, a mistaken user nudge to load it again should still trigger browser-api execution instead of another load",
+  "history": "../histories/loaded_browser_skill_mistaken_load_nudge_uses_browser_api.json",
+  "expect": {
+    "response_type": "thrust",
+    "require_staging_line": true,
+    "require_separator_line": true,
+    "require_single_separator": true,
+    "require_code_after_separator": true,
+    "require_valid_javascript": true,
+    "must_contain": [
+      "_____javascript",
+      "google.com"
+    ],
+    "must_match_any": [
+      {
+        "pattern": "space\\.browser\\.(?:open|create)\\(\"https://(?:www\\.)?google\\.com/?\"\\)",
+        "flags": "u"
+      }
+    ],
+    "must_not_match": [
+      {
+        "pattern": "space\\.skills\\.load\\(\"browser-control\"\\)",
+        "flags": "u"
+      },
+      {
+        "pattern": "location\\.(?:href|assign|replace)\\s*=",
+        "flags": "u"
+      },
+      {
+        "pattern": "location\\.(?:assign|replace)\\(",
+        "flags": "u"
+      }
+    ]
+  }
+}

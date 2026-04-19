@@ -17,6 +17,7 @@ storage
 - ~/spaces/<spaceId>/space.yaml = space meta + live layout
 - ~/spaces/<spaceId>/widgets/<widgetId>.yaml = widget meta + renderer
 - ~/spaces/<spaceId>/data/ and assets/ = widget-owned files
+- ~/spaces/<spaceId>/scripts/ = current-space shared JS modules loaded through `context.import("scripts/...")`
 
 main helpers
 Current space:
@@ -167,8 +168,14 @@ write and reload behavior
 - Use reloadWidget(id) when you want an explicit rerun without changing source
 
 renderer rules
-- Prefer async (parent, currentSpace) => { ... }
+- Prefer async (parent, currentSpace, context) => { ... }
 - Render into parent
+- Use `const mod = await context.import("scripts/utils.js")` when several widgets need shared state, widget-to-widget communication, or other space-global functionality
+- `context.import(...)` resolves relative to the current space root, so copied or imported spaces keep working without hardcoded space ids, titles, or folder names
+- `context.paths.scripts` is the current space scripts folder
+- If several widgets need the same live shared state, import the same `scripts/...` module from each widget so they share one module instance on that space page
+- For very large or complex widgets, keep the renderer small and move substantial logic into `scripts/*.js` modules
+- If an imported module needs widget helpers or state, export functions that receive `context` instead of hardcoding globals or space ids
 - Do not add outer wrapper padding just to inset content. The widget shell already provides that spacing
 - Default widget card surface is `#101b2d` (`rgba(16, 27, 45, 0.92)`). Do not add another full-card background unless the content truly needs its own stage
 - Use light text and UI elements by default because widgets sit on that dark surface

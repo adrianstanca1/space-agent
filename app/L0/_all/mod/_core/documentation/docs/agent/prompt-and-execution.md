@@ -85,11 +85,14 @@ Important execution rules:
 - execution blocks should be preceded by one short narration line
 - `_____javascript` must appear on its own line
 - execution output is fed back as `_____framework`
+- the live firmware prompt treats off-runtime website visits as browser-control work: open or navigate a stand-alone browser window instead of leaving the current runtime page, and do not use `window.location`, `location.href`, `location.assign(...)`, or `location.replace(...)` to escape the runtime
 - the live firmware prompt distinguishes runtime identity fields from persisted YAML keys: `space.api.userSelfInfo()` exposes `fullName`, but `~/user.yaml` stores `full_name`, so profile edits should update `full_name`, not `fullName`
+- the live firmware prompt also keeps one compact widget-authoring rule aligned with `_core/spaces`: prefer `async (parent, currentSpace, context) => { ... }` and split shared or large current-space widget logic into `await context.import("scripts/...")`; detailed widget workflow still lives in the spaces-owned skill
 - if an execution block returns no result and prints no logs, the transcript says `execution returned no result and no console logs were printed`
 - multiline console-print blocks are labeled with `log↓`, `info↓`, `warn↓`, `error↓`, `debug↓`, `dir↓`, `table↓`, or `assert↓`, and multiline returned values are labeled with `result↓`
 - structured console-print payloads and structured results should prefer YAML over JSON when the shared serializer can express them cleanly, and ordinary returned arrays or objects should be preserved there rather than collapsed to a short console-style preview
 - `space.skills.load(...)` still returns the typed skill object, but `history` placement writes the skill body into history while `system` and `transient` placement only report `skill loaded to system message` or `skill loaded to transient area` and store the skill in runtime prompt context for later requests
+- task control treats a successful skill load as a read stage, not automatic completion: if the user asked to use that skill and the task is still open, the next move should use the newly loaded skill or its runtime helpers instead of answering `Done.` or issuing the same load again
 
 ## Failure And Retry Behavior
 

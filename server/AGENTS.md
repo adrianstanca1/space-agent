@@ -141,7 +141,7 @@ Core runtime contracts:
 - when the current login is allowed to auto-restore `userCrypto` on the same browser profile, the browser keeps only one encrypted `localStorage` blob; the authenticated `user_crypto_session_key` endpoint derives the wrapping key from the current backend `sessionId` plus the server-held session secret, and the server never persists that wrapping key or the unwrapped user master key
 - password verifiers remain in `L2/<username>/meta/password.json`, but the SCRAM verifier is sealed with a backend-held key so the file is no longer self-sufficient
 - per-user wrapped browser-encryption state may also live in `L2/<username>/meta/user_crypto.json`; that record now includes a backend-sealed server-share envelope for multi-instance recovery, while a local backend-share cache may also live under `server/data/user_crypto/` or the matching `SPACE_AUTH_DATA_DIR/user_crypto/` override path; the plaintext share is never stored in the app tree
-- `WORKERS` defaults to `1`; when it is greater than `1`, the runtime forks HTTP workers, keeps the primary as the authoritative watchdog and unified state owner, lets workers perform normal request work and filesystem mutations locally, and publishes versioned state deltas or snapshots back out from the primary after those mutations commit; worker-owned writes also rely on that same primary post-rebuild path to schedule any debounced writable-layer Git history commits
+- `WORKERS` defaults to `1`; when it is greater than `1`, the runtime forks HTTP workers, keeps the primary as the authoritative watchdog and unified state owner, lets workers perform normal request work and filesystem mutations locally, requires workers to publish the exact changed logical app paths back to the primary once, and publishes versioned state deltas or snapshots back out from the primary after those mutations commit; worker-owned writes and primary-owned jobs use that explicit mutation path as the normal freshness mechanism, the same primary post-rebuild path schedules any debounced writable-layer Git history commits, and the watchdog's full-tree reconcile remains an infrequent completion-anchored backstop for missed external or CLI changes
 - primary-owned background jobs also run only on that authoritative runtime owner: the lone server process when `WORKERS=1`, or the clustered primary when `WORKERS>1`
 - responses expose `Space-State-Version` and `Space-Worker`; requests may send `Space-State-Version` as a required minimum replicated version, and the router may briefly wait for worker catch-up before handling the request
 - runtime auth may switch to a single-user mode where every request resolves to the implicit `user` principal
@@ -168,6 +168,7 @@ The server relies on a small set of shared infrastructure contracts. Do not re-i
 
 - `server/lib/file_watch/` owns the canonical live view of app files through `path_index`, `group_index`, and `user_index`
 - request-time worker code should consume replicated shared-state shards derived from those indexes instead of depending on watchdog-specific scanning helpers; the watchdog remains the primary-owned producer of those shards
+- the watchdog's normal freshness path is exact logical-path commits plus `fs.watch` incremental sync; full-tree reconciles are a rare completion-anchored backstop rather than a fixed-rate polling loop
 - `server/lib/customware/file_access.js` is the canonical entry point for authenticated app-file list, read, write, delete, copy, move, and info operations
 - `server/lib/customware/user_quota.js` is the canonical per-user folder-size quota helper; callers must enforce quota through shared app-file mutation helpers instead of adding endpoint-local size checks
 - file listing and pattern discovery may be filtered to writable paths through the shared file-access helper, and Git repository discovery returns writable owner roots without exposing `.git` metadata
@@ -194,6 +195,7 @@ Infrastructure rules:
 - keep group and user access state derived from `group_index` and `user_index`, not re-parsed per request
 - keep file-list and path-discovery work index-backed instead of walking the filesystem ad hoc
 - commit indexed filesystem, group, or auth mutations through the shared watchdog mutation path so the primary publishes versioned state updates to every worker replica
+- keep periodic full rescans rare and completion-anchored, and route any unavoidable backstop rebuild through the shared yielding reconcile path instead of adding new synchronous polling loops
 
 ## API Contract
 

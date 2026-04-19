@@ -1,5 +1,5 @@
 provider:
-  api_base: https://openrouter.ai/api/v1/chat/completions
+  api_base: "https://openrouter.ai/api/v1/chat/completions"
   model: openai/gpt-5.4-mini
   api_key_env: OPENROUTER_API_KEY
   temperature: 0.2
@@ -7,9 +7,8 @@ provider:
   timeout_ms: 90000
   retry_count: 2
   retry_backoff_ms: 1500
-  referer: https://space-agent.local/tests/agent_llm_performance
-  title: "Space Agent Prompt Performance Tests"
-
+  referer: "https://space-agent.local/tests/agent_llm_performance"
+  title: Space Agent Prompt Performance Tests
 paths:
   prompts_dir: ./prompts
   cases_dir: ./cases
@@ -20,7 +19,6 @@ paths:
   latest_run_file: ./results/latest-run.json
   progress_file: ./results/progress.md
   summary_file: ./results/summary.md
-
 run:
   active_models:
     - openai/gpt-5.4-mini
@@ -30,9 +28,7 @@ run:
   repeat_count: 1
   keep_generations: all
   active_prompts:
-    - 086A_082A_no_half_thrust_onboarding
-    - 086B_reply_gate_onboarding_router
-    - 086C_three_mode_gate
+    - 089A_086A_browser_skill_exact_id
   active_cases:
     - page_title_requires_execution
     - smalltalk_hi_terminal
@@ -102,3 +98,7 @@ run:
     - direct_repair_after_known_widget_error
     - remove_space_by_title_requires_discovery_first
     - followup_after_wrong_space_removal_requires_discovery_execution
+    - browser_skill_correction_requires_load_first
+    - continue_after_browser_skill_load_uses_browser_api
+    - loaded_browser_skill_followup_uses_browser_api
+    - loaded_browser_skill_mistaken_load_nudge_uses_browser_api

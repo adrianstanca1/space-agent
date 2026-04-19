@@ -52,6 +52,8 @@ Runtime-state commands:
 - `user`
 - `group`
 
+These commands are out-of-process filesystem writers. They edit logical `L1` and `L2` content through shared server libraries, but they do not notify a running server through the clustered worker mutation path. A live server sees those CLI changes through watchdog file watching plus its rare backstop reconcile.
+
 `node space user create` can add the new user to groups in the same command with `--groups <group[,group...]>`. The group list is comma-separated, normalized, de-duplicated, and written through the same `L1` group helper used by `node space group add`.
 
 `node space group add` creates the target writable `L1` group if it does not already exist, including predefined runtime group ids such as `_admin`.

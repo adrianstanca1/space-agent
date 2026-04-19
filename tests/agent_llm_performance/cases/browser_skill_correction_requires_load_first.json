@@ -1,0 +1,37 @@
+{
+  "id": "browser_skill_correction_requires_load_first",
+  "description": "when the user corrects a browser-navigation request to use the browser skill, the next move should load that skill instead of navigating again",
+  "history": "../histories/browser_skill_correction_requires_load_first.json",
+  "expect": {
+    "response_type": "thrust",
+    "require_staging_line": true,
+    "require_separator_line": true,
+    "require_single_separator": true,
+    "require_code_after_separator": true,
+    "require_valid_javascript": true,
+    "must_contain": [
+      "_____javascript",
+      "browser-control"
+    ],
+    "must_match": [
+      {
+        "pattern": "space\\.skills\\.load\\(\"browser-control\"\\)",
+        "flags": "u"
+      }
+    ],
+    "must_not_match": [
+      {
+        "pattern": "location\\.(?:href|assign|replace)\\s*=",
+        "flags": "u"
+      },
+      {
+        "pattern": "location\\.(?:assign|replace)\\(",
+        "flags": "u"
+      },
+      {
+        "pattern": "space\\.browser\\.(?:open|create|navigate)\\(",
+        "flags": "u"
+      }
+    ]
+  }
+}

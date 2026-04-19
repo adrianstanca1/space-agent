@@ -5,6 +5,7 @@ import {
   SPACES_ROUTE_PATH,
   WIDGET_API_VERSION
 } from "/mod/_core/spaces/constants.js";
+import { createCurrentSpaceModuleImporter } from "/mod/_core/spaces/widget-import.js";
 import {
   buildCenteredFirstFitLayout,
   clampWidgetPosition,
@@ -15,6 +16,7 @@ import {
 } from "/mod/_core/spaces/layout.js";
 import {
   buildSpaceRootPath,
+  buildSpaceScriptsPath,
   buildSpaceWidgetFilePath,
   createSpace,
   createWidgetSource,
@@ -2415,8 +2417,14 @@ function buildWidgetHeaderTitle(spaceRecord, widgetId) {
 }
 
 function createWidgetContext(spaceRecord, widgetId, size, layoutEntry) {
+  const spaceRootPath = buildSpaceRootPath(spaceRecord.id);
   const widgetPath = buildSpaceWidgetFilePath(spaceRecord.id, widgetId);
   const widgetRecord = getWidgetRecord(spaceRecord, widgetId);
+  const importCurrentSpaceModule = createCurrentSpaceModuleImporter({
+    fileInfo: globalThis.space.api.fileInfo.bind(globalThis.space.api),
+    resolveAppUrl,
+    spaceRootPath
+  });
 
   return {
     api: globalThis.space.api,
@@ -2428,11 +2436,13 @@ function createWidgetContext(spaceRecord, widgetId, size, layoutEntry) {
       write: globalThis.space.api.fileWrite.bind(globalThis.space.api)
     },
     fetchExternal: globalThis.space.fetchExternal?.bind(globalThis.space),
+    import: importCurrentSpaceModule,
     openSpace: spacesRuntime.openSpace,
     paths: {
-      assets: `${buildSpaceRootPath(spaceRecord.id)}assets/`,
-      data: `${buildSpaceRootPath(spaceRecord.id)}data/`,
-      root: buildSpaceRootPath(spaceRecord.id),
+      assets: `${spaceRootPath}assets/`,
+      data: `${spaceRootPath}data/`,
+      root: spaceRootPath,
+      scripts: buildSpaceScriptsPath(spaceRecord.id),
       widget: widgetPath
     },
     reloadSpace: spacesRuntime.reloadCurrentSpace,
@@ -2441,7 +2451,7 @@ function createWidgetContext(spaceRecord, widgetId, size, layoutEntry) {
     size,
     space: {
       id: spaceRecord.id,
-      path: buildSpaceRootPath(spaceRecord.id),
+      path: spaceRootPath,
       title: spaceRecord.title,
       updatedAt: spaceRecord.updatedAt
     },

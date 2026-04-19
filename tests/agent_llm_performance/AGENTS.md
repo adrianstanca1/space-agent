@@ -28,6 +28,8 @@ This scope owns:
 ## Local Contracts
 
 - prompt files are standalone system prompts and are ranked by filename id plus saved results, not by hidden script state
+- prompt variants that cover browser-navigation behavior should say near the top that visiting another website means using `browser-control` and a stand-alone browser window, and that leaving the current runtime page via `window.location`, `location.href`, `location.assign(...)`, or `location.replace(...)` is forbidden
+- prompt variants that carry compact widget-authoring guidance should keep it aligned with the live firmware prompt and `_core/spaces`: prefer `async (parent, currentSpace, context) => { ... }` and use `await context.import("scripts/...")` for current-space shared modules, shared state, cross-widget communication, space-global helpers, and large widget splits
 - prompt generations should usually be created as triads:
   - `NNNA_*` = conservative changes
   - `NNNB_*` = middle changes
@@ -84,6 +86,7 @@ This scope owns:
 
 - prefer adding new failures as prepared histories and assertions before changing scoring code
 - when a real conversation exposes a logic bug, distill it into the shortest history that still reproduces the control-flow mistake
+- when a bug is about `space.skills.load(...)`, add both sides of the control flow when relevant: the initial load correction and the post-load use-the-skill continuation or mistaken-reload push
 - when a real trace shows the agent ignoring route-specific or space-specific system instructions, distill that mismatch into prepared cases instead of assuming the generic prompt already covers it
 - keep case assertions aimed at behavior class, continuation logic, target reuse, and stop conditions rather than exact domain phrasing
 - avoid overfitting the suite to one domain; keep a mix of live facts, widget edits, file edits, and recovery cases

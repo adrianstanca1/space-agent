@@ -29,6 +29,7 @@ Important files:
 - `widgets/<widgetId>.yaml`: widget metadata plus the renderer source string
 - `data/`: widget-owned structured files
 - `assets/`: widget-owned assets fetched through `/~/...`
+- `scripts/`: current-space shared JavaScript modules loaded from widget renderers through `context.import("scripts/...")`
 - `thumbnail.webp` or `thumbnail.jpg`: optional experimental dashboard-card background captured from the currently open space and cropped toward the visible widget cluster
 
 Important rules:
@@ -183,7 +184,7 @@ Rules:
 Preferred renderer shape:
 
 ```js
-async (parent, currentSpace) => {
+async (parent, currentSpace, context) => {
   // render into parent
 }
 ```
@@ -191,6 +192,11 @@ async (parent, currentSpace) => {
 Rules:
 
 - render directly into `parent`
+- `context.paths` includes `root`, `data`, `assets`, `scripts`, and `widget` for the current space
+- `context.import("scripts/utils.js")` loads a current-space module without hardcoded space ids or titles
+- if several widgets need shared state or a common event bus or other global space behavior, import the same `scripts/...` module from each widget
+- for very large or complex widgets, keep the renderer thin and move substantial logic into `scripts/*.js` modules
+- if imported modules need widget helpers or state, export functions that receive `context` instead of hardcoding widget ids or space paths
 - do not add outer wrapper padding just to inset content; the widget shell already provides that space
 - the default widget card surface is `#101b2d` (`rgba(16, 27, 45, 0.92)`); avoid another generic full-card background unless the content needs a dedicated stage
 - prefer light text and UI elements by default because widget content sits on a dark surface

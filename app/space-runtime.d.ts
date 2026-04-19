@@ -23,14 +23,17 @@ type SpaceApiCallOptions = {
 
 type SpaceFileApiResult = {
   access?: "read" | "write" | string;
-  endpoint?: string;
-  gitRepositories?: boolean;
-  recursive?: boolean;
-  paths?: string[];
-  path: string;
+  bytesWritten?: number;
   content?: string;
   encoding?: string;
-  bytesWritten?: number;
+  endpoint?: string;
+  gitRepositories?: boolean;
+  isDirectory?: boolean;
+  modifiedAt?: string;
+  path: string;
+  paths?: string[];
+  recursive?: boolean;
+  size?: number;
 };
 
 type SpaceFileListOptions = {

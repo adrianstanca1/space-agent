@@ -9,6 +9,7 @@ export const SPACE_WIDGETS_DIR = "widgets/";
 export const SPACE_WIDGET_FILE_EXTENSION = ".yaml";
 export const SPACE_DATA_DIR = "data/";
 export const SPACE_ASSETS_DIR = "assets/";
+export const SPACE_SCRIPTS_DIR = "scripts/";
 
 export const GRID_COORD_MIN = -4096;
 export const GRID_COORD_MAX = 4096;

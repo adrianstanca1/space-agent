@@ -1,0 +1,18 @@
+generated_at: "2026-04-18T06:44:26.831Z"
+generation_id: 2026-04-18T06-44-26-831Z
+model: openai/gpt-5.4-mini
+prompts:
+  -
+    rank: 1
+    id: 089A_086A_browser_skill_exact_id
+    passed_cases: 68
+    total_cases: 72
+    pass_rate: 0.9444
+    passed_attempts: 68
+    total_attempts: 72
+    attempt_pass_rate: 0.9444
+    failed_cases:
+      - selective_text_edit_requires_read_first
+      - selective_yaml_edit_requires_read_first
+      - repeat_do_it_requires_execution
+      - browser_skill_correction_requires_load_first

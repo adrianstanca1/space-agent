@@ -8,18 +8,19 @@ each case should have one primary category in this file even if it touches secon
 
 ## Current Balance
 
-- total problem groups: `12`
-- total active cases: `68`
+- total problem groups: `13`
+- total active cases: `72`
 - heaviest coverage:
   - `current-context and live facts`: `10`
   - `staged edits and handoffs`: `8`
 - lighter coverage:
-  - `onboarding and proactive guidance`: `3`
   - `conversation vs execution boundary`: `3`
+  - `skill loading and application`: `4`
+  - `onboarding and proactive guidance`: `3`
   - `direct runtime control without helper`: `7`
-  - `error recovery and telemetry truth`: `7`
   - `verification and runtime ownership`: `7`
   - `active target anchoring and repair momentum`: `4`
+  - `error recovery and telemetry truth`: `7`
   - `completion and reopen logic`: `5`
   - `reply shape and follow-through`: `3`
   - `space navigation and action semantics`: `6`
@@ -36,6 +37,17 @@ cases:
 - `smalltalk_hi_terminal`
 - `page_title_requires_execution`
 - `time_requires_execution`
+
+### Skill Loading And Application — `4`
+
+goal: treat skill loads as setup for the active task instead of completion, use the exact skill id on first load, and forbid same-skill reload loops once the skill is already loaded
+
+cases:
+
+- `browser_skill_correction_requires_load_first`
+- `continue_after_browser_skill_load_uses_browser_api`
+- `loaded_browser_skill_followup_uses_browser_api`
+- `loaded_browser_skill_mistaken_load_nudge_uses_browser_api`
 
 ### Onboarding And Proactive Guidance — `3`
 

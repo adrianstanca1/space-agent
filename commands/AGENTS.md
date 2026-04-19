@@ -328,6 +328,8 @@ Guidance:
 
 These commands edit the layered runtime state under `app/`. They should operate through explicit filesystem contracts and shared backend libraries, not through ad hoc inline file mutations.
 
+They are still out-of-process writers. They mutate `L1` and `L2` on disk through shared server libraries, but they do not send IPC or HTTP mutation reports to an already-running server process. A live server therefore observes those CLI writes through watchdog file watching plus its rare backstop reconcile, not through the clustered worker mutation pipeline.
+
 ### `user`
 
 Purpose:

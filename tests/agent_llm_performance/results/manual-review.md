@@ -582,3 +582,38 @@
 - decision:
   - do not treat temperature reduction alone as the fix
   - keep the leaderboard on the standard `0.2` track for now
+
+#### `089A` browser-skill promotion
+
+- new regression family added from the browser-skill loop trace:
+  - `browser_skill_correction_requires_load_first`
+  - `continue_after_browser_skill_load_uses_browser_api`
+  - `loaded_browser_skill_followup_uses_browser_api`
+  - `loaded_browser_skill_mistaken_load_nudge_uses_browser_api`
+- baseline `086A_082A_no_half_thrust_onboarding` behavior on that family:
+  - one-shot focused run: `2/4`
+  - repeat-3 focused run: `2/4` strict, `6/12` attempts
+  - persistent misses:
+    - reused `location.href` when the user corrected to the browser skill
+    - reloaded `browser-control` after it had already loaded instead of using `space.browser`
+- promoted prompt: `089A_086A_browser_skill_exact_id`
+  - one-shot expanded-suite run on `72` active cases: `69/72`
+  - full-suite repeat validation runs landed between `65/72` and `67/72` strict, with `206/216` to `208/216` passing attempts
+  - browser-skill family repeat-3 run: `4/4` strict, `12/12` attempts
+- promotion reason:
+  - fixes the new skill-loading control bug cleanly and stably
+  - improves the expanded-suite one-shot frontier from `65/72` to `69/72`
+  - holds the rest of the suite well enough to justify live promotion despite residual drift
+- remaining repeat weak spots after promotion:
+  - `partial_mitigation_is_not_completion` `2/3`
+  - `selective_yaml_edit_requires_read_first` `0/3`
+  - `widget_missing_without_replacement_requires_terminal_truth` `2/3`
+  - `repeat_do_it_requires_execution` `1/3`
+  - `post_success_followup_requires_execution_or_completion` `2/3`
+- token cost:
+  - `086A_082A_no_half_thrust_onboarding`: `4966`
+  - `089A_086A_browser_skill_exact_id`: `5366`
+  - delta: `+400`
+- manual review outcome:
+  - promote `089A_086A_browser_skill_exact_id` into live firmware prompt
+  - keep the remaining weak spots as the next sweep target instead of holding the skill fix back

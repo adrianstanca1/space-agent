@@ -66,7 +66,10 @@ Rules:
 - keep derived indexes derived; do not build side-channel mutable state around them
 - treat the watchdog as the only authoritative writer of replicated filesystem-derived state shards
 - primary-owned watchdog state initializes its replicated version space from a long startup epoch when no snapshot version is provided, while replicas continue to trust the primary snapshot version they were bootstrapped with
+- exact logical-path mutation reports from workers and jobs plus `fs.watch` incremental sync are the normal freshness path; do not rely on a fast whole-tree reconcile for routine writes
 - incremental `user_index` rebuilds rely on concrete changed auth or profile file paths, so mutation publishers must include `user.yaml`, `meta/password.json`, and `meta/logins.json` when those files are created or rewritten
+- periodic full rescans are a backstop for missed external or out-of-process changes, are scheduled from the previous run's completion time, default to 5 minutes, and may be disabled with `reconcileIntervalMs <= 0`
+- full rescans should rebuild indexes asynchronously and yield to the event loop so the primary stays responsive during larger walks
 - clustered worker replicas consume versioned snapshots and incremental state deltas from the primary watchdog owner
 - if a feature needs a new live derived view, add a handler plus config entry instead of manually wiring one-off logic in `server/app.js`
 
@@ -75,5 +78,6 @@ Rules:
 - add or change handlers through `config.yaml` plus handler classes, not special cases in bootstrap code
 - keep refresh behavior deterministic and centralized in `watchdog.js`
 - keep incremental sync authoritative; when a change must be visible across workers immediately after a write, publish the exact logical project paths that changed
+- keep backstop rescans infrequent and non-blocking; reuse the yielding full-scan path instead of adding new synchronous polling loops
 - keep index semantics stable because router, auth, and customware depend on them
 - if watched paths, handler names, or index contracts change, update this file and the affected docs in the same session

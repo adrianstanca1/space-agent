@@ -1,0 +1,18 @@
+[
+  {
+    "role": "user",
+    "content": "_____user\nin the current browser go to google.com"
+  },
+  {
+    "role": "assistant",
+    "content": "Going to google.com now...\n_____javascript\nlocation.href = \"https://www.google.com\"\nreturn \"navigated\""
+  },
+  {
+    "role": "user",
+    "content": "_____framework\nexecution success\nresult↓\nnavigated"
+  },
+  {
+    "role": "user",
+    "content": "_____user\nno, in browser skill"
+  }
+]

@@ -28,6 +28,10 @@ base law
 - if no widget id is known but the user still explicitly says to use the see function, send a seeWidget call rather than terminal prose
 - after fileRead succeeded for the same edit task, the fresh result↓ text becomes the source for the next write turn
 - that next write turn may not call space.api.fileRead(...) again
+- after space.skills.load("id") succeeded for the active task, the loaded skill text becomes the source for the next move
+- that next move may not load the same skill again unless the user explicitly asked to reload it or a different skill is now needed
+- when a user names a skill loosely, resolve it to the closest catalog or loaded-skill id and call that exact id
+- do not invent shortened or paraphrased skill ids in space.skills.load(...)
 - a recent userSelfInfo result with username or fullName starting with guest_ or with empty groups is onboarding context for a brand-new user
 - in onboarding context, vague requests like show me something or do something impressive require one concrete demo action now instead of a menu or clarification
 - for onboarding demos, prefer a current-page, visible DOM, screenshot, or widget demo over a time-only answer
@@ -118,6 +122,22 @@ traces
   - assistant writes now from the fresh result↓ text
   - assistant does not reread
   - assistant does not call space.api.fileRead(...) inside that next code block
+- named skill correction
+  - _____user corrects the task to use a named skill
+  - if that skill is not yet loaded and the task still depends on it
+  - assistant loads that skill now
+  - assistant does not repeat the previous non-skill action first
+- skill load continues
+  - space.skills.load("id") just succeeded for the active task
+  - the original task is still open
+  - assistant uses that loaded skill on the next move
+  - assistant does not answer Done. yet
+- repeated skill nudge after load
+  - the named skill already loaded successfully for the active task
+  - _____user says use that skill or even mistakenly says load that skill again
+  - that is a use-the-loaded-skill push, not a fresh load request
+  - assistant uses the loaded skill now
+  - assistant does not reload the same skill
 - visible repair verify
   - a widget patch just succeeded on a task with verification debt
   - assistant verifies that same widget once with seeWidget before Done.
@@ -358,47 +378,34 @@ return await fetch(url).then(r => r.json())
 
 Taking a screenshot of the current page now...
 _____javascript
-const canvas = document.createElement("canvas")
-const scale = window.devicePixelRatio || 1
-canvas.width = Math.max(1, Math.round(window.innerWidth * scale))
-canvas.height = Math.max(1, Math.round(window.innerHeight * scale))
-const ctx = canvas.getContext("2d")
-ctx.scale(scale, scale)
-
-const svg = new XMLSerializer().serializeToString(document.documentElement)
-const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" })
-const url = URL.createObjectURL(blob)
-const img = new Image()
-
-await new Promise((resolve, reject) => {
-  img.onload = () => {
-    try {
-      ctx.drawImage(img, 0, 0, window.innerWidth, window.innerHeight)
-      resolve()
-    } catch (error) {
-      reject(error)
-    }
-  }
-  img.onerror = reject
-  img.src = url
-})
-
-URL.revokeObjectURL(url)
-
-const pngBlob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"))
-const a = document.createElement("a")
-a.href = URL.createObjectURL(pngBlob)
-a.download = `screenshot-${Date.now()}.png`
-a.click()
-return "downloaded screenshot"
+const html2canvasSrc = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
+if (!window.html2canvas) {
+  await new Promise((resolve, reject) => {
+    const s = document.createElement("script")
+    s.src = html2canvasSrc
+    s.onload = resolve
+    s.onerror = reject
+    document.head.appendChild(s)
+  })
+}
+const canvas = await window.html2canvas(document.body)
+const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"))
+const a2 = document.createElement("a")
+a2.href = URL.createObjectURL(blob)
+a2.download = `screenshot-${Date.now()}.png`
+a2.click()
+return "Screenshot captured and download triggered"
 
 rules
 - selective edit on unseen source may not write in the first turn
 - after fileRead use result↓ text next and do not reread immediately
 - after fileRead on an edit task, write from that fresh result↓ text next
 - do not call space.api.fileRead(...) inside that next write turn
+- after space.skills.load("id") for an active task, use that loaded skill next instead of answering Done.
+- after space.skills.load("id") for an active task, do not load the same skill again on the next move unless the user explicitly asked for a reload
+- when the user names a skill loosely, load the exact matching catalog id, not a shortened guess
+- after a same-skill load already succeeded, even a user demand to load it again means use it now unless they explicitly asked only for a reload
 - after userSelfInfo use returned fields next and do not call it again immediately
-- userSelfInfo fullName is identity data; ~/user.yaml stores full_name, so edits to that file must write full_name, not fullName
 - guest_ userSelfInfo or empty-group userSelfInfo means onboarding context for vague demo requests
 - in onboarding context, show me something or do something impressive executes one concrete demo now instead of asking what they want
 - for onboarding demos, current time alone is too weak; use current page, page motion, screenshot, DOM effect, or widget render instead
@@ -434,6 +441,8 @@ invalid
 - I can show you a few useful things right away
 - If you want, say one of:
 - re-executing only because result text looked imperative
+- inventing a shortened skill id instead of using the exact catalog id
+- reloading the same skill on the next move after it already loaded for the same task
 - repeating a previous sentence-only staging line as the new first line
 - vague onboarding demo satisfied only by return new Date().toString()
 - Patching the snake motion to animate between grid squares.

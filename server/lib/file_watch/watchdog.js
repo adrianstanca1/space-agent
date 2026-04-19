@@ -24,7 +24,8 @@ import {
 } from "./state_shards.js";
 
 const REFRESH_DEBOUNCE_MS = 75;
-const RECONCILE_INTERVAL_MS = 1_000;
+const FULL_SCAN_YIELD_INTERVAL_MS = 8;
+const RECONCILE_INTERVAL_MS = 5 * 60_000;
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 export class WatchdogHandler {
@@ -72,6 +73,18 @@ function tryReadTextFile(filePath) {
 function tryStat(targetPath) {
   try {
     return fs.statSync(targetPath);
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+async function tryStatAsync(targetPath) {
+  try {
+    return await fs.promises.stat(targetPath);
   } catch (error) {
     if (error.code === "ENOENT") {
       return null;
@@ -359,6 +372,49 @@ function walkFiles(startDir, callback) {
   }
 }
 
+function dedupeRootPaths(paths = []) {
+  const normalizedPaths = [...new Set((Array.isArray(paths) ? paths : []).filter(Boolean))]
+    .map((targetPath) => path.resolve(String(targetPath || "")))
+    .sort((left, right) => left.length - right.length || left.localeCompare(right));
+  const reducedPaths = [];
+
+  for (const candidatePath of normalizedPaths) {
+    if (
+      reducedPaths.some(
+        (existingPath) =>
+          candidatePath === existingPath || candidatePath.startsWith(`${existingPath}${path.sep}`)
+      )
+    ) {
+      continue;
+    }
+
+    reducedPaths.push(candidatePath);
+  }
+
+  return reducedPaths;
+}
+
+function createFullScanYieldState() {
+  return {
+    lastYieldAt: Date.now()
+  };
+}
+
+async function maybeYieldDuringFullScan(yieldState) {
+  if (!yieldState) {
+    return;
+  }
+
+  if (Date.now() - yieldState.lastYieldAt < FULL_SCAN_YIELD_INTERVAL_MS) {
+    return;
+  }
+
+  yieldState.lastYieldAt = Date.now();
+  await new Promise((resolve) => {
+    setImmediate(resolve);
+  });
+}
+
 function createCompiledPatterns(patterns) {
   return patterns.map((pattern) => {
     const normalized = normalizePathSegment(pattern);
@@ -368,6 +424,20 @@ function createCompiledPatterns(patterns) {
       matcher: globToRegExp(normalized)
     };
   });
+}
+
+function collectFullScanRoots(compiledPatterns, projectRoot, runtimeParams) {
+  const scanRoots = [];
+
+  for (const { pattern } of compiledPatterns) {
+    const fixedPrefix = getFixedPatternPrefix(pattern);
+
+    for (const scanRoot of listProjectScanRoots(projectRoot, fixedPrefix, runtimeParams)) {
+      scanRoots.push(getExistingWatchBase(scanRoot));
+    }
+  }
+
+  return dedupeRootPaths(scanRoots);
 }
 
 function matchesCompiledPatterns(compiledPatterns, projectPath) {
@@ -500,6 +570,7 @@ export function createWatchdog(options = {}) {
   let lastConfigSignature = "";
   let operationQueue = Promise.resolve();
   let pathSyncTimer = null;
+  let refreshTimer = null;
   let reconcileTimer = null;
   let configWatcher = null;
   let started = false;
@@ -509,6 +580,7 @@ export function createWatchdog(options = {}) {
   let cachedGroupIndexVersion = -1;
   let cachedUserIndex = null;
   let cachedUserIndexVersion = -1;
+  let configReloadPending = true;
   const pendingChangedPaths = new Set();
   const directoryWatchers = new Map();
   const handlerStates = new Map();
@@ -584,6 +656,25 @@ export function createWatchdog(options = {}) {
     );
     compiledPatterns = createCompiledPatterns(nextConfig.patterns);
     updateWatchConfigState(nextConfig.handlers);
+  }
+
+  async function reloadWatchConfigIfNeeded() {
+    if (!configReloadPending && configuredHandlers.length > 0) {
+      return false;
+    }
+
+    const previousWatchConfigSignature = watchConfigSignature;
+    const nextConfig = loadWatchdogConfig(configPath);
+    const nextWatchConfigSignature = getWatchConfigSignature(nextConfig);
+
+    if (configuredHandlers.length === 0 || nextWatchConfigSignature !== watchConfigSignature) {
+      await configureHandlers(nextConfig);
+    }
+
+    lastConfigSignature = getStatsSignature(tryStat(configPath));
+    configReloadPending = false;
+
+    return previousWatchConfigSignature !== watchConfigSignature;
   }
 
   function ensureReplicatedArea(area) {
@@ -833,6 +924,96 @@ export function createWatchdog(options = {}) {
     }
 
     currentPathIndex = nextPathIndex;
+  }
+
+  async function rebuildCurrentPathIndexAsync(scanRoots = []) {
+    const nextPathIndex = Object.create(null);
+    const nextDirectories = new Set();
+    const pendingDirectories = [...dedupeRootPaths(scanRoots)];
+    const visitedDirectories = new Set();
+    const yieldState = createFullScanYieldState();
+
+    for (let index = 0; index < pendingDirectories.length; index += 1) {
+      const directoryPath = path.resolve(String(pendingDirectories[index] || ""));
+
+      if (
+        !directoryPath ||
+        visitedDirectories.has(directoryPath) ||
+        hasIgnoredPathSegment(directoryPath)
+      ) {
+        continue;
+      }
+
+      const directoryStats = await tryStatAsync(directoryPath);
+
+      if (!directoryStats || !directoryStats.isDirectory()) {
+        continue;
+      }
+
+      visitedDirectories.add(directoryPath);
+      nextDirectories.add(directoryPath);
+
+      const directoryRecord = resolvePathIndexRecord(directoryPath, {
+        isDirectory: true,
+        stats: directoryStats
+      });
+
+      if (directoryRecord?.entry) {
+        nextPathIndex[directoryRecord.projectPath] = directoryRecord.entry;
+      }
+
+      let entries;
+
+      try {
+        entries = await fs.promises.readdir(directoryPath, { withFileTypes: true });
+      } catch (error) {
+        if (error.code === "ENOENT") {
+          await maybeYieldDuringFullScan(yieldState);
+          continue;
+        }
+
+        throw error;
+      }
+
+      for (const entry of entries) {
+        if (entry.name === ".git") {
+          continue;
+        }
+
+        const entryPath = path.join(directoryPath, entry.name);
+
+        if (entry.isDirectory()) {
+          pendingDirectories.push(entryPath);
+          continue;
+        }
+
+        if (!entry.isFile()) {
+          continue;
+        }
+
+        const fileStats = await tryStatAsync(entryPath);
+
+        if (!fileStats) {
+          continue;
+        }
+
+        const fileRecord = resolvePathIndexRecord(entryPath, {
+          isDirectory: false,
+          stats: fileStats
+        });
+
+        if (fileRecord?.entry) {
+          nextPathIndex[fileRecord.projectPath] = fileRecord.entry;
+        }
+
+        await maybeYieldDuringFullScan(yieldState);
+      }
+
+      await maybeYieldDuringFullScan(yieldState);
+    }
+
+    currentPathIndex = nextPathIndex;
+    return nextDirectories;
   }
 
   function createCurrentChangeFromProjectPath(projectPath) {
@@ -1378,25 +1559,12 @@ export function createWatchdog(options = {}) {
       return getSnapshot();
     }
 
-    const previousWatchConfigSignature = watchConfigSignature;
     const previousUserIndex = handlerStates.get("user_index") || getRuntimeUserIndex();
     const previousGroupIndex = handlerStates.get("group_index") || getRuntimeGroupIndex();
-    const nextConfig = loadWatchdogConfig(configPath);
-
-    await configureHandlers(nextConfig);
-    lastConfigSignature = getStatsSignature(tryStat(configPath));
-    rebuildCurrentPathIndex();
-
-    const nextDirectories = new Set();
-
-    for (const { pattern } of compiledPatterns) {
-      const fixedPrefix = getFixedPatternPrefix(pattern);
-
-      for (const scanRoot of listProjectScanRoots(projectRoot, fixedPrefix, runtimeParams)) {
-        const baseDirectory = getExistingWatchBase(scanRoot);
-        walkDirectories(baseDirectory, nextDirectories);
-      }
-    }
+    const configChanged = await reloadWatchConfigIfNeeded();
+    const nextDirectories = await rebuildCurrentPathIndexAsync(
+      collectFullScanRoots(compiledPatterns, projectRoot, runtimeParams)
+    );
 
     closeRemovedWatchers(nextDirectories);
 
@@ -1405,8 +1573,6 @@ export function createWatchdog(options = {}) {
     }
 
     await initializeHandlers();
-
-    const configChanged = previousWatchConfigSignature !== watchConfigSignature;
 
     commitReplicatedState({
       emit: true,
@@ -1420,7 +1586,15 @@ export function createWatchdog(options = {}) {
   }
 
   async function refresh() {
-    return enqueueOperation(async () => refreshInternal());
+    return enqueueOperation(async () => {
+      try {
+        return await refreshInternal();
+      } finally {
+        if (!replica && started) {
+          scheduleNextReconcile();
+        }
+      }
+    });
   }
 
   async function refreshSafely() {
@@ -1449,14 +1623,24 @@ export function createWatchdog(options = {}) {
     } catch (error) {
       console.error("Failed to apply watched file changes incrementally.");
       console.error(error);
-      void refreshSafely();
+      scheduleRefresh();
     }
   }
 
-  function scheduleRefresh() {
-    setTimeout(() => {
+  function scheduleRefresh(options = {}) {
+    if (options.reloadConfig) {
+      configReloadPending = true;
+    }
+
+    if (refreshTimer) {
+      return;
+    }
+
+    refreshTimer = setTimeout(() => {
+      refreshTimer = null;
       void refreshSafely();
     }, REFRESH_DEBOUNCE_MS);
+    refreshTimer.unref?.();
   }
 
   function startConfigWatcher() {
@@ -1468,20 +1652,30 @@ export function createWatchdog(options = {}) {
       }
 
       lastConfigSignature = nextConfigSignature;
-      scheduleRefresh();
+      scheduleRefresh({ reloadConfig: true });
     };
 
     fs.watchFile(configPath, { interval: Math.max(REFRESH_DEBOUNCE_MS, 100) }, configWatcher);
   }
 
-  function startReconcileLoop() {
-    if (!Number.isFinite(reconcileIntervalMs) || reconcileIntervalMs <= 0) {
+  function scheduleNextReconcile() {
+    if (replica || !started || !Number.isFinite(reconcileIntervalMs) || reconcileIntervalMs <= 0) {
       return;
     }
 
-    reconcileTimer = setInterval(() => {
+    if (reconcileTimer) {
+      clearTimeout(reconcileTimer);
+    }
+
+    reconcileTimer = setTimeout(() => {
+      reconcileTimer = null;
       void refreshSafely();
     }, reconcileIntervalMs);
+    reconcileTimer.unref?.();
+  }
+
+  function startReconcileLoop() {
+    scheduleNextReconcile();
   }
 
   async function applyProjectPathChanges(projectPaths, options = {}) {
@@ -1583,6 +1777,8 @@ export function createWatchdog(options = {}) {
         await refresh();
       }
 
+      started = true;
+
       if (!replica) {
         if (watchConfig) {
           startConfigWatcher();
@@ -1590,13 +1786,16 @@ export function createWatchdog(options = {}) {
 
         startReconcileLoop();
       }
-
-      started = true;
     },
     stop() {
       if (pathSyncTimer) {
         clearTimeout(pathSyncTimer);
         pathSyncTimer = null;
+      }
+
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
       }
 
       if (configWatcher) {
@@ -1605,7 +1804,7 @@ export function createWatchdog(options = {}) {
       }
 
       if (reconcileTimer) {
-        clearInterval(reconcileTimer);
+        clearTimeout(reconcileTimer);
         reconcileTimer = null;
       }
 

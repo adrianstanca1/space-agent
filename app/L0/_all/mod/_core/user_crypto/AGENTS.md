@@ -37,6 +37,6 @@ This scope owns:
 ## Development Guidance
 
 - keep this module headless and runtime-focused
-- keep actual crypto primitives in the shared browser helper served from `server/pages/res/user-crypto.js` so `/login` and authenticated app modules use the same envelope format and wrap derivation
+- keep actual crypto primitives in the shared browser helper served from `server/pages/res/user-crypto.js` so `/login` and authenticated app modules use the same envelope format and wrap derivation, and keep that helper compatible with browsers that expose partial `Buffer` polyfills without Node's `base64url` codec alias
 - keep failure handling soft for callers and explicit in console output
 - if the runtime namespace, session-cache format, bootstrap behavior, or `userCrypto:` envelope format changes, update this file, `/app/AGENTS.md`, `/app/L0/_all/mod/_core/framework/AGENTS.md`, and the matching docs under `_core/documentation/docs/`

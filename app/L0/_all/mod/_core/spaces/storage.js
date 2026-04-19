@@ -2,6 +2,7 @@ import {
   DEFAULT_WIDGET_POSITION,
   SPACE_ASSETS_DIR,
   SPACE_DATA_DIR,
+  SPACE_SCRIPTS_DIR,
   SPACE_MANIFEST_FILE,
   SPACE_WIDGET_FILE_EXTENSION,
   SPACE_WIDGET_SCHEMA,
@@ -1499,6 +1500,10 @@ export function buildSpaceDataPath(spaceId) {
 
 export function buildSpaceAssetsPath(spaceId) {
   return `${buildSpaceRootPath(spaceId)}${SPACE_ASSETS_DIR}`;
+}
+
+export function buildSpaceScriptsPath(spaceId) {
+  return `${buildSpaceRootPath(spaceId)}${SPACE_SCRIPTS_DIR}`;
 }
 
 export function resolveAppUrl(path) {

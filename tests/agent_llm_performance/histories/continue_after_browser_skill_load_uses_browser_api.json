@@ -1,0 +1,14 @@
+[
+  {
+    "role": "user",
+    "content": "_____user\nopen google in browser for me"
+  },
+  {
+    "role": "assistant",
+    "content": "Loading the browser control skill now...\n_____javascript\nreturn await space.skills.load(\"browser-control\")"
+  },
+  {
+    "role": "user",
+    "content": "_____framework\nexecution success\n---\nname: Browser Control\ndescription: Load this skill when you need to navigate the web through space.browser\n---\n\nUse this skill when the task needs to navigate the web through space.browser.\n\nworkflow\n- If a new browser window is needed, call `space.browser.open(url)` or `space.browser.create(...)`.\n- If an existing browser should change page, call `space.browser.navigate(id, url)`.\n\nguidance\n- Prefer `space.browser.open(\"https://example.com\")` when the task needs a fresh browser window."
+  }
+]
