@@ -114,7 +114,7 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
     console.error(error?.cause || error);
 
     sendJson(res, statusCode, {
-      error: statusCode >= 500 ? "Internal server error" : error.message
+      error: statusCode >= 500 ? error.message : "Invalid request"
     });
     return;
   }
