@@ -262,13 +262,18 @@ async function importSpaceArchive(spaceId, mode, payloadBytes) {
 }
 
 async function createCloudShare(baseUrl, payloadBytes, encryption = null) {
-  const response = await fetch(createCloudShareCreateUrl(baseUrl, encryption), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/octet-stream"
-    },
-    body: payloadBytes
-  });
+  let response;
+  try {
+    response = await fetch(createCloudShareCreateUrl(baseUrl, encryption), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/octet-stream"
+      },
+      body: payloadBytes
+    });
+  } catch (error) {
+    throw new Error("Unable to upload the cloud share.");
+  }
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
