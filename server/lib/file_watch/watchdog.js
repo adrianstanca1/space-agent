@@ -1209,7 +1209,8 @@ export function createWatchdog(options = {}) {
         schedulePathSync(path.join(directoryPath, String(fileName)));
       });
 
-      watcher.on("error", () => {
+      watcher.on("error", (error) => {
+        console.error(`[watchdog] File system watch error on "${directoryPath}": ${error?.message || error}`);
         watcher.close();
         directoryWatchers.delete(directoryPath);
         schedulePathSync(directoryPath);
