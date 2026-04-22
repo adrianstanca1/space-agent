@@ -676,6 +676,11 @@ async function handleLoadModel(payload = {}) {
       dtype,
       progress_callback
     });
+    if (generator?.device && typeof generator.device.lost === "object") {
+      generator.device.lost.then((info) => {
+        postWorkerError(WORKER_OUTBOUND.CONTEXT_LOST, createWorkerError(info.message || "WebGPU context lost.", { cause: info }), { modelId });
+      });
+    }
     flushLoadProgressTracker(currentLoadProgressTracker, requestId, modelId);
     const resolvedProcessor = await resolveChatProcessor(runtimeModule, modelId, {
       device: "webgpu",

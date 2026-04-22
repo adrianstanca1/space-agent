@@ -1000,6 +1000,19 @@ class HuggingFaceManager {
         break;
       }
 
+      case WORKER_OUTBOUND.CONTEXT_LOST: {
+        logHuggingFaceConsoleError("WebGPU context lost", {
+          activeModelId: this.state.activeModelId,
+          error: payload.error
+        });
+        this.restartWorker({
+          clearPersistedSelection: false,
+          keepLoadingState: false,
+          statusText: "WebGPU context lost. Restarting worker..."
+        });
+        break;
+      }
+
       default:
         break;
     }
