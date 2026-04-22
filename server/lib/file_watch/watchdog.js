@@ -582,6 +582,7 @@ export function createWatchdog(options = {}) {
   let cachedUserIndexVersion = -1;
   let configReloadPending = true;
   const MAX_PENDING_CHANGED_PATHS = 10_000;
+  const MAX_ENQUEUED_PATHS = 8_000; // backpressure threshold — reject before hitting the hard cap
   const pendingChangedPaths = new Set();
   const directoryWatchers = new Map();
   const handlerStates = new Map();
@@ -1703,6 +1704,12 @@ export function createWatchdog(options = {}) {
         projectPaths: [],
         version: getCurrentVersion()
       };
+    }
+
+    if (pendingChangedPaths.size >= MAX_ENQUEUED_PATHS) {
+      throw new Error(
+        `Watchdog queue backpressure: ${pendingChangedPaths.size} pending operations (threshold ${MAX_ENQUEUED_PATHS}). Rejecting batch of ${normalizedProjectPaths.length} path(s).`
+      );
     }
 
     if (replica) {

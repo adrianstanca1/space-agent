@@ -47,6 +47,13 @@ const SESSION_VERIFIER_PREFIX = "space-session-token-v1";
 const SESSION_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 const USER_AGENT_MAX_LENGTH = 512;
 
+// Dummy verifier for constant-time auth error response when user does not exist
+const DUMMY_VERIFIER_FOR_TIMING_EQUALITY = {
+  iterations: 310_000,
+  salt: "dW1pbnNhbHQAAAAAAAAAAAAAAAAAAAAAAA",
+  storedKey: "dW1wa2V5dGhhdGlzMzJyYW5kb21iYXNlNjQ1dXJsZW5jb2RlZA"
+};
+
 function createStatusError(message, statusCode) {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -101,7 +108,8 @@ function createSessionCookieHeader(sessionToken) {
     HttpOnly: true,
     "Max-Age": Math.floor(SESSION_TTL_MS / 1000),
     Path: "/",
-    SameSite: "Strict"
+    SameSite: "Strict",
+    Secure: true
   });
 }
 
@@ -110,7 +118,8 @@ function createClearedSessionCookieHeader() {
     HttpOnly: true,
     "Max-Age": 0,
     Path: "/",
-    SameSite: "Strict"
+    SameSite: "Strict",
+    Secure: true
   });
 }
 
@@ -712,6 +721,9 @@ export function createAuthService(options = {}) {
       ? readCurrentPasswordVerifier(challenge.username)
       : null;
 
+    // Use dummy verifier so auth error timing does not reveal whether user exists
+    const verifierForProof = verifier || DUMMY_VERIFIER_FOR_TIMING_EQUALITY;
+
     if (!verifier) {
       throw new Error("Invalid username or password.");
     }
@@ -726,12 +738,15 @@ export function createAuthService(options = {}) {
       clientProof,
       serverNonce: challenge.serverNonce,
       username: challenge.username,
-      verifier
+      verifier: verifierForProof
     });
 
     if (!loginResult.ok) {
       throw new Error("Invalid username or password.");
     }
+
+    // Run password verification against dummy to equalize timing even when user does not exist
+    verifyPassword("dummy-password-for-timing", DUMMY_VERIFIER_FOR_TIMING_EQUALITY);
 
     if (challenge.userCryptoStatus === "missing") {
       const provisioningRecord =
