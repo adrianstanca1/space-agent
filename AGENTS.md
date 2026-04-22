@@ -173,7 +173,7 @@ These rules apply across the codebase:
 Top-level structure:
 
 - `space`: root CLI router that discovers command modules dynamically
-- `.github/`: repo-level automation, tagged desktop release publishing, and lightweight public assets used by the README, including hero and badge artwork
+- `.github/`: repo-level automation, tagged desktop release publishing, and lightweight public assets used by the README, including hero, badge, and video thumbnail artwork
 - `.vscode/`: workspace editor settings plus the checked-in `npm run dev` debugger launch config for server-side breakpoints during local development
 - `commands/`: CLI command modules such as `serve`, `help`, `get`, `set`, `version`, and `update`
 - `app/`: browser runtime, layered customware model, shared frontend modules, and browser test surfaces
@@ -263,7 +263,7 @@ Child-doc obligations:
 
 Core ownership:
 
-- `/README.md` owns the public-facing project overview, quick starts, call-to-action links, community links, release entry points, DeepWiki discovery link, and public hero artwork; it must point back to the binding `AGENTS.md` contract instead of replacing it
+- `/README.md` owns the public-facing project overview, quick starts, call-to-action links, community links, release entry points, video links, DeepWiki discovery link, and public hero artwork; it must point back to the binding `AGENTS.md` contract instead of replacing it
 - `/AGENTS.md` owns repo-wide rules, documentation policy, top-level structure, and cross-cutting principles
 - `/app/AGENTS.md` owns browser-runtime architecture, layer rules, frontend composition rules, and app-wide guidance
 - `/server/AGENTS.md` owns server responsibilities, request flow, API/module/page boundaries, and server-wide infrastructure guidance

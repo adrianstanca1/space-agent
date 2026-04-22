@@ -23,6 +23,19 @@
   <a href="https://deepwiki.com/agent0ai/space-agent"><img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" /></a>
 </p>
 
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <tr>
+    <td valign="middle" width="300">
+      <a href="https://www.youtube.com/watch?v=CNRHxEZ8yqs"><img src="./.github/thumb.webp" alt="Watch Space Agent on YouTube" width="280" /></a>
+    </td>
+    <td valign="middle">
+      <strong>Watch the Space Agent tour</strong><br />
+      See how a browser-first AI workspace can reshape its own interface, build tools, and grow through simple <code>SKILL.md</code> files.<br />
+      <a href="https://www.youtube.com/watch?v=CNRHxEZ8yqs">Watch on YouTube</a>
+    </td>
+  </tr>
+</table>
+
 ---
 
 ## Why Space Agent Is Different
