@@ -410,6 +410,9 @@ function createRequestHandler(options) {
 
     const requestStart = Date.now();
 
+    // Parse request URL early for logging
+    const requestUrl = new URL(req.url, `http://${req.headers.host || `${host}:${port}`}`);
+
     // Log request duration on response finish
     res.on("finish", () => {
       const duration = Date.now() - requestStart;
@@ -426,7 +429,6 @@ function createRequestHandler(options) {
     }
 
     installStateResponseHeaders(res, stateSync, workerNumber);
-    const requestUrl = new URL(req.url, `http://${req.headers.host || `${host}:${port}`}`);
 
     const stateVersionWait = await waitForRequestedStateVersion(req, res, stateSync);
 
