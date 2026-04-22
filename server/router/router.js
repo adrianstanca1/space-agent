@@ -1,4 +1,5 @@
 import { URL } from "node:url";
+import { randomUUID } from "node:crypto";
 
 import {
   createRequestContext,
@@ -335,6 +336,11 @@ function createRequestHandler(options) {
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("X-XSS-Protection", "1; mode=block");
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    // Request tracing ID for end-to-end traceability
+    res.setHeader("X-Request-ID", randomUUID());
+
+    const requestStart = Date.now();
 
     // Rate limit check
     if (!checkRateLimit(req, res)) {
