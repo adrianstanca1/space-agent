@@ -199,9 +199,9 @@ function normalizeParamSpec(paramName, rawSpec) {
   return spec;
 }
 
-async function loadParamSpecs(projectRoot) {
+async function loadParamSpecs(projectRoot, { signal } = {}) {
   const paramsFilePath = path.join(projectRoot, "commands", "params.yaml");
-  const sourceText = await fs.readFile(paramsFilePath, "utf8");
+  const sourceText = await fs.readFile(paramsFilePath, { encoding: "utf8", signal });
   const parsedParams = parseSimpleYaml(sourceText);
 
   return Object.entries(parsedParams).map(([paramName, rawSpec]) =>
