@@ -11,6 +11,7 @@ const WATCH_TARGETS = ["space", "commands", "server"].map((entry) => path.join(P
 const SCAN_INTERVAL_MS = 750;
 const RESTART_DEBOUNCE_MS = 1_000;
 const SHUTDOWN_GRACE_MS = 2_000;
+const MAX_PENDING_RESTART_REASONS = 1000;
 
 let childProcess = null;
 let currentSnapshot = "";
@@ -203,6 +204,11 @@ function flushScheduledRestart() {
 function scheduleRestart(reason) {
   if (isShuttingDown) {
     return;
+  }
+
+  if (pendingRestartReasons.size >= MAX_PENDING_RESTART_REASONS) {
+    const oldestKey = pendingRestartReasons.values().next().value;
+    pendingRestartReasons.delete(oldestKey);
   }
 
   pendingRestartReasons.add(reason);
