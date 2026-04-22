@@ -43,6 +43,7 @@ const PROXY_RESPONSE_FINAL_HEADER = "x-space-proxy-final-url";
 const PROXY_RESPONSE_REDIRECTED_HEADER = "x-space-proxy-redirected";
 const PROXY_UPSTREAM_TIMEOUT_MS = 30_000;
 const PROXY_MAX_REDIRECTS = 10;
+const MAX_PROXY_REQUEST_BODY_BYTES = 50 * 1024 * 1024;
 
 function getTargetUrl(requestUrl, headers) {
   return requestUrl.searchParams.get("url") || headers[PROXY_TARGET_HEADER];
@@ -154,7 +155,7 @@ async function proxyExternalRequest(req, res, requestUrl) {
 
   if (requestCanHaveBody(method)) {
     const contentLength = parseInt(req.headers["content-length"], 10);
-    if (!isNaN(contentLength) && contentLength > 50 * 1024 * 1024) {
+    if (!isNaN(contentLength) && contentLength > MAX_PROXY_REQUEST_BODY_BYTES) {
       sendProxyError(res, 413, "Request body too large");
       return;
     }
