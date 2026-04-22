@@ -1,5 +1,5 @@
 import http from "node:http";
-
+import nodeUtil from "node:util";
 import {
   API_DIR,
   APP_DIR,
@@ -10,6 +10,51 @@ import {
   PROJECT_ROOT,
   SERVER_TMP_DIR
 } from "./config.js";
+
+const CURRENT_API_VERSION = "1";
+
+async function checkStartupHealth(service) {
+  try {
+    if (service.ping) {
+      await service.ping();
+    }
+    return true;
+  } catch (err) {
+    console.error(`[startup] ${service.name} health check failed:`, err.message);
+    return false;
+  }
+}
+
+async function verifyCriticalServices(runtime) {
+  const checks = [];
+
+  if (runtime.watchdog && typeof runtime.watchdog.ping === "function") {
+    checks.push({ name: "watchdog", ping: () => runtime.watchdog.ping() });
+  }
+
+  if (runtime.auth && typeof runtime.auth.ping === "function") {
+    checks.push({ name: "auth", ping: () => runtime.auth.ping() });
+  }
+
+  if (runtime.stateSystem && typeof runtime.stateSystem.ping === "function") {
+    checks.push({ name: "stateSystem", ping: () => runtime.stateSystem.ping() });
+  }
+
+  const results = await Promise.all(checks.map(async (svc) => ({ ...svc, ok: await checkStartupHealth(svc) })));
+  const failed = results.filter((r) => !r.ok);
+
+  if (failed.length > 0) {
+    console.error("[startup] Critical services unreachable:");
+    for (const f of failed) {
+      console.error(`  - ${f.name}`);
+    }
+    process.exit(1);
+  }
+
+  if (checks.length > 0) {
+    console.log("[startup] Critical services verified.");
+  }
+}
 import { loadApiRegistry } from "./lib/api/registry.js";
 import { createAuthService } from "./lib/auth/service.js";
 import { flushGitHistoryCommits } from "./lib/customware/git_history.js";
@@ -22,6 +67,23 @@ import { JobRunner } from "./jobs/job_runner.js";
 import { createLocalMutationSync } from "./runtime/request_mutations.js";
 import { sendJson } from "./router/responses.js";
 import { createRequestHandler } from "./router/router.js";
+
+const formatUnhandled = (reason) => {
+  if (reason instanceof Error) {
+    return nodeUtil.inspect(reason, { depth: 4, colors: false });
+  }
+  return nodeUtil.inspect(reason, { depth: 4, colors: false });
+};
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[unhandledRejection]", formatUnhandled(reason));
+  process.exit(1);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("[uncaughtException]", formatUnhandled(error));
+  process.exit(1);
+});
 
 function resolveBrowserHost(host) {
   if (host === "0.0.0.0" || host === "::" || host === "[::]") {
@@ -228,6 +290,7 @@ async function createAgentServer(overrides = {}) {
           await resolvedAuth.initialize();
         }
         await jobRunner.start();
+        await verifyCriticalServices(runtime);
 
         return await new Promise((resolve, reject) => {
           server.once("error", reject);
