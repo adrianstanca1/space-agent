@@ -360,6 +360,15 @@ function createRequestHandler(options) {
     // Request tracing ID for end-to-end traceability
     res.setHeader("X-Request-ID", randomUUID());
 
+    // Advertise current API version to clients
+    res.setHeader(API_VERSION_HEADER, CURRENT_API_VERSION);
+
+    // Warn on deprecated API version usage
+    const clientApiVersion = req.headers[API_VERSION_HEADER.toLowerCase()];
+    if (clientApiVersion && clientApiVersion !== CURRENT_API_VERSION) {
+      console.warn(`[router] Client using deprecated API version "${clientApiVersion}" (current: ${CURRENT_API_VERSION}) — consider upgrading.`);
+    }
+
     const requestStart = Date.now();
 
     // Log request duration on response finish
