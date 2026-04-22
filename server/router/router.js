@@ -26,9 +26,9 @@ const STATE_VERSION_WAIT_TIMEOUT_MS = 1_000;
 const CURRENT_API_VERSION = "1";
 const API_VERSION_HEADER = "X-API-Version";
 
-// In-memory rate limiter: 100 requests per IP per minute
+// In-memory rate limiter: 500 requests per IP per minute
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_REQUESTS = 100;
+const RATE_LIMIT_MAX_REQUESTS = 500;
 const RATE_LIMIT_MAX_ENTRIES = 10_000;
 const rateLimitMap = new Map();
 
