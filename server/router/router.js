@@ -65,7 +65,7 @@ function checkRateLimit(req, res) {
 
   if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
     res.writeHead(429, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Too many requests" }));
+    res.end(JSON.stringify({ error: "Too many requests", code: "RATE_LIMITED" }));
     return false;
   }
 
@@ -119,7 +119,8 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
       res,
       405,
       {
-        error: `Method ${methodName} is not supported for ${apiModule.endpointName}`
+        error: `Method ${methodName} is not supported for ${apiModule.endpointName}`,
+        code: "INVALID_REQUEST"
       },
       {
         Allow: getAllowedMethods(apiModule).join(", "),
@@ -134,7 +135,8 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
     parsedRequest = await readParsedRequestBody(req, contextOptions.runtimeParams);
   } catch (error) {
     sendJson(res, 400, {
-      error: `Invalid request body: ${error.message}`
+      error: `Invalid request body: ${error.message}`,
+      code: "INVALID_REQUEST"
     });
     return;
   }
@@ -159,12 +161,14 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
     });
   } catch (error) {
     const statusCode = Number(error && error.statusCode) || 500;
+    const errorCode = error && error.code ? String(error.code) : String(statusCode);
 
     console.error(`[api] ${methodName} /api/${apiModule.endpointName} failed (${statusCode}).`);
     console.error(error?.cause || error);
 
     sendJson(res, statusCode, {
-      error: statusCode >= 500 ? error.message : "Invalid request"
+      error: statusCode >= 500 ? error.message : "Invalid request",
+      code: errorCode
     });
     return;
   }
@@ -177,7 +181,8 @@ function sendUnauthorized(res, requestContext, auth) {
     res,
     401,
     {
-      error: "Authentication required"
+      error: "Authentication required",
+      code: "AUTH_REQUIRED"
     },
     requestContext?.user?.shouldClearSessionCookie &&
       auth &&
@@ -265,7 +270,8 @@ async function waitForRequestedStateVersion(req, res, stateSync) {
     res,
     503,
     {
-      error: "Server state is still synchronizing. Retry the request."
+      error: "Server state is still synchronizing. Retry the request.",
+      code: "SERVICE_UNAVAILABLE"
     },
     {
       "Retry-After": "0"
