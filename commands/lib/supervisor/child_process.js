@@ -5,6 +5,7 @@ import path from "node:path";
 import { attachPrefixedLineLog } from "./process_log.js";
 
 const LISTENING_LINE_PATTERN = /space server listening at (https?:\/\/[^\s]+)/u;
+const HEALTH_CHECK_POLL_INTERVAL_MS = 250;
 
 function delay(ms) {
   return new Promise((resolve) => {
@@ -42,7 +43,7 @@ async function waitForHealthy(url, timeoutMs) {
       return;
     }
 
-    await delay(250);
+    await delay(HEALTH_CHECK_POLL_INTERVAL_MS);
   }
 
   throw new Error(`Serve child did not become healthy at ${url} within ${timeoutMs}ms.`);
