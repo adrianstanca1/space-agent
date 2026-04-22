@@ -338,6 +338,10 @@ const model = {
     return this.busyAction === "import";
   },
 
+  get isCloudShareInProgress() {
+    return this.busyAction === "cloud" && !this.cloudErrorText && !this.shareUrl;
+  },
+
   clearArchiveFeedback() {
     this.archiveErrorText = "";
     this.archiveStatusText = "";

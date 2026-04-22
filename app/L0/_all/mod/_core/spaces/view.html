@@ -184,7 +184,8 @@
                               :disabled="$store.spacesShareModal.isBusy"
                               @click="void $store.spacesShareModal.shareToCloud()"
                             >
-                              Create Share Link
+                              <x-icon x-text="$store.spacesShareModal.isCloudShareInProgress ? 'hourglass_top' : 'cloud_upload'"></x-icon>
+                              <span x-text="$store.spacesShareModal.isCloudShareInProgress ? 'Creating…' : 'Create Share Link'"></span>
                             </button>
                           </div>
 
