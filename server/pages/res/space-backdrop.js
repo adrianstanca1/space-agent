@@ -37,11 +37,15 @@
   }
 
   function randomBetween(min, max) {
-    return min + Math.random() * (max - min);
+    const arr = new Uint32Array(1);
+    window.crypto.getRandomValues(arr);
+    return min + (arr[0] / 0xffffffff) * (max - min);
   }
 
   function chooseRandom(list) {
-    return list[Math.floor(Math.random() * list.length)] || null;
+    const arr = new Uint32Array(1);
+    window.crypto.getRandomValues(arr);
+    return list[arr[0] % list.length] || null;
   }
 
   function createSpaceBackdropRuntime(
