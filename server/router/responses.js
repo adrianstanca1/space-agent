@@ -42,7 +42,7 @@ function sendRedirect(res, location, headers = {}) {
 }
 
 function sendJson(res, statusCode, payload, headers = {}) {
-  const body = JSON.stringify(payload, null, 2);
+  const body = JSON.stringify(payload);
   res.writeHead(statusCode, {
     ...headers,
     "Content-Type": "application/json; charset=utf-8",
