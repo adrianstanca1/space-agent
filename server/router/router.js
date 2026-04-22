@@ -23,10 +23,13 @@ import {
 const STATE_WORKER_HEADER = "Space-Worker";
 const STATE_VERSION_COOKIE_NAME = "space_state_version";
 const STATE_VERSION_WAIT_TIMEOUT_MS = 1_000;
+const CURRENT_API_VERSION = "1";
+const API_VERSION_HEADER = "X-API-Version";
 
 // In-memory rate limiter: 100 requests per IP per minute
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 100;
+const RATE_LIMIT_MAX_ENTRIES = 10_000;
 const rateLimitMap = new Map();
 
 function rateLimitKey(req) {
@@ -36,6 +39,23 @@ function rateLimitKey(req) {
 function checkRateLimit(req, res) {
   const key = rateLimitKey(req);
   const now = Date.now();
+
+  // Evict expired entries and enforce max size
+  if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES) {
+    for (const [k, v] of rateLimitMap) {
+      if (now - v.start > RATE_LIMIT_WINDOW_MS) {
+        rateLimitMap.delete(k);
+      }
+    }
+    // If still over limit, evict oldest half
+    if (rateLimitMap.size >= RATE_LIMIT_MAX_ENTRIES) {
+      const sorted = [...rateLimitMap.entries()].sort((a, b) => a[1].start - b[1].start);
+      for (const [k] of sorted.slice(0, Math.floor(RATE_LIMIT_MAX_ENTRIES / 2))) {
+        rateLimitMap.delete(k);
+      }
+    }
+  }
+
   const entry = rateLimitMap.get(key);
 
   if (!entry || now - entry.start > RATE_LIMIT_WINDOW_MS) {
@@ -341,6 +361,16 @@ function createRequestHandler(options) {
     res.setHeader("X-Request-ID", randomUUID());
 
     const requestStart = Date.now();
+
+    // Log request duration on response finish
+    res.on("finish", () => {
+      const duration = Date.now() - requestStart;
+      if (duration > 1000) {
+        console.warn(`[slow] ${req.method} ${requestUrl?.pathname} took ${duration}ms`);
+      } else {
+        console.log(`[request] ${req.method} ${requestUrl?.pathname} ${duration}ms`);
+      }
+    });
 
     // Rate limit check
     if (!checkRateLimit(req, res)) {
