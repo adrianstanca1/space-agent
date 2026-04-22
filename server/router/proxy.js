@@ -151,6 +151,15 @@ async function proxyExternalRequest(req, res, requestUrl) {
 
   const method = String(req.method || "GET").toUpperCase();
   const upstreamHeaders = createUpstreamHeaders(req.headers);
+
+  if (requestCanHaveBody(method)) {
+    const contentLength = parseInt(req.headers["content-length"], 10);
+    if (!isNaN(contentLength) && contentLength > 50 * 1024 * 1024) {
+      sendProxyError(res, 413, "Request body too large");
+      return;
+    }
+  }
+
   const body = requestCanHaveBody(method) ? await readRequestBody(req) : undefined;
   let upstreamResponse;
   let redirectCount = 0;
