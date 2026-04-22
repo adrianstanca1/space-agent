@@ -149,6 +149,14 @@ async function pipeReadableToResponse(res, stream) {
     readable.once("error", reject);
     res.once("error", reject);
     res.once("finish", resolve);
+
+    // Cancel the readable if the client disconnects mid-stream
+    res.on("close", () => {
+      if (!res.writableEnded && !readable.destroyed) {
+        readable.destroy();
+      }
+    });
+
     readable.pipe(res);
   });
 }
