@@ -1,7 +1,23 @@
 import { getRuntimeGroupIndex } from "../lib/customware/group_runtime.js";
 import { getUserCryptoState } from "../lib/auth/user_crypto.js";
 
-export function get(context) {
+/**
+ * GET /api/user_self_info
+ *
+ * Returns the authenticated user's profile including groups, managed groups,
+ * session info, and user-crypto state.
+ *
+ * Response body:
+ *   - fullName       {string}
+ *   - groups         {string[]}
+ *   - managedGroups  {string[]}
+ *   - sessionId      {string}
+ *   - userCryptoKeyId {string}
+ *   - userCryptoState {string}
+ *   - username       {string}
+ *
+ * Requires authentication. Returns 401 via middleware if not authenticated.
+ */
   const username = String(context.user?.username || "").trim();
   const userIndex =
     context.watchdog && typeof context.watchdog.getIndex === "function"

@@ -29,6 +29,29 @@ async function waitForMinimumDuration(startedAtMs, minimumDurationMs) {
   }
 }
 
+/**
+ * POST /api/password_change
+ *
+ * Changes the authenticated user's password and signs them out of all sessions.
+ *
+ * Request body (JSON):
+ *   - currentPassword {string} - User's current password
+ *   - newPassword     {string} - New password to set
+ *   - userCryptoRecord {object} - [optional] Updated user-crypto record
+ *
+ * Response body:
+ *   - passwordChanged {boolean}
+ *   - signedOut      {boolean} - Always true; client should clear session cookie
+ *   - username       {string}
+ *
+ * Errors:
+ *   - 400: Passwords must be strings
+ *   - 403: Password login disabled (single-user mode)
+ *   - 401: Invalid current password
+ *   - 500: Password policy violation or internal error
+ *
+ * Applies a fixed minimum duration before responding to prevent timing attacks.
+ */
 export async function post(context) {
   if (isSingleUserApp(context.runtimeParams)) {
     throw createHttpError("Password login is disabled in single-user mode.", 403);

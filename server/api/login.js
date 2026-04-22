@@ -3,6 +3,29 @@ import { runTrackedMutation } from "../runtime/request_mutations.js";
 
 export const allowAnonymous = true;
 
+/**
+ * POST /api/login
+ *
+ * Authenticates a user using a password challenge-response flow with optional
+ * user-crypto provisioning.
+ *
+ * Request body (JSON):
+ *   - challengeToken  {string}   - Server challenge token from /api/login_challenge
+ *   - clientProof     {string}   - Base64url client proof derived from password
+ *   - userCryptoProvisioning {object} - [optional] User-crypto provisioning share
+ *
+ * Response body:
+ *   - authenticated    {boolean}
+ *   - serverSignature  {string}   - Base64url server signature for client verification
+ *   - sessionId        {string}
+ *   - userCrypto        {object}   - User-crypto record for session
+ *   - username          {string}
+ *
+ * Errors:
+ *   - 401: Invalid credentials or challenge expired
+ *   - 403: Password login disabled (single-user mode)
+ */
+
 const FAILED_LOGIN_MIN_DURATION_MS = 1000;
 
 function createHttpError(message, statusCode) {
