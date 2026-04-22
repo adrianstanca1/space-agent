@@ -27,6 +27,7 @@ const WORKER_BOOTSTRAP_ENV_NAME = "SPACE_CLUSTER_BOOTSTRAP";
 const WORKER_NUMBER_ENV_NAME = "SPACE_CLUSTER_WORKER_NUMBER";
 const WORKER_SENTINEL_ENV_NAME = "SPACE_CLUSTER_WORKER";
 const WORKER_BOOTSTRAP_TIMEOUT_MS = 30_000;
+const PRIMARY_REQUEST_TIMEOUT_MS = 30_000;
 
 function buildBrowserUrl(browserHost, port) {
   return `http://${browserHost}:${port}`;
@@ -293,9 +294,20 @@ async function startClusterWorker() {
     const requestId = createIpcRequestId(requestPrefix);
 
     return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        pendingStateRequests.delete(requestId);
+        reject(new Error(`Primary request "${method}" timed out after ${PRIMARY_REQUEST_TIMEOUT_MS}ms.`));
+      }, PRIMARY_REQUEST_TIMEOUT_MS);
+
       pendingStateRequests.set(requestId, {
-        reject,
-        resolve
+        reject: (err) => {
+          clearTimeout(timeoutId);
+          reject(err);
+        },
+        resolve: (val) => {
+          clearTimeout(timeoutId);
+          resolve(val);
+        }
       });
 
       sendMessage({
