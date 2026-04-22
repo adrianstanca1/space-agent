@@ -698,7 +698,11 @@ class HuggingFaceManager {
     this.ensureDefaultModelInput();
 
     if (reboot) {
-      void this.ensureWorker().catch(() => {});
+      void this.ensureWorker().catch((err) =>
+        logHuggingFaceConsoleError("Worker boot failed after reboot", {
+          error: err?.message || String(err)
+        })
+      );
     }
   }
 
@@ -1349,7 +1353,11 @@ class HuggingFaceManager {
       throw error;
     } finally {
       if (!this.worker) {
-        void this.ensureWorker().catch(() => {});
+        void this.ensureWorker().catch((err) =>
+          logHuggingFaceConsoleError("Worker boot failed after model discard", {
+            error: err?.message || String(err)
+          })
+        );
       }
     }
   }
@@ -1375,7 +1383,12 @@ class HuggingFaceManager {
       return;
     }
 
-    void this.loadModel(persistedSelection).catch(() => {});
+    void this.loadModel(persistedSelection).catch((err) => {
+      logHuggingFaceConsoleError("Restore persisted model failed", {
+        error: err?.message || String(err),
+        modelId: persistedSelection?.modelId
+      });
+    });
   }
 
   requestStop() {

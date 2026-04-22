@@ -500,10 +500,12 @@ async function resolveChatProcessor(runtimeModule, modelId, loadOptions = {}) {
       modelId,
       source: "auto-processor"
     });
-    return {
-      processor: null,
-      source: ""
-    };
+    const loadError = createWorkerError(
+      `Failed to load processor for model "${modelId}".`,
+      { cause: error }
+    );
+    postWorkerError(WORKER_OUTBOUND.LOAD_ERROR, loadError, { modelId });
+    return null;
   }
 }
 

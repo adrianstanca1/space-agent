@@ -191,7 +191,9 @@ const model = {
       dtype: overrides.dtype ?? this.selectedDtype,
       maxNewTokens: overrides.maxNewTokens ?? this.maxNewTokens,
       modelInput: overrides.modelInput ?? this.modelInput
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error("[huggingface] handleLoadModel failed:", err);
+    });
   },
 
   handleSavedModelAction(entry = {}) {
