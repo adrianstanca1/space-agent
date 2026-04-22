@@ -44,6 +44,7 @@ const SESSION_SIGNATURE_PREFIX = "space-session-record-v1";
 const SESSION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,200}$/u;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const SESSION_VERIFIER_PREFIX = "space-session-token-v1";
+const SESSION_CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 const USER_AGENT_MAX_LENGTH = 512;
 
 function createStatusError(message, statusCode) {
@@ -438,6 +439,7 @@ export function createAuthService(options = {}) {
   const runtimeParams = options.runtimeParams || null;
   const watchdog = options.watchdog || null;
   let initialized = false;
+  let cleanupTimer = null;
 
   function getUserIndex() {
     if (!watchdog || typeof watchdog.getIndex !== "function") {
@@ -445,6 +447,56 @@ export function createAuthService(options = {}) {
     }
 
     return watchdog.getIndex("user_index") || createEmptyUserIndex();
+  }
+
+  function cleanupExpiredSessions() {
+    const nowMs = Date.now();
+    const userIndex = getUserIndex();
+    const usernames = Object.keys(userIndex.users || {});
+
+    usernames.forEach((username) => {
+      const normalizedUsername = normalizeEntityId(username);
+      if (!normalizedUsername) return;
+
+      const logins = sanitizeStoredLogins(
+        readUserLogins(projectRoot, normalizedUsername, runtimeParams),
+        normalizedUsername,
+        authKeys
+      );
+
+      let changed = false;
+
+      Object.entries(logins).forEach(([sessionVerifier, session]) => {
+        const expiresAtMs = Date.parse(session.expiresAt);
+        if (Number.isFinite(expiresAtMs) && expiresAtMs <= nowMs) {
+          delete logins[sessionVerifier];
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        writeUserLogins(projectRoot, normalizedUsername, logins, runtimeParams);
+      }
+    });
+  }
+
+  function startCleanupTimer() {
+    if (cleanupTimer) return;
+    cleanupTimer = setInterval(() => {
+      try {
+        cleanupExpiredSessions();
+      } catch (error) {
+        console.error("[auth] Session cleanup failed:", error.message);
+      }
+    }, SESSION_CLEANUP_INTERVAL_MS);
+    cleanupTimer.unref?.();
+  }
+
+  function stopCleanupTimer() {
+    if (cleanupTimer) {
+      clearInterval(cleanupTimer);
+      cleanupTimer = null;
+    }
   }
 
   function readCurrentPasswordVerifier(username) {
@@ -815,6 +867,7 @@ export function createAuthService(options = {}) {
     initialized = true;
 
     if (!enableInitialization) {
+      startCleanupTimer();
       return;
     }
 
@@ -902,7 +955,8 @@ export function createAuthService(options = {}) {
     initialize,
     issueSessionForUser,
     revokeSession,
-    resolveUserFromCookies
+    resolveUserFromCookies,
+    stop: stopCleanupTimer
   };
 }
 
