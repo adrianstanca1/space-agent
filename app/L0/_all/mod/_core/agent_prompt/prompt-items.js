@@ -296,30 +296,45 @@ export function listPromptItems(input) {
 }
 
 export function setPromptItem(items, key, value) {
-  const mergedItems = mergePromptItemMaps(items);
   const normalizedItem = normalizePromptItemDefinition(key, value);
+  const normalizedKey = normalizedItem ? normalizedItem.key : String(key || "").trim();
+  const existingItems = normalizePromptItemMap(items);
 
   if (!normalizedItem) {
-    delete mergedItems[String(key || "").trim()];
-    return mergedItems;
+    if (!normalizedKey || !Object.hasOwn(existingItems, normalizedKey)) {
+      return existingItems;
+    }
+    const nextItems = { ...existingItems };
+    delete nextItems[normalizedKey];
+    return nextItems;
   }
 
-  mergedItems[normalizedItem.key] = {
-    ...normalizedItem
+  if (Object.hasOwn(existingItems, normalizedKey) && existingItems[normalizedKey].value === normalizedItem.value) {
+    return existingItems;
+  }
+
+  return {
+    ...existingItems,
+    [normalizedItem.key]: normalizedItem
   };
-  return mergedItems;
 }
 
 export function deletePromptItem(items, key) {
-  const mergedItems = mergePromptItemMaps(items);
   const normalizedKey = String(key || "").trim();
 
   if (!normalizedKey) {
-    return mergedItems;
+    return normalizePromptItemMap(items);
   }
 
-  delete mergedItems[normalizedKey];
-  return mergedItems;
+  const existingItems = normalizePromptItemMap(items);
+
+  if (!Object.hasOwn(existingItems, normalizedKey)) {
+    return existingItems;
+  }
+
+  const nextItems = { ...existingItems };
+  delete nextItems[normalizedKey];
+  return nextItems;
 }
 
 export function comparePromptTrimCandidates(left, right) {

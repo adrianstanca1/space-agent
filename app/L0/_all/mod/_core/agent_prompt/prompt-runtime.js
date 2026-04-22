@@ -128,10 +128,10 @@ export class AgentPromptInstance {
       ...(context && typeof context === "object" && !Array.isArray(context) ? context : {})
     });
     this.promptInput = await this.buildPromptInput({
-      ...cloneStructuredData(this.context),
+      ...this.context,
       prompt: this
     });
-    return cloneStructuredData(this.promptInput);
+    return this.promptInput;
   }
 
   async updateHistory(historyMessages, options = {}) {
@@ -145,17 +145,17 @@ export class AgentPromptInstance {
 
     if (this.updatePromptHistory && hasPreparedPromptInput(this)) {
       this.promptInput = await this.updatePromptHistory({
-        context: cloneStructuredData(this.context),
-        historyMessages: cloneStructuredData(nextHistoryMessages),
+        context: this.context,
+        historyMessages: nextHistoryMessages,
         options:
           options && typeof options === "object" && !Array.isArray(options)
-            ? cloneStructuredData(options)
+            ? options
             : {},
         prompt: this,
-        promptInput: cloneStructuredData(this.promptInput)
+        promptInput: this.promptInput
       });
 
-      return cloneStructuredData(this.promptInput);
+      return this.promptInput;
     }
 
     return this.build({
