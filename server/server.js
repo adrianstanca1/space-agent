@@ -28,8 +28,8 @@ async function startServer(overrides = {}) {
 }
 
 function logServerStartup(server, projectRoot) {
-  console.log(`space server version ${resolveProjectVersion(projectRoot)}`);
-  console.log(`space server listening at ${server.browserUrl}`);
+  console.error(`space server version ${resolveProjectVersion(projectRoot)}`);
+  console.error(`space server listening at ${server.browserUrl}`);
 }
 
 async function runServeCli(overrides = {}) {
