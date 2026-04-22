@@ -2,6 +2,7 @@ import { runTrackedMutation } from "../runtime/request_mutations.js";
 import { loadJobRegistry } from "./job_registry.js";
 
 const JOB_LOCK_AREA = "job_run";
+const JOB_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 const MIN_DELAY_MS = 10;
 
 function normalizeDelayMs(value, fallbackMs) {
@@ -208,7 +209,12 @@ export class JobRunner {
         }
       }
 
-      await jobState.job.run(jobContext);
+      await Promise.race([
+        jobState.job.run(jobContext),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`Job "${jobId}" timed out after ${JOB_TIMEOUT_MS}ms.`)), JOB_TIMEOUT_MS)
+        )
+      ]);
 
       jobState.failureCount = 0;
       jobState.lastSucceededAt = Date.now();
