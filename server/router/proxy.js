@@ -42,6 +42,7 @@ const PROXY_RESPONSE_TARGET_HEADER = "x-space-proxy-target-url";
 const PROXY_RESPONSE_FINAL_HEADER = "x-space-proxy-final-url";
 const PROXY_RESPONSE_REDIRECTED_HEADER = "x-space-proxy-redirected";
 const PROXY_UPSTREAM_TIMEOUT_MS = 30_000;
+const PROXY_MAX_REDIRECTS = 10;
 
 function getTargetUrl(requestUrl, headers) {
   return requestUrl.searchParams.get("url") || headers[PROXY_TARGET_HEADER];
@@ -147,27 +148,66 @@ async function proxyExternalRequest(req, res, requestUrl) {
   const upstreamHeaders = createUpstreamHeaders(req.headers);
   const body = requestCanHaveBody(method) ? await readRequestBody(req) : undefined;
   let upstreamResponse;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), PROXY_UPSTREAM_TIMEOUT_MS);
+  let redirectCount = 0;
+  let currentUrl = targetUrl;
 
-  try {
-    upstreamResponse = await fetch(targetUrl, {
-      method,
-      headers: upstreamHeaders,
-      body,
-      redirect: "follow",
-      signal: controller.signal
-    });
-  } catch (error) {
-    clearTimeout(timeout);
-    if (error.name === "AbortError") {
-      sendProxyError(res, 504, "Upstream request timed out");
+  while (redirectCount < PROXY_MAX_REDIRECTS) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), PROXY_UPSTREAM_TIMEOUT_MS);
+
+    try {
+      upstreamResponse = await fetch(currentUrl, {
+        method,
+        headers: upstreamHeaders,
+        body,
+        redirect: "manual",
+        signal: controller.signal
+      });
+    } catch (error) {
+      clearTimeout(timeout);
+      if (error.name === "AbortError") {
+        sendProxyError(res, 504, "Upstream request timed out");
+        return;
+      }
+      sendProxyError(res, 502, `Upstream fetch failed: ${error.message}`);
       return;
     }
-    sendProxyError(res, 502, `Upstream fetch failed: ${error.message}`);
+    clearTimeout(timeout);
+
+    const status = upstreamResponse.status;
+
+    if (status === 301 || status === 302 || status === 303 || status === 307 || status === 308) {
+      const locationHeader = upstreamResponse.headers.get("location");
+      if (!locationHeader) {
+        sendProxyError(res, 502, "Redirect response with no Location header");
+        return;
+      }
+
+      let redirectUrl;
+      try {
+        redirectUrl = new URL(locationHeader, currentUrl);
+      } catch {
+        sendProxyError(res, 502, "Invalid redirect URL");
+        return;
+      }
+
+      if (!isSupportedProxyProtocol(redirectUrl.protocol)) {
+        sendProxyError(res, 502, `Redirect to unsupported protocol: ${redirectUrl.protocol}`);
+        return;
+      }
+
+      redirectCount++;
+      currentUrl = redirectUrl;
+      continue;
+    }
+
+    break;
+  }
+
+  if (redirectCount >= PROXY_MAX_REDIRECTS) {
+    sendProxyError(res, 502, `Too many redirects (max ${PROXY_MAX_REDIRECTS})`);
     return;
   }
-  clearTimeout(timeout);
 
   const responseHeaders = createClientHeaders(upstreamResponse.headers, targetUrl, upstreamResponse);
   applyApiCorsHeaders(res);
