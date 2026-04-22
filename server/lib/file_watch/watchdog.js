@@ -581,6 +581,7 @@ export function createWatchdog(options = {}) {
   let cachedUserIndex = null;
   let cachedUserIndexVersion = -1;
   let configReloadPending = true;
+  const MAX_PENDING_CHANGED_PATHS = 10_000;
   const pendingChangedPaths = new Set();
   const directoryWatchers = new Map();
   const handlerStates = new Map();
@@ -1181,6 +1182,10 @@ export function createWatchdog(options = {}) {
     }
 
     if (targetPath) {
+      if (pendingChangedPaths.size >= MAX_PENDING_CHANGED_PATHS) {
+        const oldestKey = pendingChangedPaths.values().next().value;
+        pendingChangedPaths.delete(oldestKey);
+      }
       pendingChangedPaths.add(targetPath);
     }
 
