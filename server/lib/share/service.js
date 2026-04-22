@@ -362,8 +362,8 @@ function runArchiveTool(command, args, options = {}) {
       }
     });
 
-    child.once("error", (error) => {
-      reject(createShareError((options.missingCommandMessage || "Archive tool is unavailable.") + " " + error.message, 500));
+    child.once("error", () => {
+      reject(createShareError(options.missingCommandMessage || "Archive tool is unavailable.", 500));
     });
 
     child.once("close", (code, signal) => {
