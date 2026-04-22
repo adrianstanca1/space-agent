@@ -268,6 +268,29 @@ async function readHistoryHead(repoRoot) {
   return tryReadGitAsync(repoRoot, ["rev-parse", "--verify", "HEAD"]);
 }
 
+async function pruneHistoryRefs(repoRoot, maxRefs = 1000) {
+  const result = await runGitAsync(
+    repoRoot,
+    ["for-each-ref", "--format=%(refname)", "refs/space-history/"],
+    { check: false }
+  );
+
+  if (result.status !== 0) {
+    return;
+  }
+
+  const refs = result.stdout.trim().split("\n").filter(Boolean);
+
+  if (refs.length <= maxRefs) {
+    return;
+  }
+
+  const toDelete = refs.slice(0, refs.length - maxRefs);
+  for (const ref of toDelete) {
+    await runGitAsync(repoRoot, ["update-ref", "-d", ref], { check: false });
+  }
+}
+
 async function preserveHistoryHeadRef(repoRoot, reason = "snapshot") {
   const hash = await readHistoryHead(repoRoot);
 
@@ -280,6 +303,7 @@ async function preserveHistoryHeadRef(repoRoot, reason = "snapshot") {
   const refName = `refs/space-history/${safeReason}/${Date.now()}-${shortHash}`;
 
   await runGitAsync(repoRoot, ["update-ref", refName, hash]);
+  await pruneHistoryRefs(repoRoot, 1000);
   return refName;
 }
 
