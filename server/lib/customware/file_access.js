@@ -498,6 +498,34 @@ function ensureValidReadEncoding(encoding) {
   throw createHttpError(`Unsupported read encoding: ${String(encoding || "")}`, 400);
 }
 
+function rejectPathTraversal(absolutePath, projectRoot, requestedPath) {
+  const resolved = path.resolve(absolutePath);
+  const rootResolved = path.resolve(String(projectRoot || ""));
+
+  if (!resolved.startsWith(rootResolved + path.sep) && resolved !== rootResolved) {
+    throw createHttpError(`Path traversal denied: ${requestedPath}`, 403);
+  }
+}
+
+function rejectSymlinksInPath(absolutePath, requestedPath) {
+  let currentPath = absolutePath;
+
+  while (currentPath !== path.dirname(currentPath)) {
+    try {
+      const stats = fs.lstatSync(currentPath);
+      if (stats.isSymbolicLink()) {
+        throw createHttpError(`Symlink in path not allowed: ${requestedPath}`, 403);
+      }
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        break;
+      }
+      throw error;
+    }
+    currentPath = path.dirname(currentPath);
+  }
+}
+
 function ensureValidWriteEncoding(encoding) {
   if (encoding === "utf8" || encoding === "base64") {
     return encoding;
@@ -574,7 +602,10 @@ function normalizeReadRequests(options = {}) {
 
 function readAppFiles(options = {}) {
   const requests = normalizeReadRequests(options);
+  const projectRoot = String(options.projectRoot || "");
   const files = requests.map((request) => {
+    rejectPathTraversal(request.absolutePath, projectRoot, request.path);
+    rejectSymlinksInPath(request.absolutePath, request.path);
     const buffer = fs.readFileSync(request.absolutePath);
 
     return {
@@ -956,12 +987,15 @@ function writeAppFiles(options = {}) {
   const requests = normalizeWriteRequests(options);
   const quotaDeltas = getWriteQuotaDeltas(requests);
   const quotaPlan = createQuotaPlan(options, quotaDeltas);
+  const projectRoot = String(options.projectRoot || "");
   let totalBytesWritten = 0;
 
   let files;
 
   try {
     files = requests.map((request) => {
+      rejectPathTraversal(request.absolutePath, projectRoot, request.path);
+      rejectSymlinksInPath(request.absolutePath, request.path);
       if (request.isDirectory) {
         fs.mkdirSync(request.absolutePath, { recursive: true });
 
