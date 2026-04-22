@@ -100,7 +100,7 @@ function sendProxyError(res, statusCode, message) {
   sendJson(res, statusCode, { error: message });
 }
 
-async function pipeUpstreamBodyToResponse(res, upstreamResponse) {
+async function pipeUpstreamBodyToResponse(res, upstreamResponse, signal) {
   if (!upstreamResponse.body) {
     res.end();
     return;
@@ -112,6 +112,11 @@ async function pipeUpstreamBodyToResponse(res, upstreamResponse) {
     upstreamStream.once("error", reject);
     res.once("error", reject);
     res.once("finish", resolve);
+    res.once("close", () => {
+      if (signal) {
+        signal.abort();
+      }
+    });
 
     upstreamStream.pipe(res);
   });
@@ -150,9 +155,9 @@ async function proxyExternalRequest(req, res, requestUrl) {
   let upstreamResponse;
   let redirectCount = 0;
   let currentUrl = targetUrl;
+  const controller = new AbortController();
 
   while (redirectCount < PROXY_MAX_REDIRECTS) {
-    const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), PROXY_UPSTREAM_TIMEOUT_MS);
 
     try {
@@ -212,7 +217,7 @@ async function proxyExternalRequest(req, res, requestUrl) {
   const responseHeaders = createClientHeaders(upstreamResponse.headers, targetUrl, upstreamResponse);
   applyApiCorsHeaders(res);
   res.writeHead(upstreamResponse.status, responseHeaders);
-  await pipeUpstreamBodyToResponse(res, upstreamResponse);
+  await pipeUpstreamBodyToResponse(res, upstreamResponse, controller.signal);
 }
 
 export { proxyExternalRequest };
