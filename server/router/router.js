@@ -108,6 +108,35 @@ function getAllowedMethods(apiModule) {
     .sort();
 }
 
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
+
+function isStateChangingMethod(method) {
+  return !SAFE_METHODS.has(String(method || "").toUpperCase());
+}
+
+function rejectUnsafeRequestWithoutOrigin(req, res) {
+  const origin = req.headers["origin"];
+  const referer = req.headers["referer"];
+
+  if (origin || referer) {
+    return false;
+  }
+
+  const userAgent = String(req.headers["user-agent"] || "");
+  const isBrowserLike = userAgent.length > 0;
+
+  if (!isBrowserLike) {
+    return false;
+  }
+
+  sendJson(res, 403, {
+    error: "Missing origin or referer header.",
+    code: "CSRF_FAILURE"
+  });
+
+  return true;
+}
+
 async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOptions) {
   const methodName = String(req.method || "GET").toUpperCase();
   const handler = apiModule.handlers[methodName.toLowerCase()];
@@ -126,6 +155,10 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
         Allow: getAllowedMethods(apiModule).join(", "),
       }
     );
+    return;
+  }
+
+  if (isStateChangingMethod(methodName) && rejectUnsafeRequestWithoutOrigin(req, res)) {
     return;
   }
 
