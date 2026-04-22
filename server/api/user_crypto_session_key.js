@@ -6,7 +6,7 @@ function createHttpError(message, statusCode) {
 
 export async function get(context) {
   if (!context.user?.isAuthenticated) {
-    throw createHttpError("Authentication is required.", 401);
+    throw createHttpError("authentication required", 401);
   }
 
   const sessionKey =
@@ -15,7 +15,7 @@ export async function get(context) {
       : "";
 
   if (!String(sessionKey || "").trim()) {
-    throw createHttpError("Session-scoped user crypto key is unavailable.", 403);
+    throw createHttpError("session-scoped user crypto key unavailable", 403);
   }
 
   return {

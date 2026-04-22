@@ -50,7 +50,7 @@ async function waitForMinimumDuration(startedAtMs, minimumDurationMs) {
 
 export async function post(context) {
   if (isSingleUserApp(context.runtimeParams)) {
-    throw createHttpError("Password login is disabled in single-user mode.", 403);
+    throw createHttpError("password login disabled in single-user mode", 403);
   }
 
   const startedAtMs = Date.now();

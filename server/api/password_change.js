@@ -54,17 +54,17 @@ async function waitForMinimumDuration(startedAtMs, minimumDurationMs) {
  */
 export async function post(context) {
   if (isSingleUserApp(context.runtimeParams)) {
-    throw createHttpError("Password login is disabled in single-user mode.", 403);
+    throw createHttpError("password login disabled in single-user mode", 403);
   }
 
   const payload = readPayload(context);
 
   if (typeof payload.currentPassword !== "string") {
-    throw createHttpError("Current password must be provided as a string.", 400);
+    throw createHttpError("current password must be a string", 400);
   }
 
   if (typeof payload.newPassword !== "string") {
-    throw createHttpError("New password must be provided as a string.", 400);
+    throw createHttpError("new password must be a string", 400);
   }
 
   const startedAtMs = Date.now();
@@ -93,6 +93,6 @@ export async function post(context) {
     };
   } catch (error) {
     await waitForMinimumDuration(startedAtMs, FAILED_PASSWORD_CHANGE_MIN_DURATION_MS);
-    throw createHttpError(error.message || "Password change failed.", Number(error.statusCode) || 500);
+    throw createHttpError(error.message || "password change failed", Number(error.statusCode) || 500);
   }
 }
