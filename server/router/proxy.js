@@ -41,6 +41,7 @@ const PROXY_TARGET_HEADER = "x-space-target-url";
 const PROXY_RESPONSE_TARGET_HEADER = "x-space-proxy-target-url";
 const PROXY_RESPONSE_FINAL_HEADER = "x-space-proxy-final-url";
 const PROXY_RESPONSE_REDIRECTED_HEADER = "x-space-proxy-redirected";
+const PROXY_UPSTREAM_TIMEOUT_MS = 30_000;
 
 function getTargetUrl(requestUrl, headers) {
   return requestUrl.searchParams.get("url") || headers[PROXY_TARGET_HEADER];
@@ -146,18 +147,27 @@ async function proxyExternalRequest(req, res, requestUrl) {
   const upstreamHeaders = createUpstreamHeaders(req.headers);
   const body = requestCanHaveBody(method) ? await readRequestBody(req) : undefined;
   let upstreamResponse;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PROXY_UPSTREAM_TIMEOUT_MS);
 
   try {
     upstreamResponse = await fetch(targetUrl, {
       method,
       headers: upstreamHeaders,
       body,
-      redirect: "follow"
+      redirect: "follow",
+      signal: controller.signal
     });
   } catch (error) {
+    clearTimeout(timeout);
+    if (error.name === "AbortError") {
+      sendProxyError(res, 504, "Upstream request timed out");
+      return;
+    }
     sendProxyError(res, 502, `Upstream fetch failed: ${error.message}`);
     return;
   }
+  clearTimeout(timeout);
 
   const responseHeaders = createClientHeaders(upstreamResponse.headers, targetUrl, upstreamResponse);
   applyApiCorsHeaders(res);
