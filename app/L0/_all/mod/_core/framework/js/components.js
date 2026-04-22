@@ -41,6 +41,10 @@ export async function importComponent(path, targetElement) {
     } else {
       const response = await fetch(componentUrl);
       if (!response.ok) {
+        const loadingEl = targetElement.querySelector(':scope > .loading');
+        if (loadingEl) {
+          targetElement.removeChild(loadingEl);
+        }
         throw new Error(
           `Error loading component ${path}: ${response.statusText}`
         );
