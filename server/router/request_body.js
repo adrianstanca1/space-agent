@@ -1,17 +1,28 @@
-const MAX_REQUEST_BODY_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const DEFAULT_MAX_REQUEST_BODY_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_REQUEST_BODY_SIZE_PARAM = "MAX_REQUEST_BODY_SIZE_BYTES";
+
+function getMaxRequestBodySizeBytes(runtimeParams) {
+  const rawLimit =
+    runtimeParams && typeof runtimeParams.get === "function"
+      ? runtimeParams.get(MAX_REQUEST_BODY_SIZE_PARAM, DEFAULT_MAX_REQUEST_BODY_SIZE_BYTES)
+      : DEFAULT_MAX_REQUEST_BODY_SIZE_BYTES;
+  const limitBytes = Math.floor(Number(rawLimit) || DEFAULT_MAX_REQUEST_BODY_SIZE_BYTES);
+  return Number.isFinite(limitBytes) && limitBytes > 0 ? limitBytes : DEFAULT_MAX_REQUEST_BODY_SIZE_BYTES;
+}
 
 function requestCanHaveBody(method) {
   return !["GET", "HEAD"].includes(String(method || "GET").toUpperCase());
 }
 
-function readRequestBody(req) {
+function readRequestBody(req, maxSizeBytes) {
+  const effectiveLimit = maxSizeBytes || DEFAULT_MAX_REQUEST_BODY_SIZE_BYTES;
   return new Promise((resolve, reject) => {
     const chunks = [];
     let bytesReceived = 0;
 
     req.on("data", (chunk) => {
       bytesReceived += chunk.length;
-      if (bytesReceived > MAX_REQUEST_BODY_SIZE_BYTES) {
+      if (bytesReceived > effectiveLimit) {
         reject(new Error("Request body too large"));
         return;
       }
@@ -26,8 +37,9 @@ function readRequestBody(req) {
   });
 }
 
-async function readParsedRequestBody(req) {
-  const rawBody = requestCanHaveBody(req.method) ? await readRequestBody(req) : Buffer.alloc(0);
+async function readParsedRequestBody(req, runtimeParams) {
+  const maxSizeBytes = getMaxRequestBodySizeBytes(runtimeParams);
+  const rawBody = requestCanHaveBody(req.method) ? await readRequestBody(req, maxSizeBytes) : Buffer.alloc(0);
   const contentTypeHeader = String(req.headers["content-type"] || "");
   const contentType = contentTypeHeader.split(";")[0].trim().toLowerCase();
 

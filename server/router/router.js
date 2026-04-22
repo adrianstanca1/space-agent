@@ -81,7 +81,7 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
   let parsedRequest;
 
   try {
-    parsedRequest = await readParsedRequestBody(req);
+    parsedRequest = await readParsedRequestBody(req, contextOptions.runtimeParams);
   } catch (error) {
     sendJson(res, 400, {
       error: `Invalid request body: ${error.message}`
