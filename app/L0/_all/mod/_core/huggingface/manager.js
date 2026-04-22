@@ -890,17 +890,20 @@ class HuggingFaceManager {
 
         const error = createWorkerError(payload.error, "Model load failed.");
         const pendingLoad = this.pendingLoad;
-        this.clearPendingLoad();
-        this.setState({
-          activeDtype: "",
-          activeModelId: "",
-          error: error.message,
-          isLoadingModel: false,
-          loadProgress: createLoadProgressState(),
-          loadingModelLabel: "",
-          statusText: "Model load failed."
-        });
-        pendingLoad.deferred.reject(error);
+        this.clearPendingLoad(error);
+        try {
+          this.setState({
+            activeDtype: "",
+            activeModelId: "",
+            error: error.message,
+            isLoadingModel: false,
+            loadProgress: createLoadProgressState(),
+            loadingModelLabel: "",
+            statusText: "Model load failed."
+          });
+        } catch {
+          // State update failed but deferred was already rejected via clearPendingLoad.
+        }
         break;
       }
 
@@ -1473,6 +1476,19 @@ class HuggingFaceManager {
       requestId,
       requestOptions
     });
+
+    const timeoutMs = 5 * 60 * 1000;
+    const timeoutId = setTimeout(() => {
+      if (!this.pendingGenerate || this.pendingGenerate.requestId !== requestId) {
+        return;
+      }
+      this.clearPendingGenerate(new Error("Hugging Face generation timed out after 5 minutes."));
+    }, timeoutMs);
+
+    deferred.promise.then(
+      () => clearTimeout(timeoutId),
+      () => clearTimeout(timeoutId)
+    );
 
     return deferred.promise;
   }
