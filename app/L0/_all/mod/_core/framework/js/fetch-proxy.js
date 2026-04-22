@@ -9,6 +9,7 @@ const FETCH_PROXY_MARKER = Symbol.for("space.fetch-proxy-installed");
 const RETRYABLE_STATE_SYNC_ERROR = "Server state is still synchronizing. Retry the request.";
 const STATE_SYNC_RETRY_DELAY_MS = 100;
 const STATE_SYNC_RETRY_MAX_ATTEMPTS = 3;
+const EXPONENTIAL_BASE = 2;
 const proxyFallbackOrigins = new Set();
 
 function requestCanHaveBody(method) {
@@ -133,7 +134,7 @@ async function fetchSameOriginWithStateSyncRetry(originalFetch, request) {
       return response;
     }
 
-    await waitForRetryDelay(STATE_SYNC_RETRY_DELAY_MS * (attempt + 1), attemptRequest.signal);
+    await waitForRetryDelay(STATE_SYNC_RETRY_DELAY_MS * Math.pow(EXPONENTIAL_BASE, attempt), attemptRequest.signal);
   }
 
   return response;

@@ -18,6 +18,7 @@ import { getUserCryptoState } from "../lib/auth/user_crypto.js";
  *
  * Requires authentication. Returns 401 via middleware if not authenticated.
  */
+export function get(context) {
   const username = String(context.user?.username || "").trim();
   const userIndex =
     context.watchdog && typeof context.watchdog.getIndex === "function"
