@@ -1,3 +1,5 @@
+const MAX_REQUEST_BODY_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
 function requestCanHaveBody(method) {
   return !["GET", "HEAD"].includes(String(method || "GET").toUpperCase());
 }
@@ -5,8 +7,14 @@ function requestCanHaveBody(method) {
 function readRequestBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
+    let bytesReceived = 0;
 
     req.on("data", (chunk) => {
+      bytesReceived += chunk.length;
+      if (bytesReceived > MAX_REQUEST_BODY_SIZE_BYTES) {
+        reject(new Error("Request body too large"));
+        return;
+      }
       chunks.push(chunk);
     });
 
