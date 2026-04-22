@@ -69,6 +69,18 @@ export class JobRunner {
     this.started = false;
     this.stateSystem = options.stateSystem || null;
     this.watchdog = options.watchdog || null;
+    this._boundSignalHandler = this._signalHandler.bind(this);
+    process.on("SIGTERM", this._boundSignalHandler);
+  }
+
+  _signalHandler() {
+    console.log("[job_runner] SIGTERM received — stopping jobs gracefully.");
+    this.stop();
+  }
+
+  [Symbol.dispose]() {
+    process.off("SIGTERM", this._boundSignalHandler);
+    this.stop();
   }
 
   async loadJobs() {
@@ -121,6 +133,31 @@ export class JobRunner {
         clearTimeout(jobState.timerId);
         jobState.timerId = null;
       }
+    }
+
+    const runningJobs = [...this.jobStates.values()].filter((s) => s.running);
+    if (runningJobs.length > 0) {
+      console.log(`[job_runner] Waiting for ${runningJobs.length} running job(s) to finish...`);
+    }
+  }
+
+  async waitForRunningJobs(timeoutMs = 30_000) {
+    const start = Date.now();
+    const checkInterval = 100;
+
+    while (this.jobStates.size > 0) {
+      const stillRunning = [...this.jobStates.values()].filter((s) => s.running);
+
+      if (stillRunning.length === 0) {
+        break;
+      }
+
+      if (Date.now() - start > timeoutMs) {
+        console.warn("[job_runner] Timeout waiting for running jobs — forcing stop.");
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
   }
 
