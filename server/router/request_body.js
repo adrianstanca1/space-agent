@@ -39,10 +39,17 @@ async function readParsedRequestBody(req) {
   }
 
   if (contentType === "application/json") {
-    return {
-      body: JSON.parse(rawBody.toString("utf8")),
-      rawBody
-    };
+    try {
+      return {
+        body: JSON.parse(rawBody.toString("utf8")),
+        rawBody
+      };
+    } catch {
+      return {
+        body: undefined,
+        rawBody
+      };
+    }
   }
 
   if (
