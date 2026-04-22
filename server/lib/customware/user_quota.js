@@ -7,7 +7,18 @@ import {
 } from "./layout.js";
 
 const USER_FOLDER_SIZE_LIMIT_PARAM = "USER_FOLDER_SIZE_LIMIT_BYTES";
+const USER_FOLDER_SIZE_CACHE_TTL_MS = 5 * 60 * 1000;
+const USER_FOLDER_SIZE_CACHE_MAX_ENTRIES = 1000;
 const userFolderSizeCache = new Map();
+
+function evictExpiredUserFolderSizeCacheEntries() {
+  const now = Date.now();
+  for (const [k, v] of userFolderSizeCache) {
+    if (now - v.cachedAt > USER_FOLDER_SIZE_CACHE_TTL_MS) {
+      userFolderSizeCache.delete(k);
+    }
+  }
+}
 
 function createQuotaError(message, statusCode = 413) {
   const error = new Error(message);
@@ -65,13 +76,23 @@ function getCachedUserFolderSize(rootAbsolutePath) {
   const cacheKey = toCacheKey(rootAbsolutePath);
   const cachedEntry = userFolderSizeCache.get(cacheKey);
 
-  if (cachedEntry) {
+  if (cachedEntry && Date.now() - cachedEntry.cachedAt <= USER_FOLDER_SIZE_CACHE_TTL_MS) {
     return cachedEntry.bytes;
+  }
+
+  evictExpiredUserFolderSizeCacheEntries();
+
+  if (userFolderSizeCache.size >= USER_FOLDER_SIZE_CACHE_MAX_ENTRIES) {
+    const oldestKey = userFolderSizeCache.keys().next().value;
+    if (oldestKey) {
+      userFolderSizeCache.delete(oldestKey);
+    }
   }
 
   const bytes = readAbsolutePathSize(cacheKey);
   userFolderSizeCache.set(cacheKey, {
-    bytes
+    bytes,
+    cachedAt: Date.now()
   });
   return bytes;
 }
