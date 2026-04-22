@@ -141,7 +141,7 @@ async function handleApiModuleRequest(req, res, requestUrl, apiModule, contextOp
   const methodName = String(req.method || "GET").toUpperCase();
   const handler = apiModule.handlers[methodName.toLowerCase()];
 
-  applyApiCorsHeaders(res);
+  applyApiCorsHeaders(req, res);
 
   if (!handler) {
     sendJson(
