@@ -123,6 +123,26 @@ npm run dev # server with auto-reload
 
 Open the checked-in VS Code launch entry `Dev Server (npm run dev)` when you want breakpoints in `server/` code. It launches the same watcher and auto-attaches to the spawned `node space serve` process across restarts.
 
+### Environment variables
+
+Space Agent reads variables from a `.env` file in the project root (or `.env.local` for local overrides). Copy the example and configure as needed:
+
+```bash
+cp .env.example .env  # if an example file exists
+```
+
+Key variables (see `server/lib/utils/env_files.js` for the full loader):
+
+| Variable | Description |
+|----------|-------------|
+| `CUSTOMWARE_PATH` | Path to customware directory (default: `./customware`) |
+| `HOST` | Bind address for the server (default: `127.0.0.1`) |
+| `PORT` | HTTP port (default: `3000`) |
+| `SESSION_SECRET` | Secret used for signing session cookies |
+| `ENCRYPTION_KEY` | Master encryption key for sensitive data |
+
+Variables can also be passed directly: `HOST=0.0.0.0 PORT=3000 node space serve`.
+
 ### For production
 
 ```bash
