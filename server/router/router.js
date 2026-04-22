@@ -23,6 +23,35 @@ const STATE_WORKER_HEADER = "Space-Worker";
 const STATE_VERSION_COOKIE_NAME = "space_state_version";
 const STATE_VERSION_WAIT_TIMEOUT_MS = 1_000;
 
+// In-memory rate limiter: 100 requests per IP per minute
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 100;
+const rateLimitMap = new Map();
+
+function rateLimitKey(req) {
+  return String(req.socket?.remoteAddress || req.headers?.["x-forwarded-for"] || "unknown");
+}
+
+function checkRateLimit(req, res) {
+  const key = rateLimitKey(req);
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+
+  if (!entry || now - entry.start > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(key, { start: now, count: 1 });
+    return true;
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    res.writeHead(429, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Too many requests" }));
+    return false;
+  }
+
+  entry.count++;
+  return true;
+}
+
 function createParamsObject(searchParams) {
   const params = Object.create(null);
 
@@ -301,6 +330,17 @@ function createRequestHandler(options) {
       : String(providedProjectVersion || "");
 
   return async function requestHandler(req, res) {
+    // Apply security headers on all responses
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+
+    // Rate limit check
+    if (!checkRateLimit(req, res)) {
+      return;
+    }
+
     installStateResponseHeaders(res, stateSync, workerNumber);
     const requestUrl = new URL(req.url, `http://${req.headers.host || `${host}:${port}`}`);
 
