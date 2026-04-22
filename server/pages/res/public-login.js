@@ -127,7 +127,7 @@ async function requestJson(path, options = {}) {
       String(response.headers.get("Retry-After") || "").trim() === "0" &&
       attempt + 1 < STATE_SYNC_RETRY_ATTEMPTS
     ) {
-      await wait(STATE_SYNC_RETRY_DELAY_MS);
+      await wait(STATE_SYNC_RETRY_DELAY_MS * (0.5 + Math.random()));
       continue;
     }
 
