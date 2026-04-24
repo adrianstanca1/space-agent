@@ -21,6 +21,7 @@
     "package:desktop:host": "node packaging/scripts/host-package.js",
     "package:desktop:host:dir": "node packaging/scripts/host-package.js --dir",
     "package:desktop:macos": "node packaging/scripts/macos-package.js",
+    "package:desktop:macos:dev": "node packaging/scripts/macos-dev-build.js",
     "package:desktop:macos:all": "node packaging/scripts/macos-package.js --arch x64,arm64",
     "package:desktop:linux": "node packaging/scripts/linux-package.js",
     "package:desktop:linux:all": "node packaging/scripts/linux-package.js --arch x64,arm64",
@@ -95,8 +96,5 @@
     "archiver": "^7.0.1",
     "electron-updater": "^6.8.3",
     "isomorphic-git": "^1.37.4"
-  },
-  "optionalDependencies": {
-    "nodegit": "^0.27.0"
   }
 }

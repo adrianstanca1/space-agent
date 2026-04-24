@@ -21,15 +21,15 @@ test("browser-manager auto-loads on onscreen surfaces", () => {
   assert.match(browserManagerSkill, /loaded:\n\s+tags:\n\s+- onscreen/u);
 });
 
-test("browser-control auto-loads only when a browser window is open", () => {
+test("browser-control auto-loads only when a browser surface is open", () => {
   assert.match(browserControlSkill, /name: Browser Control/u);
   assert.match(browserControlSkill, /when:\n\s+tags:\n\s+- onscreen/u);
   assert.match(browserControlSkill, /loaded:\n\s+tags:\n\s+- onscreen\n\s+- browser:open/u);
 });
 
-test("browser window overlay exports browser:open context tags", () => {
+test("browser overlay exports browser:open context tags when any browser is open", () => {
   assert.match(
     browserWindowHtml,
-    /<x-context :data-tags="\$store\.webBrowsing\.hasOpenWindows \? 'browser:open' : ''"><\/x-context>/u
+    /<x-context :data-tags="\$store\.webBrowsing\.hasOpenBrowsers \? 'browser:open' : ''"><\/x-context>/u
   );
 });

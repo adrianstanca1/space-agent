@@ -2,6 +2,7 @@ import {
   getBrowserFrameBridge,
   send as sendBrowserFrameMessage
 } from "./browser-frame-bridge.js";
+import { defineBrowserElement } from "./browser-element.js";
 import {
   AGENT_FUNCTION_REQUIREMENT,
   guardAgentFunction
@@ -66,6 +67,7 @@ const PERSISTED_BROWSER_WINDOWS_WRITE_DELAY_MS = 80;
 const ROUTER_STAGE_APPROX_MAX_WIDTH_REM = 84;
 const AGENT_BROWSER_INTERACTION_MESSAGE_TYPES = new Set([
   "click",
+  "evaluate",
   "history_back",
   "history_forward",
   "location_navigate",
@@ -78,6 +80,8 @@ const AGENT_BROWSER_INTERACTION_MESSAGE_TYPES = new Set([
 
 let nextWindowZIndex = 2147481200;
 let nextBrowserWindowInstanceKey = 1;
+const browserSurfaceElements = new Map();
+const browserElementIds = new WeakMap();
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -397,6 +401,10 @@ function shouldRememberAgentBrowserInteraction(type) {
 }
 
 function normalizeAgentBrowserId(value) {
+  if (typeof Element !== "undefined" && value instanceof Element) {
+    return String(value.dataset?.browserId || value.getAttribute?.("data-browser-id") || "").trim();
+  }
+
   if (typeof value === "number" && Number.isFinite(value)) {
     const ordinal = Math.trunc(value);
     return ordinal > 0 ? `${BROWSER_WINDOW_ID_PREFIX}${ordinal}` : "";
@@ -416,6 +424,18 @@ function normalizeAgentBrowserId(value) {
 
   const ordinal = extractBrowserWindowOrdinal(normalizedValue);
   return ordinal ? `${BROWSER_WINDOW_ID_PREFIX}${ordinal}` : normalizedValue;
+}
+
+function mergeBrowserSurfaceEntries(currentSurfaces = [], nextSurfaces = []) {
+  const surfaceById = new Map();
+
+  [...(Array.isArray(currentSurfaces) ? currentSurfaces : []), ...(Array.isArray(nextSurfaces) ? nextSurfaces : [])]
+    .filter((browserSurface) => browserSurface?.id)
+    .forEach((browserSurface) => {
+      surfaceById.set(browserSurface.id, browserSurface);
+    });
+
+  return [...surfaceById.values()];
 }
 
 function toAgentBrowserId(value) {
@@ -467,7 +487,7 @@ function normalizeCreateWindowOptions(value) {
 
 async function settleRuntimeBrowserWindowState(store, id, options = {}) {
   const normalizedId = normalizeAgentBrowserId(id);
-  const browserWindow = normalizedId ? store.getWindow(normalizedId) : null;
+  const browserWindow = normalizedId ? store.getBrowser(normalizedId) : null;
   if (!browserWindow) {
     return null;
   }
@@ -483,7 +503,7 @@ async function settleRuntimeBrowserWindowState(store, id, options = {}) {
         syncAttempts: options.attempts,
         timeoutMs: options.navigationReadyTimeoutMs
       });
-      return settledState ?? buildRuntimeBrowserWindowSnapshot(store.getWindow(normalizedId));
+      return settledState ?? buildRuntimeBrowserWindowSnapshot(store.getBrowser(normalizedId));
     }
   }
 
@@ -499,12 +519,12 @@ async function settleRuntimeBrowserWindowState(store, id, options = {}) {
     });
   }
 
-  return buildRuntimeBrowserWindowSnapshot(store.getWindow(normalizedId));
+  return buildRuntimeBrowserWindowSnapshot(store.getBrowser(normalizedId));
 }
 
 async function performRuntimeBrowserRead(store, id, type, payload = null, options = {}) {
   const normalizedId = normalizeAgentBrowserId(id);
-  const browserWindow = normalizedId ? store.getWindow(normalizedId) : null;
+  const browserWindow = normalizedId ? store.getBrowser(normalizedId) : null;
   if (!browserWindow) {
     throw new Error(`Browser window "${String(id || "").trim()}" was not found.`);
   }
@@ -523,7 +543,7 @@ async function performRuntimeBrowserRead(store, id, type, payload = null, option
 
 async function performRuntimeBrowserAction(store, id, actionType, perform, options = {}) {
   const normalizedId = normalizeAgentBrowserId(id);
-  const browserWindow = normalizedId ? store.getWindow(normalizedId) : null;
+  const browserWindow = normalizedId ? store.getBrowser(normalizedId) : null;
   if (!browserWindow) {
     throw new Error(`Browser window "${String(id || "").trim()}" was not found.`);
   }
@@ -532,7 +552,7 @@ async function performRuntimeBrowserAction(store, id, actionType, perform, optio
     store.rememberBrowserInteraction(normalizedId, actionType);
   }
 
-  const beforeState = buildRuntimeBrowserWindowSnapshot(store.getWindow(normalizedId));
+  const beforeState = buildRuntimeBrowserWindowSnapshot(store.getBrowser(normalizedId));
   const action = await perform(normalizedId);
   const state = await settleRuntimeBrowserWindowState(store, normalizedId, {
     attempts: options.syncAttempts,
@@ -579,7 +599,7 @@ function ensureBrowserRuntimeNamespace(store) {
   } = previousNamespace;
   const requireWindowId = (id) => {
     const normalizedId = normalizeAgentBrowserId(id);
-    if (!normalizedId || !store.getWindow(normalizedId)) {
+    if (!normalizedId || !store.getBrowser(normalizedId)) {
       throw new Error(`Browser window "${String(id || "").trim()}" was not found.`);
     }
     return normalizedId;
@@ -621,19 +641,19 @@ function ensureBrowserRuntimeNamespace(store) {
         return;
       }
 
-      store.closeWindow(normalizedId);
+      store.closeBrowser(normalizedId);
     }),
     closeAll: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, () => {
-      const ids = store.windows.map((browserWindow) => browserWindow.id);
+      const ids = store.getBrowserList().map((browserWindow) => browserWindow.id);
 
       ids.forEach((id) => {
-        store.closeWindow(id);
+        store.closeBrowser(id);
       });
 
       return ids.length;
     }),
     count: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, () => {
-      return store.windows.length;
+      return store.getBrowserList().length;
     }),
     content: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, (id, payload = null, options = {}) => {
       return performRuntimeBrowserRead(store, id, "content", payload, options);
@@ -647,10 +667,16 @@ function ensureBrowserRuntimeNamespace(store) {
     dom: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, (id, payload = null, options = {}) => {
       return performRuntimeBrowserRead(store, id, "dom", payload, options);
     }),
+    evaluate: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, (id, scriptOrPayload = "", options = {}) => {
+      const payload = typeof scriptOrPayload === "string"
+        ? { script: scriptOrPayload }
+        : scriptOrPayload;
+      return performRuntimeBrowserRead(store, id, "evaluate", payload, options);
+    }),
     focus: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, (id, options = {}) => {
       const normalizedId = requireWindowId(id);
       store.rememberBrowserInteraction(normalizedId, "focus");
-      store.focusWindow(normalizedId, options);
+      store.focusBrowser(normalizedId, options);
       return settleRuntimeBrowserWindowState(store, normalizedId, {
         allowUnready: true,
         attempts: 1
@@ -667,13 +693,13 @@ function ensureBrowserRuntimeNamespace(store) {
       });
     }),
     has: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, (id) => {
-      return Boolean(store.getWindow(normalizeAgentBrowserId(id)));
+      return Boolean(store.getBrowser(normalizeAgentBrowserId(id)));
     }),
     ids: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, () => {
-      return store.windows.map((browserWindow) => toAgentBrowserId(browserWindow.id));
+      return store.getBrowserList().map((browserWindow) => toAgentBrowserId(browserWindow.id));
     }),
     list: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, () => {
-      return store.windows.map((browserWindow) => buildRuntimeBrowserWindowSnapshot(browserWindow));
+      return store.getBrowserList().map((browserWindow) => buildRuntimeBrowserWindowSnapshot(browserWindow));
     }),
     navigate: guardAgentFunction(AGENT_FUNCTION_REQUIREMENT.NATIVE_APP_ONLY, (id, url) => {
       return performRuntimeBrowserAction(store, id, "location_navigate", (normalizedId) => {
@@ -889,10 +915,7 @@ function readImmediateBrowserNavigationState(store, id) {
   return null;
 }
 
-function createBrowserWindowState(id, cascadeIndex = 0, options = {}) {
-  const clampArea = getAvailableWindowArea();
-  const spawnArea = getSpawnWindowArea();
-  const size = getDefaultExpandedSize(spawnArea, clampArea);
+function createBrowserSurfaceState(id, options = {}) {
   const initialUrl = String(options.url || "").trim();
   const frameSrc = initialUrl
     ? normalizeTypedBrowserLocation(initialUrl)
@@ -909,16 +932,34 @@ function createBrowserWindowState(id, cascadeIndex = 0, options = {}) {
     frameSrc,
     id,
     instanceKey: getNextBrowserWindowInstanceKey(),
+    isWindow: false,
+    kind: String(options.kind || "surface").trim() || "surface",
+    loading: false,
+    title: ""
+  };
+}
+
+function createBrowserWindowState(id, cascadeIndex = 0, options = {}) {
+  const clampArea = getAvailableWindowArea();
+  const spawnArea = getSpawnWindowArea();
+  const size = getDefaultExpandedSize(spawnArea, clampArea);
+
+  return {
+    ...createBrowserSurfaceState(id, {
+      ...options,
+      kind: "window"
+    }),
+    isWindow: true,
     isMinimized: false,
     loading: false,
     position: getDefaultPosition(size, spawnArea, clampArea, cascadeIndex),
     size: { ...size },
-    title: "",
     zIndex: getNextZIndex()
   };
 }
 
 const model = {
+  browserSurfaces: [],
   frameConnections: Object.create(null),
   interaction: null,
   lastInteractedBrowserId: "",
@@ -938,7 +979,8 @@ const model = {
       this.offDesktopBrowserHostEvents = bindDesktopBrowserHostEvents({
         onFocus: (id) => {
           if (id) {
-            this.focusWindow(id, {
+            this.rememberBrowserInteraction(id, "focus");
+            this.focusBrowser(id, {
               fromBrowserSurface: true
             });
           }
@@ -1050,7 +1092,7 @@ const model = {
       const storedId = String(entry?.id || "").trim();
       const browserId = storedId && !restoredIds.has(storedId)
         ? storedId
-        : getNextBrowserWindowId([...this.windows, ...restoredWindows], globalThis.document);
+        : getNextBrowserWindowId([...this.getBrowserList(), ...restoredWindows], globalThis.document);
       restoredIds.add(browserId);
 
       const restoredUrl = normalizeTypedBrowserLocation(entry?.url)
@@ -1080,6 +1122,7 @@ const model = {
     }
 
     this.windows = restoredWindows;
+    this.browserSurfaces = mergeBrowserSurfaceEntries(this.browserSurfaces, restoredWindows);
     syncBrowserWindowCounters(restoredWindows);
     this.fitWindowsToViewport({
       persistDelayMs: 0,
@@ -1090,6 +1133,10 @@ const model = {
 
   get hasOpenWindows() {
     return this.windows.length > 0;
+  },
+
+  get hasOpenBrowsers() {
+    return this.getBrowserList().length > 0;
   },
 
   get usesNativeDesktopSurface() {
@@ -1107,6 +1154,21 @@ const model = {
     }
 
     return this.windows.find((browserWindow) => browserWindow.id === normalizedId) || null;
+  },
+
+  getBrowserList() {
+    const surfaces = Array.isArray(this.browserSurfaces) ? this.browserSurfaces : [];
+    return surfaces.length ? surfaces : this.windows;
+  },
+
+  getBrowser(id) {
+    const normalizedId = String(id || "").trim();
+    if (!normalizedId) {
+      return null;
+    }
+
+    return this.getBrowserList().find((browserWindow) => browserWindow.id === normalizedId)
+      || this.getWindow(normalizedId);
   },
 
   getIframe(id) {
@@ -1178,9 +1240,126 @@ const model = {
     return getDesktopBrowserWebviewPartition(id);
   },
 
+  allocateBrowserSurfaceId(preferredId = "") {
+    const normalizedPreferredId = String(preferredId || "").trim();
+    const preferredElement = normalizedPreferredId ? browserSurfaceElements.get(normalizedPreferredId) : null;
+
+    if (
+      normalizedPreferredId &&
+      !this.getBrowser(normalizedPreferredId) &&
+      !preferredElement &&
+      !isBrowserWindowIdInUse(normalizedPreferredId, this.getBrowserList(), globalThis.document)
+    ) {
+      return normalizedPreferredId;
+    }
+
+    return getNextBrowserWindowId(this.getBrowserList(), globalThis.document);
+  },
+
+  registerBrowserElement(element, options = {}) {
+    if (!element) {
+      return null;
+    }
+
+    const previousId = browserElementIds.get(element) || "";
+    const requestedId = String(element.dataset?.browserId || element.getAttribute?.("data-browser-id") || previousId || "").trim();
+    const existingElement = requestedId ? browserSurfaceElements.get(requestedId) : null;
+    const shouldReuseRequestedId = requestedId
+      && (!existingElement || existingElement === element || !existingElement.isConnected);
+    const id = shouldReuseRequestedId ? requestedId : this.allocateBrowserSurfaceId(requestedId);
+    const sourceUrl = String(options.src ?? element.getAttribute?.("src") ?? "").trim();
+    let browserSurface = this.getBrowser(id);
+
+    if (!browserSurface) {
+      browserSurface = createBrowserSurfaceState(id, {
+        kind: "element",
+        url: sourceUrl
+      });
+      this.browserSurfaces = mergeBrowserSurfaceEntries(this.browserSurfaces, [browserSurface]);
+      syncBrowserWindowCounters(this.getBrowserList());
+    } else if (!this.getBrowserList().some((entry) => entry.id === browserSurface.id)) {
+      this.browserSurfaces = mergeBrowserSurfaceEntries(this.browserSurfaces, [browserSurface]);
+    }
+
+    if (previousId && previousId !== id && browserSurfaceElements.get(previousId) === element) {
+      browserSurfaceElements.delete(previousId);
+      if (!this.getWindow(previousId)) {
+        this.removeBrowserSurface(previousId);
+      }
+    }
+
+    if (sourceUrl && (!browserSurface.currentUrl || browserSurface.currentUrl === resolveBrowserLocation(resolveDefaultFrameSrc()))) {
+      const normalizedSourceUrl = normalizeTypedBrowserLocation(sourceUrl);
+      if (normalizedSourceUrl) {
+        browserSurface.addressValue = normalizedSourceUrl;
+        browserSurface.currentUrl = normalizedSourceUrl;
+        browserSurface.frameSrc = normalizedSourceUrl;
+      }
+    }
+
+    browserElementIds.set(element, id);
+    browserSurfaceElements.set(id, element);
+    if (element.dataset?.browserId !== id) {
+      element.dataset.browserId = id;
+    }
+    return browserSurface;
+  },
+
+  unregisterBrowserElement(element) {
+    if (!element) {
+      return false;
+    }
+
+    const id = browserElementIds.get(element) || String(element.dataset?.browserId || element.getAttribute?.("data-browser-id") || "").trim();
+    if (!id) {
+      return false;
+    }
+
+    if (browserSurfaceElements.get(id) === element) {
+      browserSurfaceElements.delete(id);
+    }
+
+    browserElementIds.delete(element);
+
+    if (this.getWindow(id)) {
+      this.unregisterBrowserSurface(id, element);
+      this.unregisterWebview(id);
+      this.unregisterIframe(id);
+      return true;
+    }
+
+    this.removeBrowserSurface(id);
+    return true;
+  },
+
+  updateBrowserElementSource(element, src) {
+    const id = browserElementIds.get(element) || String(element?.dataset?.browserId || element?.getAttribute?.("data-browser-id") || "").trim();
+    const browserSurface = id ? this.getBrowser(id) : this.registerBrowserElement(element, { src });
+    const normalizedUrl = normalizeTypedBrowserLocation(src);
+
+    if (!browserSurface || !normalizedUrl) {
+      return false;
+    }
+
+    if (browserSurface.currentUrl === normalizedUrl && browserSurface.frameSrc === normalizedUrl) {
+      return true;
+    }
+
+    browserSurface.addressValue = normalizedUrl;
+    void this.navigateToAddress(browserSurface.id);
+    return true;
+  },
+
+  notifyBrowserElementState(id) {
+    const normalizedId = String(id || "").trim();
+    const browserSurface = this.getBrowser(normalizedId);
+    const element = browserSurfaceElements.get(normalizedId);
+    element?.updateBrowserState?.(browserSurface);
+  },
+
   rememberBrowserInteraction(id, type = "") {
     const normalizedId = String(id || "").trim();
-    const browserWindow = normalizedId ? this.getWindow(normalizedId) : null;
+    const browserWindow = normalizedId ? this.getBrowser(normalizedId) : null;
     if (!browserWindow) {
       return;
     }
@@ -1197,10 +1376,11 @@ const model = {
   },
 
   createWindow(options = {}) {
-    const id = getNextBrowserWindowId(this.windows);
+    const id = getNextBrowserWindowId(this.getBrowserList());
     const browserWindow = createBrowserWindowState(id, this.windows.length, options);
 
     this.windows = [...this.windows, browserWindow];
+    this.browserSurfaces = mergeBrowserSurfaceEntries(this.browserSurfaces, [browserWindow]);
     this.focusWindow(id, {
       persist: false
     });
@@ -1234,10 +1414,29 @@ const model = {
     }
   },
 
+  focusBrowser(id, options = {}) {
+    const normalizedId = String(id || "").trim();
+    const browserWindow = this.getWindow(normalizedId);
+    if (browserWindow) {
+      this.focusWindow(normalizedId, options);
+      return;
+    }
+
+    const webview = this.getWebview(normalizedId);
+    if (webview) {
+      focusWebview(webview);
+      return;
+    }
+
+    if (this.usesNativeDesktopSurface && options.focusSurface !== false) {
+      focusBrowserSurface(normalizedId);
+    }
+  },
+
   handleWindowPointerDown(id, event) {
     const target = event?.target;
     const shouldKeepChromeFocus = target instanceof Element
-      && Boolean(target.closest(".web-browsing-window-toolbar"));
+      && Boolean(target.closest(".web-browsing-window-toolbar, .space-browser-toolbar"));
 
     this.focusWindow(id, {
       focusSurface: !shouldKeepChromeFocus
@@ -1284,6 +1483,46 @@ const model = {
     return expandedSize;
   },
 
+  removeBrowserSurface(id) {
+    const normalizedId = String(id || "").trim();
+    if (!normalizedId) {
+      return false;
+    }
+
+    this.unregisterBrowserSurface(normalizedId);
+    this.unregisterWebview(normalizedId);
+    this.unregisterIframe(normalizedId);
+    delete this.observedNavigationVersions[normalizedId];
+    delete this.pendingNavigations[normalizedId];
+    delete this.syncTokens[normalizedId];
+    browserSurfaceElements.delete(normalizedId);
+    this.browserSurfaces = this.getBrowserList().filter((entry) => entry.id !== normalizedId);
+
+    if (this.lastInteractedBrowserId === normalizedId) {
+      this.lastInteractedBrowserId = "";
+      this.lastInteractedBrowserInstanceKey = null;
+    }
+
+    return true;
+  },
+
+  closeBrowser(id) {
+    const normalizedId = String(id || "").trim();
+    if (!normalizedId) {
+      return false;
+    }
+
+    if (this.getWindow(normalizedId)) {
+      this.closeWindow(normalizedId);
+      return true;
+    }
+
+    const element = browserSurfaceElements.get(normalizedId);
+    this.removeBrowserSurface(normalizedId);
+    element?.remove?.();
+    return true;
+  },
+
   closeWindow(id) {
     const browserWindow = this.getWindow(id);
     if (!browserWindow) {
@@ -1294,11 +1533,7 @@ const model = {
       this.stopPointer();
     }
 
-    this.unregisterBrowserSurface(browserWindow.id);
-    this.unregisterWebview(browserWindow.id);
-    this.unregisterIframe(browserWindow.id);
-    delete this.observedNavigationVersions[browserWindow.id];
-    delete this.pendingNavigations[browserWindow.id];
+    this.removeBrowserSurface(browserWindow.id);
     this.windows = this.windows.filter((entry) => entry.id !== browserWindow.id);
     this.persistWindowsNow();
   },
@@ -1467,8 +1702,8 @@ const model = {
   },
 
   registerIframe(id, iframe) {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow || !iframe) {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface || !iframe) {
       return;
     }
 
@@ -1492,7 +1727,8 @@ const model = {
     }
 
     const handleIframeFocus = () => {
-      this.focusWindow(id, {
+      this.rememberBrowserInteraction(id, "focus");
+      this.focusBrowser(id, {
         fromBrowserSurface: true
       });
     };
@@ -1506,7 +1742,7 @@ const model = {
       iframe.addEventListener?.(eventName, handler);
     });
 
-    this.frameConnections[browserWindow.id] = {
+    this.frameConnections[browserSurface.id] = {
       bridge,
       iframe,
       offNavigationState,
@@ -1524,8 +1760,8 @@ const model = {
   },
 
   registerBrowserSurface(id, element) {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow || !element || !this.usesNativeDesktopSurface) {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface || !element || !this.usesNativeDesktopSurface) {
       return;
     }
 
@@ -1548,7 +1784,7 @@ const model = {
       // The host bridge remains optional while the native view is still initializing.
     }
 
-    this.frameConnections[browserWindow.id] = {
+    this.frameConnections[browserSurface.id] = {
       bridge,
       iframe: null,
       offNavigationState,
@@ -1556,17 +1792,17 @@ const model = {
       webview: null
     };
 
-    registerDesktopBrowserSurface(browserWindow.id, element, {
+    registerDesktopBrowserSurface(browserSurface.id, element, {
       injectPath: BROWSER_INJECT_PATH,
-      url: browserWindow.currentUrl || browserWindow.frameSrc
+      url: browserSurface.currentUrl || browserSurface.frameSrc
     });
 
     void this.syncNavigationState(id, { attempts: FRAME_SYNC_ATTEMPTS + 3 });
   },
 
   registerWebview(id, webview, initialUrl = "") {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow || !isWebviewLike(webview)) {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface || !isWebviewLike(webview)) {
       return;
     }
 
@@ -1583,7 +1819,7 @@ const model = {
     this.unregisterWebview(id);
 
     const normalizedInitialUrl = resolveBrowserLocation(
-      initialUrl || browserWindow.currentUrl || browserWindow.frameSrc || DEFAULT_FRAME_SRC
+      initialUrl || browserSurface.currentUrl || browserSurface.frameSrc || DEFAULT_FRAME_SRC
     );
     const runtimeState = {
       attached: false,
@@ -1591,9 +1827,9 @@ const model = {
     };
 
     if (normalizedInitialUrl) {
-      browserWindow.addressValue = normalizedInitialUrl;
-      browserWindow.currentUrl = normalizedInitialUrl;
-      browserWindow.frameSrc = normalizedInitialUrl;
+      browserSurface.addressValue = normalizedInitialUrl;
+      browserSurface.currentUrl = normalizedInitialUrl;
+      browserSurface.frameSrc = normalizedInitialUrl;
     }
 
     let bridge = null;
@@ -1614,22 +1850,22 @@ const model = {
         this.createWindow(url ? { url } : {});
       });
       offPreloadReady = bridge.on("__preload_ready__", (message) => {
-        browserWindow.bridgeTransportReady = true;
-        logBrowser("debug", `[space-browser] Guest preload ready for ${browserWindow.id}.`, message.payload);
+        browserSurface.bridgeTransportReady = true;
+        logBrowser("debug", `[space-browser] Guest preload ready for ${browserSurface.id}.`, message.payload);
       });
       offPreloadReceived = bridge.on("__preload_received__", (message) => {
-        browserWindow.bridgeTransportReady = true;
-        logBrowser("debug", `[space-browser] Guest preload received host envelope for ${browserWindow.id}.`, message.payload);
+        browserSurface.bridgeTransportReady = true;
+        logBrowser("debug", `[space-browser] Guest preload received host envelope for ${browserSurface.id}.`, message.payload);
       });
       offBridgeReady = bridge.on("__bridge_ready__", (message) => {
-        browserWindow.bridgeTransportReady = true;
-        browserWindow.bridgeStateReady = false;
-        logBrowser("debug", `[space-browser] Guest bridge runtime ready for ${browserWindow.id}.`, message.payload);
+        browserSurface.bridgeTransportReady = true;
+        browserSurface.bridgeStateReady = false;
+        logBrowser("debug", `[space-browser] Guest bridge runtime ready for ${browserSurface.id}.`, message.payload);
       });
       offCoreHandlersReady = bridge.on("__core_handlers_ready__", (message) => {
-        browserWindow.bridgeTransportReady = true;
-        browserWindow.bridgeHandlersReady = true;
-        logBrowser("debug", `[space-browser] Guest core handlers ready for ${browserWindow.id}.`, message.payload);
+        browserSurface.bridgeTransportReady = true;
+        browserSurface.bridgeHandlersReady = true;
+        logBrowser("debug", `[space-browser] Guest core handlers ready for ${browserSurface.id}.`, message.payload);
         void this.syncNavigationState(id, {
           attempts: 2
         });
@@ -1642,7 +1878,7 @@ const model = {
       const state = runtimeState.attached
         ? collectWebviewNavigationState(webview)
         : {
-            url: resolveBrowserLocation(fallbackUrl || browserWindow.currentUrl || browserWindow.frameSrc || "")
+            url: resolveBrowserLocation(fallbackUrl || browserSurface.currentUrl || browserSurface.frameSrc || "")
           };
       this.applyNavigationState(id, state);
     };
@@ -1650,7 +1886,7 @@ const model = {
       stabilizeEmbedder();
 
       const nextUrl = resolveBrowserLocation(
-        browserWindow.currentUrl || browserWindow.frameSrc || normalizedInitialUrl || DEFAULT_FRAME_SRC
+        browserSurface.currentUrl || browserSurface.frameSrc || normalizedInitialUrl || DEFAULT_FRAME_SRC
       );
       if (!nextUrl) {
         return;
@@ -1670,20 +1906,20 @@ const model = {
       syncState();
     };
     const handleDidStartLoading = () => {
-      browserWindow.bridgeHandlersReady = false;
-      browserWindow.bridgeStateReady = false;
-      browserWindow.bridgeTransportReady = false;
-      browserWindow.loading = true;
+      browserSurface.bridgeHandlersReady = false;
+      browserSurface.bridgeStateReady = false;
+      browserSurface.bridgeTransportReady = false;
+      browserSurface.loading = true;
       runtimeState.injected = false;
       this.markNavigationObserved(id);
       stabilizeEmbedder();
       syncState();
     };
     const handleDidStopLoading = () => {
-      browserWindow.loading = false;
+      browserSurface.loading = false;
       stabilizeEmbedder();
       syncState();
-      if (browserWindow.bridgeHandlersReady) {
+      if (browserSurface.bridgeHandlersReady) {
         void this.syncNavigationState(id, { attempts: 2 });
       }
     };
@@ -1697,7 +1933,8 @@ const model = {
       syncState();
     };
     const handleSurfaceFocus = () => {
-      this.focusWindow(id, {
+      this.rememberBrowserInteraction(id, "focus");
+      this.focusBrowser(id, {
         fromBrowserSurface: true
       });
       focusWebview(webview);
@@ -1708,7 +1945,7 @@ const model = {
       focusWebview(webview);
       if (runtimeState.injected) {
         syncState();
-        if (browserWindow.bridgeHandlersReady) {
+        if (browserSurface.bridgeHandlersReady) {
           void this.syncNavigationState(id, { attempts: 2 });
         }
         return;
@@ -1716,13 +1953,13 @@ const model = {
 
       runtimeState.injected = true;
       void injectBrowserWebviewRuntime(webview, {
-        browserId: browserWindow.id,
+        browserId: browserSurface.id,
         injectPath: BROWSER_INJECT_PATH
       }).then(() => {
         syncState();
         return true;
       }).catch((error) => {
-        logBrowser("error", `[space-browser] Failed to inject browser runtime into ${browserWindow.id}.`, error);
+        logBrowser("error", `[space-browser] Failed to inject browser runtime into ${browserSurface.id}.`, error);
         runtimeState.injected = false;
         syncState();
       });
@@ -1736,7 +1973,7 @@ const model = {
 
       const level = Number(event?.level);
       const payload = {
-        browserId: browserWindow.id,
+        browserId: browserSurface.id,
         line: Number(event?.line) || 0,
         sourceId: String(event?.sourceId || "")
       };
@@ -1761,7 +1998,7 @@ const model = {
       webview.addEventListener(eventName, handler);
     });
 
-    this.frameConnections[browserWindow.id] = {
+    this.frameConnections[browserSurface.id] = {
       bridge,
       iframe: null,
       offBridgeReady,
@@ -1907,6 +2144,10 @@ const model = {
       connection.offCoreHandlersReady();
     }
 
+    if (typeof connection.offIframeEvents === "function") {
+      connection.offIframeEvents();
+    }
+
     connection.bridge?.destroy?.();
     delete this.frameConnections[normalizedId];
     delete this.pendingNavigations[normalizedId];
@@ -1914,8 +2155,8 @@ const model = {
   },
 
   applyNavigationState(id, state, options = {}) {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow || !state || typeof state !== "object") {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface || !state || typeof state !== "object") {
       return;
     }
 
@@ -1923,36 +2164,39 @@ const model = {
       return;
     }
 
-    const resolvedUrl = resolveBrowserLocation(state.url || browserWindow.currentUrl || browserWindow.frameSrc || "");
+    const resolvedUrl = resolveBrowserLocation(state.url || browserSurface.currentUrl || browserSurface.frameSrc || "");
     if (resolvedUrl) {
-      browserWindow.addressValue = resolvedUrl;
-      browserWindow.currentUrl = resolvedUrl;
-      browserWindow.frameSrc = resolvedUrl;
+      browserSurface.addressValue = resolvedUrl;
+      browserSurface.currentUrl = resolvedUrl;
+      browserSurface.frameSrc = resolvedUrl;
     }
 
     if (typeof state.canGoBack === "boolean") {
-      browserWindow.canGoBack = state.canGoBack;
+      browserSurface.canGoBack = state.canGoBack;
     }
 
     if (typeof state.canGoForward === "boolean") {
-      browserWindow.canGoForward = state.canGoForward;
+      browserSurface.canGoForward = state.canGoForward;
     }
 
     if (typeof state.loading === "boolean") {
-      browserWindow.loading = state.loading;
+      browserSurface.loading = state.loading;
     }
 
     if ("title" in state) {
-      browserWindow.title = String(state.title || "").trim();
+      browserSurface.title = String(state.title || "").trim();
     }
 
     if (options.fromBridge) {
-      browserWindow.bridgeHandlersReady = true;
-      browserWindow.bridgeStateReady = true;
-      browserWindow.bridgeTransportReady = true;
+      browserSurface.bridgeHandlersReady = true;
+      browserSurface.bridgeStateReady = true;
+      browserSurface.bridgeTransportReady = true;
     }
 
-    this.schedulePersistedWindowsWrite();
+    this.notifyBrowserElementState(id);
+    if (browserSurface.isWindow) {
+      this.schedulePersistedWindowsWrite();
+    }
   },
 
   async requestBridgePayload(id, type, payload = null, options = {}) {
@@ -1976,8 +2220,8 @@ const model = {
 
   async syncNavigationState(id, options = {}) {
     const normalizedId = String(id || "").trim();
-    const browserWindow = this.getWindow(normalizedId);
-    if (!browserWindow) {
+    const browserSurface = this.getBrowser(normalizedId);
+    if (!browserSurface) {
       return false;
     }
 
@@ -1985,7 +2229,7 @@ const model = {
       return false;
     }
 
-    if (!browserWindow.bridgeHandlersReady && options.allowUnready !== true) {
+    if (!browserSurface.bridgeHandlersReady && options.allowUnready !== true) {
       const webview = this.getWebview(normalizedId);
       if (webview) {
         this.applyNavigationState(normalizedId, collectWebviewNavigationState(webview));
@@ -2001,7 +2245,7 @@ const model = {
     const attempts = Math.max(1, Number(options.attempts) || FRAME_SYNC_ATTEMPTS);
 
     for (let attempt = 0; attempt < attempts; attempt += 1) {
-      if (this.syncTokens[normalizedId] !== token || !this.getWindow(normalizedId)) {
+      if (this.syncTokens[normalizedId] !== token || !this.getBrowser(normalizedId)) {
         return false;
       }
 
@@ -2010,7 +2254,7 @@ const model = {
       });
 
       if (payload) {
-        if (this.syncTokens[normalizedId] !== token || !this.getWindow(normalizedId)) {
+        if (this.syncTokens[normalizedId] !== token || !this.getBrowser(normalizedId)) {
           return false;
         }
 
@@ -2036,12 +2280,12 @@ const model = {
   },
 
   handleFrameLoad(id, event) {
-    const browserWindow = this.getWindow(id);
-    if (browserWindow) {
-      browserWindow.bridgeHandlersReady = false;
-      browserWindow.bridgeStateReady = false;
-      browserWindow.bridgeTransportReady = false;
-      browserWindow.loading = false;
+    const browserSurface = this.getBrowser(id);
+    if (browserSurface) {
+      browserSurface.bridgeHandlersReady = false;
+      browserSurface.bridgeStateReady = false;
+      browserSurface.bridgeTransportReady = false;
+      browserSurface.loading = false;
     }
 
     this.markNavigationObserved(id);
@@ -2058,7 +2302,7 @@ const model = {
     const startedAt = Date.now();
 
     while (Date.now() - startedAt < timeoutMs) {
-      if (!this.getWindow(normalizedId)) {
+      if (!this.getBrowser(normalizedId)) {
         return false;
       }
 
@@ -2089,8 +2333,8 @@ const model = {
     let stableSince = Date.now();
 
     while (Date.now() < deadline) {
-      const browserWindow = this.getWindow(normalizedId);
-      if (!browserWindow) {
+      const browserSurface = this.getBrowser(normalizedId);
+      if (!browserSurface) {
         return null;
       }
 
@@ -2107,13 +2351,13 @@ const model = {
         continue;
       }
 
-      if (browserWindow.loading) {
+      if (browserSurface.loading) {
         stableSince = Date.now();
         await wait(25);
         continue;
       }
 
-      if (browserWindow.bridgeHandlersReady) {
+      if (browserSurface.bridgeHandlersReady) {
         await this.syncNavigationState(normalizedId, {
           allowUnready: false,
           attempts: Math.max(1, Number(options.syncAttempts) || 2)
@@ -2121,50 +2365,56 @@ const model = {
       }
 
       if (Date.now() - stableSince >= quietMs) {
-        return buildRuntimeBrowserWindowSnapshot(this.getWindow(normalizedId));
+        return buildRuntimeBrowserWindowSnapshot(this.getBrowser(normalizedId));
       }
 
       await wait(25);
     }
 
-    const browserWindow = this.getWindow(normalizedId);
-    return browserWindow ? buildRuntimeBrowserWindowSnapshot(browserWindow) : null;
+    const browserSurface = this.getBrowser(normalizedId);
+    return browserSurface ? buildRuntimeBrowserWindowSnapshot(browserSurface) : null;
   },
 
   updateAddressValue(id, value) {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow) {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface) {
       return;
     }
 
-    browserWindow.addressValue = String(value ?? "");
+    browserSurface.addressValue = String(value ?? "");
+    this.notifyBrowserElementState(id);
   },
 
   async navigateToAddress(id) {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow) {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface) {
       return;
     }
 
-    const nextUrl = normalizeTypedBrowserLocation(browserWindow.addressValue || browserWindow.currentUrl || browserWindow.frameSrc);
+    const nextUrl = normalizeTypedBrowserLocation(browserSurface.addressValue || browserSurface.currentUrl || browserSurface.frameSrc);
     if (!nextUrl) {
-      browserWindow.addressValue = browserWindow.currentUrl || browserWindow.frameSrc || "";
+      browserSurface.addressValue = browserSurface.currentUrl || browserSurface.frameSrc || "";
+      this.notifyBrowserElementState(id);
       return;
     }
 
-    this.focusWindow(id);
+    this.rememberBrowserInteraction(id, "location_navigate");
+    this.focusBrowser(id);
 
-    if (nextUrl === browserWindow.currentUrl) {
+    if (nextUrl === browserSurface.currentUrl) {
       void this.reloadFrame(id);
       return;
     }
 
-    browserWindow.addressValue = nextUrl;
-    browserWindow.currentUrl = nextUrl;
-    browserWindow.frameSrc = nextUrl;
+    browserSurface.addressValue = nextUrl;
+    browserSurface.currentUrl = nextUrl;
+    browserSurface.frameSrc = nextUrl;
     this.startPendingNavigation(id);
-    this.persistWindowsNow();
-    const payload = browserWindow.bridgeStateReady
+    this.notifyBrowserElementState(id);
+    if (browserSurface.isWindow) {
+      this.persistWindowsNow();
+    }
+    const payload = browserSurface.bridgeStateReady
       ? await this.requestBridgePayload(id, "location_navigate", {
           url: nextUrl
         })
@@ -2174,7 +2424,8 @@ const model = {
       this.performNavigateFallback(id, nextUrl);
     }
 
-    browserWindow.bridgeStateReady = false;
+    browserSurface.bridgeStateReady = false;
+    this.notifyBrowserElementState(id);
   },
 
   performNavigateFallback(id, nextUrl) {
@@ -2245,7 +2496,7 @@ const model = {
         // Fall back to resetting the current src when the child page is cross-origin.
       }
 
-      const src = resolveBrowserLocation(iframe.src || iframe.getAttribute?.("src") || this.getWindow(id)?.frameSrc || "");
+      const src = resolveBrowserLocation(iframe.src || iframe.getAttribute?.("src") || this.getBrowser(id)?.frameSrc || "");
       if (!src) {
         return false;
       }
@@ -2268,15 +2519,16 @@ const model = {
   },
 
   async goBack(id) {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow) {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface) {
       return;
     }
 
-    this.focusWindow(id);
+    this.rememberBrowserInteraction(id, "history_back");
+    this.focusBrowser(id);
     this.startPendingNavigation(id);
 
-    const payload = browserWindow.bridgeStateReady
+    const payload = browserSurface.bridgeStateReady
       ? await this.requestBridgePayload(id, "history_back")
       : null;
 
@@ -2286,15 +2538,16 @@ const model = {
   },
 
   async goForward(id) {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow) {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface) {
       return;
     }
 
-    this.focusWindow(id);
+    this.rememberBrowserInteraction(id, "history_forward");
+    this.focusBrowser(id);
     this.startPendingNavigation(id);
 
-    const payload = browserWindow.bridgeStateReady
+    const payload = browserSurface.bridgeStateReady
       ? await this.requestBridgePayload(id, "history_forward")
       : null;
 
@@ -2304,15 +2557,16 @@ const model = {
   },
 
   async reloadFrame(id) {
-    const browserWindow = this.getWindow(id);
-    if (!browserWindow) {
+    const browserSurface = this.getBrowser(id);
+    if (!browserSurface) {
       return;
     }
 
-    this.focusWindow(id);
+    this.rememberBrowserInteraction(id, "location_reload");
+    this.focusBrowser(id);
     this.startPendingNavigation(id);
 
-    const payload = browserWindow.bridgeStateReady
+    const payload = browserSurface.bridgeStateReady
       ? await this.requestBridgePayload(id, "location_reload")
       : null;
 
@@ -2320,9 +2574,11 @@ const model = {
       this.performReloadFallback(id);
     }
 
-    browserWindow.bridgeStateReady = false;
+    browserSurface.bridgeStateReady = false;
+    this.notifyBrowserElementState(id);
   }
 };
 
 const webBrowsingStore = space.fw.createStore(STORE_NAME, model);
 ensureBrowserRuntimeNamespace(webBrowsingStore);
+defineBrowserElement(() => webBrowsingStore);

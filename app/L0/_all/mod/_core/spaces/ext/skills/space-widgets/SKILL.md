@@ -179,6 +179,10 @@ renderer rules
 - Default widget card surface is `#101b2d` (`rgba(16, 27, 45, 0.92)`). Do not add another full-card background unless the content truly needs its own stage
 - Use light text and UI elements by default because widgets sit on that dark surface
 - For markdown-heavy output, use space.utils.markdown.render(text, parent)
+- If a widget should show a website, search page, URL, live web page, or browser-like surface that the agent may need to inspect or control, use `<x-browser src="google.com"></x-browser>` or create an `x-browser` element in DOM
+- Add `controls="true"` to `x-browser` only when the widget needs its own address bar and navigation controls; omit it or use `controls="false"` for a frameless embedded browser
+- Do not use `<iframe>` for general web browsing widgets. Iframes are not registered browser surfaces, so `space.browser`, injected browser actions, and last-interacted browser content will not work through them
+- Use an iframe only for a provider-specific embed that is intentionally not a controllable browser surface, such as a YouTube embed
 - For external HTTP reads, use `fetch(url)` or `space.fetchExternal(url)`. Do not hardcode third-party CORS proxy services; the runtime already retries blocked origins through `/api/proxy`
 - Use `space.proxy.buildUrl(url)` only when you specifically need a same-origin proxied URL string for a non-fetch consumer
 - Max widget size is 24x24

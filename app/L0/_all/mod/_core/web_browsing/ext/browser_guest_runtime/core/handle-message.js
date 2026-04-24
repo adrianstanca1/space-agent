@@ -21,6 +21,7 @@
   runtime.registerMessageHandler("dom", (payload) => runtime.collectDomSnapshot(payload));
   runtime.registerMessageHandler("content", (payload) => runtime.collectSemanticContent(payload));
   runtime.registerMessageHandler("detail", (payload) => runtime.collectReferenceDetail(payload));
+  runtime.registerMessageHandler("evaluate", (payload) => runtime.evaluateScript(payload));
   runtime.registerMessageHandler("click", (payload) => runtime.clickReference(payload));
   runtime.registerMessageHandler("type", (payload) => runtime.typeReference(payload));
   runtime.registerMessageHandler("submit", (payload) => runtime.submitReference(payload));

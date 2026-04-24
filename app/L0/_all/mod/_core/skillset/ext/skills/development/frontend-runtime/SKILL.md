@@ -37,7 +37,9 @@ Use this skill when the task changes browser runtime behavior, framework-backed 
   - `space.proxy`
   - `space.download`
   - `space.fetchExternal(...)`
-  - `space.browser` for floating browser-window control; load the top-level `browser-control` skill for the detailed method list and browser-frame bridge usage
+  - `space.browser` for registered browser-surface control; load the top-level `browser-control` skill for the detailed method list and browser-frame bridge usage
+
+Use `<x-browser src="https://example.com"></x-browser>` when frontend UI, pages, or widgets need to embed a live browser surface directly in their DOM. Add `controls="true"` when that surface should render its own address bar and navigation controls; omit it or set `controls="false"` for a frameless embedded browser. Authored `<x-browser>` elements register with `space.browser` automatically, so agents can discover, inspect, navigate, and interact with them the same way they use stand-alone browser windows.
 
 External browser fetches under the framework should try direct `fetch(...)` first and only fall back to `/api/proxy` after a failed cross-origin attempt; when that fallback succeeds, the runtime keeps an in-memory origin cache so later requests to the same origin go through the backend immediately for the rest of the page lifetime.
 

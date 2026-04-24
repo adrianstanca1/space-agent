@@ -33,18 +33,22 @@ function compareBrowsers(left, right) {
 }
 
 export function getOpenBrowserTransientRows(webBrowsingStore = getStore("webBrowsing")) {
-  const windows = Array.isArray(webBrowsingStore?.windows) ? webBrowsingStore.windows : [];
+  const browsers = typeof webBrowsingStore?.getBrowserList === "function"
+    ? webBrowsingStore.getBrowserList()
+    : Array.isArray(webBrowsingStore?.windows)
+      ? webBrowsingStore.windows
+      : [];
 
-  return windows
-    .map((browserWindow) => {
-      const id = normalizeBrowserTransientId(browserWindow?.id);
+  return browsers
+    .map((browserSurface) => {
+      const id = normalizeBrowserTransientId(browserSurface?.id);
       const url = normalizeBrowserTransientCell(
-        browserWindow?.currentUrl
-        || browserWindow?.frameSrc
-        || browserWindow?.addressValue
+        browserSurface?.currentUrl
+        || browserSurface?.frameSrc
+        || browserSurface?.addressValue
         || ""
       );
-      const title = normalizeBrowserTransientCell(browserWindow?.title || "");
+      const title = normalizeBrowserTransientCell(browserSurface?.title || "");
 
       if (!id) {
         return null;

@@ -1,7 +1,7 @@
 (() => {
   const GLOBAL_KEY = "__spaceBrowserPageContent__";
   const DOM_HELPER_KEY = "__spaceBrowserDomHelper__";
-  const VERSION = "5";
+  const VERSION = "6";
   const BLOCK_TAGS = new Set([
     "ADDRESS",
     "ARTICLE",
@@ -67,6 +67,42 @@
     "tab",
     "textbox"
   ]);
+  const STRUCTURAL_ROLES = new Set([
+    "alertdialog",
+    "article",
+    "banner",
+    "complementary",
+    "contentinfo",
+    "dialog",
+    "document",
+    "form",
+    "group",
+    "main",
+    "navigation",
+    "none",
+    "presentation",
+    "region"
+  ]);
+  const INTERACTIVE_EVENT_NAMES = new Set([
+    "auxclick",
+    "change",
+    "click",
+    "contextmenu",
+    "dblclick",
+    "input",
+    "keydown",
+    "keypress",
+    "keyup",
+    "mousedown",
+    "mouseup",
+    "pointerdown",
+    "pointerup",
+    "submit",
+    "touchend",
+    "touchstart"
+  ]);
+  const INTERACTIVE_EVENT_PROPERTIES = [...INTERACTIVE_EVENT_NAMES]
+    .map((eventName) => `on${eventName}`);
 
   if (globalThis[GLOBAL_KEY]?.version === VERSION) {
     return;
@@ -359,14 +395,36 @@
     return error;
   }
 
-  function normalizeSelectorList(payload) {
-    const rawSelectors = Array.isArray(payload?.selectors)
-      ? payload.selectors
-      : Array.isArray(payload)
-        ? payload
-        : [];
+  function coerceSelectorList(payload) {
+    if (typeof payload === "string") {
+      return [payload];
+    }
 
-    return rawSelectors
+    if (Array.isArray(payload?.selectors)) {
+      return payload.selectors;
+    }
+
+    if (typeof payload?.selectors === "string") {
+      return [payload.selectors];
+    }
+
+    if (Array.isArray(payload?.selector)) {
+      return payload.selector;
+    }
+
+    if (typeof payload?.selector === "string") {
+      return [payload.selector];
+    }
+
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+
+    return [];
+  }
+
+  function normalizeSelectorList(payload) {
+    return coerceSelectorList(payload)
       .map((selector) => String(selector || "").trim())
       .filter(Boolean);
   }
@@ -474,6 +532,76 @@
 
   function getTagName(element) {
     return String(element?.tagName || "").toUpperCase();
+  }
+
+  function getAttributeNamesSafe(element) {
+    try {
+      if (typeof element?.getAttributeNames === "function") {
+        return element.getAttributeNames();
+      }
+
+      return [...(element?.attributes || [])]
+        .map((attribute) => String(attribute?.name || "").trim())
+        .filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  function normalizeInteractiveEventName(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .split(/[.:]/u, 1)[0];
+  }
+
+  function isInteractiveEventName(value) {
+    return INTERACTIVE_EVENT_NAMES.has(normalizeInteractiveEventName(value));
+  }
+
+  function isInteractiveEventAttributeName(attributeName) {
+    const normalizedName = String(attributeName || "").trim().toLowerCase();
+    if (!normalizedName) {
+      return false;
+    }
+
+    if (normalizedName.startsWith("@")) {
+      return isInteractiveEventName(normalizedName.slice(1));
+    }
+
+    if (normalizedName.startsWith("x-on:") || normalizedName.startsWith("v-on:")) {
+      return isInteractiveEventName(normalizedName.slice(5));
+    }
+
+    if (normalizedName.startsWith("ng-")) {
+      return isInteractiveEventName(normalizedName.slice(3));
+    }
+
+    if (normalizedName.startsWith("on") && normalizedName.length > 2) {
+      return isInteractiveEventName(normalizedName.slice(2));
+    }
+
+    return false;
+  }
+
+  function hasHelperManagedNodeReference(element) {
+    return Boolean(normalizeAttributeText(element?.getAttribute?.("data-space-browser-node-id")));
+  }
+
+  function hasInteractiveEventHandlerAttribute(element) {
+    return getAttributeNamesSafe(element).some((attributeName) => {
+      return isInteractiveEventAttributeName(attributeName);
+    });
+  }
+
+  function hasInteractiveEventHandlerProperty(element) {
+    return INTERACTIVE_EVENT_PROPERTIES.some((propertyName) => {
+      return typeof element?.[propertyName] === "function";
+    });
+  }
+
+  function hasInteractiveEventHandler(element) {
+    return hasInteractiveEventHandlerAttribute(element) || hasInteractiveEventHandlerProperty(element);
   }
 
   function isStyleDeclarationHidden(styleValue) {
@@ -584,7 +712,20 @@
     }
 
     const role = String(element.getAttribute?.("role") || "").trim().toLowerCase();
-    return INTERACTIVE_ROLES.has(role);
+    if (INTERACTIVE_ROLES.has(role)) {
+      return true;
+    }
+
+    if (STRUCTURAL_ROLES.has(role)) {
+      return false;
+    }
+
+    if (hasInteractiveEventHandlerAttribute(element)) {
+      return true;
+    }
+
+    return (hasHelperManagedNodeReference(element) || hasInteractiveEventHandlerProperty(element))
+      && Boolean(normalizeText(element.textContent || ""));
   }
 
   function getComputedStyleSafe(element) {
@@ -1010,6 +1151,10 @@
 
     if (role === "textbox") {
       return "input text";
+    }
+
+    if (hasHelperManagedNodeReference(element) || hasInteractiveEventHandler(element)) {
+      return "button";
     }
 
     return role || tagName.toLowerCase();

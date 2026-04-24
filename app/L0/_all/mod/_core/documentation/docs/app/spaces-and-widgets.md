@@ -103,6 +103,7 @@ Widget YAML rules:
 
 - widgets may carry an optional plain-object `metadata` block in their YAML file; the browser runtime should preserve that metadata through ordinary render/upsert flows unless a caller explicitly replaces it
 - `readWidget(...)` should include a compact `metadata: ...` line when metadata exists, and `space.current.widgets` should expose both the raw `metadata` object and a convenience `example` boolean
+- widget renderers that show a website, search page, URL, live web page, or browser-like surface that the agent may inspect or control must embed a registered browser surface with plain `<x-browser src="google.com"></x-browser>` or create the same element through DOM APIs; `_core/web_browsing` owns id allocation, address-bar-style `src` normalization, optional `controls="true|false"` chrome, and `space.browser` exposure while `_core/spaces` only provides the normal widget render target; plain iframes are not registered browser surfaces and should be reserved for provider-specific embeds that are intentionally not agent-controllable
 
 ## Layout Packing
 
@@ -206,6 +207,7 @@ Rules:
 - the default widget card surface is `#101b2d` (`rgba(16, 27, 45, 0.92)`); avoid another generic full-card background unless the content needs a dedicated stage
 - prefer light text and UI elements by default because widget content sits on a dark surface
 - widget replay should evaluate renderer source through a named virtual `space-widget-...renderer.js` script so DevTools and console errors link back to widget lines instead of `index.html`; keep the wrapper minimal so the displayed line numbers stay close to the stored renderer source
+- for website, search, URL, live-page, or browser-like widget surfaces that the agent may need to inspect or control, use `<x-browser src="google.com"></x-browser>` rather than an iframe so the surface registers with `space.browser` and supports injected browser actions
 - repo-owned YouTube iframe widgets should set `iframe.referrerPolicy = "strict-origin-when-cross-origin"` so embedded playback keeps the referrer YouTube now expects
 - repo-owned YouTube widgets that need to react when playback ends should use the official IFrame API state-change events with `enablejsapi=1` and the current `origin`, and should use `ctx.widget.id` plus `ctx.space.id` for self-removal instead of hardcoded widget ids
 - use `space.utils.markdown.render(text, parent)` for markdown-heavy content

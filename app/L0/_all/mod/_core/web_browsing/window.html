@@ -16,7 +16,7 @@
       @pointercancel.window="$store.webBrowsing.stopPointer($event)"
       @resize.window="$store.webBrowsing.handleViewportResize()"
     >
-      <x-context :data-tags="$store.webBrowsing.hasOpenWindows ? 'browser:open' : ''"></x-context>
+      <x-context :data-tags="$store.webBrowsing.hasOpenBrowsers ? 'browser:open' : ''"></x-context>
       <template x-for="browserWindow in $store.webBrowsing.windows" :key="browserWindow.id">
         <section
           class="web-browsing-window"
@@ -74,88 +74,12 @@
           </header>
 
           <div class="web-browsing-window-body">
-            <form
-              class="web-browsing-window-toolbar"
-              :aria-label="`Browser bar for ${browserWindow.id}`"
-              @submit.prevent="$store.webBrowsing.navigateToAddress(browserWindow.id)"
-            >
-              <div class="web-browsing-window-toolbar-actions">
-                <button
-                  type="button"
-                  class="web-browsing-window-nav-button"
-                  aria-label="Go back"
-                  title="Back"
-                  :disabled="browserWindow.bridgeStateReady && !browserWindow.canGoBack"
-                  @click.stop="$store.webBrowsing.goBack(browserWindow.id)"
-                >
-                  <x-icon>arrow_back</x-icon>
-                </button>
-
-                <button
-                  type="button"
-                  class="web-browsing-window-nav-button"
-                  aria-label="Go forward"
-                  title="Forward"
-                  :disabled="browserWindow.bridgeStateReady && !browserWindow.canGoForward"
-                  @click.stop="$store.webBrowsing.goForward(browserWindow.id)"
-                >
-                  <x-icon>arrow_forward</x-icon>
-                </button>
-
-                <button
-                  type="button"
-                  class="web-browsing-window-nav-button"
-                  aria-label="Reload page"
-                  title="Reload"
-                  @click.stop="$store.webBrowsing.reloadFrame(browserWindow.id)"
-                >
-                  <x-icon>refresh</x-icon>
-                </button>
-              </div>
-
-              <input
-                type="text"
-                class="web-browsing-window-address-field"
-                aria-label="Browser address"
-                autocapitalize="off"
-                autocomplete="off"
-                autocorrect="off"
-                spellcheck="false"
-                :value="browserWindow.addressValue"
-                @input="$store.webBrowsing.updateAddressValue(browserWindow.id, $event.target.value)"
-              />
-            </form>
-
             <x-browser
-              class="web-browsing-window-frame-shell"
+              class="web-browsing-window-browser"
+              controls="true"
+              :src="browserWindow.frameSrc"
               :data-browser-id="browserWindow.id"
-              x-init="$store.webBrowsing.registerBrowserSurface(browserWindow.id, $el)"
-              x-destroy="$store.webBrowsing.unregisterBrowserSurface(browserWindow.id, $el)"
-            >
-              <template x-if="$store.webBrowsing.usesDesktopWebviewSurface">
-                <webview
-                  :id="browserWindow.id"
-                  :partition="$store.webBrowsing.webviewPartition(browserWindow.id)"
-                  class="web-browsing-window-frame web-browsing-window-webview"
-                  x-init="$store.webBrowsing.registerWebview(browserWindow.id, $el, browserWindow.frameSrc)"
-                  x-destroy="$store.webBrowsing.unregisterWebview(browserWindow.id, $el)"
-                ></webview>
-              </template>
-
-              <template x-if="!$store.webBrowsing.usesDesktopWebviewSurface && !$store.webBrowsing.usesNativeDesktopSurface">
-                <iframe
-                  :id="browserWindow.id"
-                  :name="browserWindow.id"
-                  class="web-browsing-window-frame"
-                  :title="`Browser frame ${browserWindow.id}`"
-                  :src="browserWindow.frameSrc"
-                  data-space-inject="/mod/_core/web_browsing/browser-frame-inject.js"
-                  x-init="$store.webBrowsing.registerIframe(browserWindow.id, $el)"
-                  x-destroy="$store.webBrowsing.unregisterIframe(browserWindow.id, $el)"
-                  @load="$store.webBrowsing.handleFrameLoad(browserWindow.id, $event)"
-                ></iframe>
-              </template>
-            </x-browser>
+            ></x-browser>
           </div>
 
           <button

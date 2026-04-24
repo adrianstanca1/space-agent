@@ -9,6 +9,8 @@ class FakeElement {
   constructor(tagName = "div") {
     this.tagName = String(tagName || "").toUpperCase();
     this.attributes = new Map();
+    this.dataset = {};
+    this.isConnected = true;
     this.style = {
       setProperty() {}
     };
@@ -50,6 +52,10 @@ class FakeElement {
 
   removeEventListener(eventName, handler) {
     this.__listeners.get(eventName)?.delete(handler);
+  }
+
+  remove() {
+    this.isConnected = false;
   }
 
   setAttribute(name, value) {
@@ -131,8 +137,10 @@ function createStoreRuntime() {
     },
     fw: {
       createStore(_name, model) {
-        const store = {
-          ...model,
+        const store = Object.create(Object.getPrototypeOf(model));
+        Object.defineProperties(store, Object.getOwnPropertyDescriptors(model));
+        Object.assign(store, {
+          browserSurfaces: [],
           frameConnections: Object.create(null),
           interaction: null,
           lastInteractedBrowserId: "",
@@ -143,7 +151,7 @@ function createStoreRuntime() {
           persistedWindowsWriteTimeoutId: null,
           syncTokens: Object.create(null),
           windows: []
-        };
+        });
         runtime.__store = store;
         return store;
       }
@@ -313,6 +321,38 @@ test("browser store persists viewport-fitted geometry after resize", async () =>
     assert.equal(persistedWindows[0].position.y, browserWindow.position.y);
     assert.equal(persistedWindows[0].size.width, browserWindow.size.width);
     assert.equal(persistedWindows[0].size.height, browserWindow.size.height);
+  });
+});
+
+test("browser store registers inline x-browser elements as generic browser surfaces", async () => {
+  await withStoreEnvironment(async ({ store }) => {
+    const browserElement = new FakeElement("x-browser");
+    browserElement.setAttribute("src", "google.com");
+
+    const browserSurface = store.registerBrowserElement(browserElement, {
+      src: browserElement.getAttribute("src")
+    });
+
+    assert.equal(browserSurface.id, "browser-1");
+    assert.equal(browserElement.dataset.browserId, "browser-1");
+    assert.equal(browserSurface.currentUrl, "https://google.com/");
+    assert.equal(browserSurface.frameSrc, "https://google.com/");
+    assert.equal(browserSurface.isWindow, false);
+    assert.equal(store.getWindow("browser-1"), null);
+    assert.deepEqual(store.getBrowserList().map((entry) => entry.id), ["browser-1"]);
+    assert.equal(store.hasOpenBrowsers, true);
+
+    store.updateBrowserElementSource(browserElement, "localhost:3000");
+    assert.equal(browserSurface.currentUrl, "http://localhost:3000/");
+    assert.equal(browserSurface.frameSrc, "http://localhost:3000/");
+
+    store.rememberBrowserInteraction("browser-1", "focus");
+    assert.equal(store.lastInteractedBrowserId, "browser-1");
+    assert.equal(store.lastInteractedBrowserInstanceKey, browserSurface.instanceKey);
+
+    store.unregisterBrowserElement(browserElement);
+    assert.equal(store.hasOpenBrowsers, false);
+    assert.equal(store.getBrowser("browser-1"), null);
   });
 });
 

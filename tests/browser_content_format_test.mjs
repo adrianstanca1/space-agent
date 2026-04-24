@@ -96,6 +96,70 @@ test("browser CLI content uses typed ref boxes, state tags, semantic tags, and U
   }
 });
 
+test("browser CLI content descends into actionable dialog containers", {
+  timeout: 2 * 60 * 1000
+}, async () => {
+  const server = await startHttpServer((request, response) => {
+    response.writeHead(200, {
+      "content-type": "text/html; charset=utf-8"
+    });
+    response.end(`<!doctype html>
+<html>
+  <head>
+    <title>Consent Dialog Content Test</title>
+  </head>
+  <body>
+    <div
+      role="dialog"
+      aria-label="Before you continue to Test Search"
+      aria-modal="true"
+      tabindex="0"
+      onclick="window.__dialogClicked = true"
+    >
+      <h1>Before you continue to Test</h1>
+      <p>We use <a href="/cookies">cookies</a> and data to</p>
+      <ul>
+        <li>Deliver and maintain Test services</li>
+        <li>Track outages and protect against spam, fraud, and abuse</li>
+      </ul>
+      <p>If you choose to "Accept all," we will also use cookies and data to improve new services.</p>
+      <p>Select “More options” to see additional information.</p>
+      <button>Reject all</button>
+      <button>Accept all</button>
+      <button role="link"><a>More options</a></button>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </div>
+  </body>
+</html>`);
+  });
+  const { port } = server.address();
+  const harness = await startBrowserHarness();
+
+  try {
+    await sendBrowserHarnessCommand(harness, "open", [`http://127.0.0.1:${port}/`]);
+    const contentResult = await sendBrowserHarnessCommand(harness, "content");
+    const documentContent = contentResult?.document || "";
+
+    assert.match(documentContent, /# Before you continue to Test/u);
+    assert.match(documentContent, /\[link \d+\] cookies/u);
+    assert.match(documentContent, /Deliver and maintain Test services/u);
+    assert.match(documentContent, /Track outages and protect against spam, fraud, and abuse/u);
+    assert.match(documentContent, /Accept all/u);
+    assert.match(documentContent, /Reject all/u);
+    assert.match(documentContent, /More options/u);
+    assert.match(documentContent, /Privacy/u);
+    assert.match(documentContent, /Terms/u);
+    assert.notEqual(
+      documentContent.trim(),
+      "[button 1] Before you continue to Test Search"
+    );
+  } finally {
+    await stopBrowserHarness(harness);
+    await stopHttpServer(server);
+  }
+});
+
 test("browser CLI actions report visible reaction and no-op retries", {
   timeout: 2 * 60 * 1000
 }, async () => {

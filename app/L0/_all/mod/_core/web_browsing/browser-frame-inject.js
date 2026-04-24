@@ -382,8 +382,24 @@
   }
 
   function coerceSelectorList(payload) {
+    if (typeof payload === "string") {
+      return [payload];
+    }
+
     if (Array.isArray(payload?.selectors)) {
       return payload.selectors;
+    }
+
+    if (typeof payload?.selectors === "string") {
+      return [payload.selectors];
+    }
+
+    if (Array.isArray(payload?.selector)) {
+      return payload.selector;
+    }
+
+    if (typeof payload?.selector === "string") {
+      return [payload.selector];
     }
 
     if (Array.isArray(payload)) {
@@ -408,16 +424,30 @@
     return null;
   }
 
-  async function captureDomHelperDocument() {
+  async function captureDomHelperDocument(payload = null) {
     const helper = getDomHelper();
     if (!helper) {
       return null;
     }
 
     try {
-      const snapshot = await helper.captureDocument();
+      const helperPayload = {};
+      const selectors = normalizeSelectorList(payload);
+      if (selectors.length) {
+        helperPayload.selectors = selectors;
+      }
+
+      const snapshotMode = typeof payload?.snapshotMode === "string"
+        ? payload.snapshotMode.trim()
+        : "";
+      if (snapshotMode) {
+        helperPayload.snapshotMode = snapshotMode;
+      }
+
+      const snapshot = await helper.captureDocument(helperPayload);
       const html = String(snapshot?.html || "").trim();
-      if (!html) {
+      const hasTargets = Boolean(snapshot?.targets && typeof snapshot.targets === "object");
+      if (!html && !hasTargets) {
         return null;
       }
 
@@ -460,7 +490,14 @@
   }
 
   async function serializeSelectorHtml(selector) {
-    const helperDocument = await captureDomHelperDocument();
+    const helperDocument = await captureDomHelperDocument({
+      selectors: [selector],
+      snapshotMode: "dom"
+    });
+    if (helperDocument?.snapshot?.targets && typeof helperDocument.snapshot.targets === "object") {
+      return String(helperDocument.snapshot.targets?.[selector] || "");
+    }
+
     if (helperDocument?.html) {
       const parsedDocument = parseHtmlDocument(helperDocument.html);
       if (parsedDocument?.querySelectorAll) {
@@ -511,6 +548,22 @@
       return {
         document: await serializeDocumentHtml()
       };
+    }
+
+    const helperPayload = payload && typeof payload === "object" && !Array.isArray(payload)
+      ? { ...payload }
+      : {};
+    const helperDocument = await captureDomHelperDocument({
+      ...helperPayload,
+      selectors,
+      snapshotMode: "dom"
+    });
+    if (helperDocument?.snapshot?.targets && typeof helperDocument.snapshot.targets === "object") {
+      const snapshot = {};
+      selectors.forEach((selector) => {
+        snapshot[selector] = String(helperDocument.snapshot.targets?.[selector] || "");
+      });
+      return snapshot;
     }
 
     const snapshot = {};
@@ -662,6 +715,45 @@
       "Browser frame bridge could not scroll to the requested reference.",
       "browser_frame_scroll_error"
     );
+  }
+
+  function resolveEvaluateScript(payload = null) {
+    const rawScript = typeof payload === "string"
+      ? payload
+      : payload?.script;
+    const script = String(rawScript || "").trim();
+
+    if (script) {
+      return script;
+    }
+
+    throw createNamedError(
+      "BrowserFrameBridgeEvaluateError",
+      "Browser frame bridge evaluate requires a non-empty script.",
+      {
+        code: "browser_frame_evaluate_script_required"
+      }
+    );
+  }
+
+  async function evaluateScript(payload = null) {
+    const script = resolveEvaluateScript(payload);
+
+    try {
+      return await Promise.resolve(globalThis.eval(script));
+    } catch (error) {
+      throw createNamedError(
+        "BrowserFrameBridgeEvaluateError",
+        "Browser frame bridge could not evaluate the requested script.",
+        {
+          code: "browser_frame_evaluate_error",
+          cause: error,
+          details: {
+            cause: serializeErrorSummary(error, "Browser frame bridge could not evaluate the requested script.")
+          }
+        }
+      );
+    }
   }
 
   function readNavigationCapability(key) {
@@ -1206,6 +1298,7 @@
       collectReferenceDetail,
       collectSemanticContent,
       createNamedError,
+      evaluateScript,
       installNavigationEvents() {
         installNavigationEvents(bridge);
         return runtime;

@@ -17,15 +17,15 @@ function wait(ms) {
   });
 }
 
-function buildBrowserStatusRow(browserWindow) {
-  const id = normalizeBrowserTransientId(browserWindow?.id);
+function buildBrowserStatusRow(browserSurface) {
+  const id = normalizeBrowserTransientId(browserSurface?.id);
   const url = normalizeBrowserTransientCell(
-    browserWindow?.currentUrl
-    || browserWindow?.frameSrc
-    || browserWindow?.addressValue
+    browserSurface?.currentUrl
+    || browserSurface?.frameSrc
+    || browserSurface?.addressValue
     || ""
   );
-  const title = normalizeBrowserTransientCell(browserWindow?.title || "");
+  const title = normalizeBrowserTransientCell(browserSurface?.title || "");
 
   if (!id) {
     return null;
@@ -45,14 +45,16 @@ async function buildLastInteractedBrowserContentTransientSection(webBrowsingStor
     return null;
   }
 
-  const browserWindow = typeof webBrowsingStore?.getWindow === "function"
-    ? webBrowsingStore.getWindow(browserId)
-    : null;
-  if (!browserWindow) {
+  const browserSurface = typeof webBrowsingStore?.getBrowser === "function"
+    ? webBrowsingStore.getBrowser(browserId)
+    : typeof webBrowsingStore?.getWindow === "function"
+      ? webBrowsingStore.getWindow(browserId)
+      : null;
+  if (!browserSurface) {
     return null;
   }
 
-  if (browserInstanceKey != null && browserWindow.instanceKey !== browserInstanceKey) {
+  if (browserInstanceKey != null && browserSurface.instanceKey !== browserInstanceKey) {
     return null;
   }
 
@@ -86,11 +88,12 @@ async function buildLastInteractedBrowserContentTransientSection(webBrowsingStor
     return null;
   }
 
-  const row = buildBrowserStatusRow(
-    typeof webBrowsingStore?.getWindow === "function"
+  const latestBrowserSurface = typeof webBrowsingStore?.getBrowser === "function"
+    ? webBrowsingStore.getBrowser(browserId)
+    : typeof webBrowsingStore?.getWindow === "function"
       ? webBrowsingStore.getWindow(browserId)
-      : browserWindow
-  );
+      : browserSurface;
+  const row = buildBrowserStatusRow(latestBrowserSurface);
   if (!row) {
     return null;
   }

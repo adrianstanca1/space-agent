@@ -62,6 +62,7 @@ Source-doc mirror map:
 - the router skill should tell the agent to use the top-level `documentation` skill's built-in docs map for broad orientation when relevant, while still treating `AGENTS.md` files as the binding contract layer
 - nested skills should stay focused on one area rather than repeating the whole architecture
 - `frontend-runtime/SKILL.md` must keep the shared runtime helper list current, including browser utilities such as `space.utils.markdown.render(...)`
+- `frontend-runtime/SKILL.md` must keep embedded browser-surface guidance current, including direct `<x-browser>` authoring, the `controls` attribute, and automatic `space.browser` registration
 - `frontend-runtime/SKILL.md` must keep the external-fetch guidance current: frontend code should use runtime-managed `fetch(...)` or `space.fetchExternal(...)` and must not hardcode third-party CORS proxy services because the runtime already falls back to `/api/proxy`
 - `extensions-components/SKILL.md` must keep extension lookup batching guidance current, including the HTML-only frontend constant `HTML_EXTENSIONS_LOAD_BATCH_WAIT_MS`, and must keep delayed-target `x-inject` guidance current for route-owned markup that targets shell seams
 - `frontend-runtime/SKILL.md` and `extensions-components/SKILL.md` must keep the framework-managed `_core/framework/head/end` seam aligned with the imperative `_core/framework/initializer.js/initialize/end` fallback guidance

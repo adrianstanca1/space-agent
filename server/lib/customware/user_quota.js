@@ -2,14 +2,21 @@ import fs from "node:fs";
 import path from "node:path";
 
 import {
+  normalizeAppProjectPath,
   parseAppProjectPath,
   resolveProjectAbsolutePath
 } from "./layout.js";
+import { getFileIndexShardId } from "../file_watch/state_shards.js";
+import { FILE_INDEX_AREA } from "../../runtime/state_areas.js";
 
 const USER_FOLDER_SIZE_LIMIT_PARAM = "USER_FOLDER_SIZE_LIMIT_BYTES";
 const USER_FOLDER_SIZE_CACHE_TTL_MS = 5 * 60 * 1000;
 const USER_FOLDER_SIZE_CACHE_MAX_ENTRIES = 1000;
 const userFolderSizeCache = new Map();
+
+function createEmptyRecordMap() {
+  return Object.create(null);
+}
 
 function evictExpiredUserFolderSizeCacheEntries() {
   const now = Date.now();
@@ -19,7 +26,6 @@ function evictExpiredUserFolderSizeCacheEntries() {
     }
   }
 }
-
 function createQuotaError(message, statusCode = 413) {
   const error = new Error(message);
   error.statusCode = statusCode;
@@ -38,6 +44,110 @@ function getUserFolderSizeLimitBytes(runtimeParams) {
 
 function toCacheKey(absolutePath) {
   return path.resolve(String(absolutePath || ""));
+}
+
+function stripTrailingSlash(value) {
+  const text = String(value || "");
+  return text.endsWith("/") ? text.slice(0, -1) : text;
+}
+
+function getProjectPathLookupCandidates(projectPath) {
+  const normalizedProjectPath = normalizeAppProjectPath(projectPath, {
+    allowAppRoot: true,
+    isDirectory: String(projectPath || "").endsWith("/")
+  });
+
+  if (!normalizedProjectPath) {
+    return [];
+  }
+
+  const baseProjectPath = stripTrailingSlash(normalizedProjectPath);
+  return normalizedProjectPath.endsWith("/")
+    ? [normalizedProjectPath, baseProjectPath]
+    : [normalizedProjectPath, `${baseProjectPath}/`];
+}
+
+function getWatchdogPathIndex(watchdog) {
+  if (!watchdog || typeof watchdog.getIndex !== "function") {
+    return null;
+  }
+
+  const pathIndex = watchdog.getIndex("path_index");
+  return pathIndex && typeof pathIndex === "object" && !Array.isArray(pathIndex) ? pathIndex : null;
+}
+
+function getStateSystemFileIndexShard(stateSystem, shardId) {
+  if (!stateSystem || typeof stateSystem.getValue !== "function") {
+    return null;
+  }
+
+  const normalizedShardId = String(shardId || "").trim();
+
+  if (!normalizedShardId) {
+    return null;
+  }
+
+  const shardValue = stateSystem.getValue(FILE_INDEX_AREA, normalizedShardId);
+  return shardValue && typeof shardValue === "object" && !Array.isArray(shardValue) ? shardValue : null;
+}
+
+function getIndexedProjectPathMap(options = {}, projectPath) {
+  const shardId = getFileIndexShardId(projectPath);
+  const stateShard = getStateSystemFileIndexShard(options.stateSystem, shardId);
+
+  if (stateShard) {
+    return stateShard;
+  }
+
+  if (options.pathIndex && typeof options.pathIndex === "object" && !Array.isArray(options.pathIndex)) {
+    return options.pathIndex;
+  }
+
+  return getWatchdogPathIndex(options.watchdog);
+}
+
+function getIndexedProjectPathSize(options = {}, projectPath) {
+  const candidates = getProjectPathLookupCandidates(projectPath);
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  const indexedProjectPaths = getIndexedProjectPathMap(options, candidates[0]);
+
+  if (!indexedProjectPaths) {
+    return null;
+  }
+
+  const existingMetadata = candidates
+    .map((candidateProjectPath) => indexedProjectPaths[candidateProjectPath])
+    .find((metadata) => metadata && typeof metadata === "object" && !Array.isArray(metadata));
+
+  if (existingMetadata && existingMetadata.isDirectory !== true) {
+    return Math.max(0, Number(existingMetadata.sizeBytes) || 0);
+  }
+
+  const directoryProjectPath =
+    candidates.find((candidateProjectPath) => candidateProjectPath.endsWith("/")) ||
+    `${stripTrailingSlash(candidates[0])}/`;
+  let totalBytes = 0;
+  let matched = false;
+
+  for (const [candidateProjectPath, metadata] of Object.entries(
+    indexedProjectPaths || createEmptyRecordMap()
+  )) {
+    if (!candidateProjectPath.startsWith(directoryProjectPath)) {
+      continue;
+    }
+
+    matched = true;
+
+    if (metadata && typeof metadata === "object" && !Array.isArray(metadata) && metadata.isDirectory !== true) {
+      totalBytes += Math.max(0, Number(metadata.sizeBytes) || 0);
+    }
+  }
+
+  return matched ? totalBytes : null;
 }
 
 function readAbsolutePathSize(absolutePath) {
@@ -72,8 +182,8 @@ function readAbsolutePathSize(absolutePath) {
   return totalBytes;
 }
 
-function getCachedUserFolderSize(rootAbsolutePath) {
-  const cacheKey = toCacheKey(rootAbsolutePath);
+function getCachedUserFolderSize(target, options = {}) {
+  const cacheKey = toCacheKey(target?.rootAbsolutePath || target);
   const cachedEntry = userFolderSizeCache.get(cacheKey);
 
   if (cachedEntry && Date.now() - cachedEntry.cachedAt <= USER_FOLDER_SIZE_CACHE_TTL_MS) {
@@ -89,7 +199,9 @@ function getCachedUserFolderSize(rootAbsolutePath) {
     }
   }
 
-  const bytes = readAbsolutePathSize(cacheKey);
+  const indexedBytes = getIndexedProjectPathSize(options, target?.rootProjectPath);
+  const bytes =
+    indexedBytes === null ? readAbsolutePathSize(target?.rootAbsolutePath || cacheKey) : indexedBytes;
   userFolderSizeCache.set(cacheKey, {
     bytes,
     cachedAt: Date.now()
@@ -163,7 +275,7 @@ function createUserFolderQuotaPlan(options = {}, deltas = []) {
     const entry =
       entriesByCacheKey.get(target.cacheKey) || {
         ...target,
-        currentBytes: getCachedUserFolderSize(target.rootAbsolutePath),
+        currentBytes: getCachedUserFolderSize(target, options),
         deltaBytes: 0,
         limitBytes
       };
@@ -239,5 +351,6 @@ export {
   createUserFolderQuotaPlan,
   getUserFolderSizeLimitBytes,
   invalidateUserFolderSizeCacheForProjectPaths,
+  getIndexedProjectPathSize,
   readAbsolutePathSize
 };

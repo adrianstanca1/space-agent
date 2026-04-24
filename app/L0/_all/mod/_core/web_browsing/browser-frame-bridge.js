@@ -16,9 +16,18 @@ import {
 const DEFAULT_SEND_TIMEOUT_MS = 5000;
 const bridgeCache = new WeakMap();
 
+function isElementLike(value) {
+  return typeof Element !== "undefined" && value instanceof Element;
+}
+
 function isIframeLike(value) {
   const tagName = String(value?.tagName || value?.nodeName || "").toUpperCase();
   return tagName === "IFRAME";
+}
+
+function isBrowserElementLike(value) {
+  const tagName = String(value?.tagName || value?.nodeName || "").toUpperCase();
+  return tagName === "X-BROWSER";
 }
 
 function resolveFrameTarget(target) {
@@ -55,6 +64,35 @@ function resolveIframeById(iframeId, root = globalThis.document) {
   return iframe;
 }
 
+function resolveBrowserElementTarget(element) {
+  if (!isElementLike(element)) {
+    return null;
+  }
+
+  if (isWebviewLike(element) || isIframeLike(element)) {
+    return element;
+  }
+
+  if (isBrowserElementLike(element)) {
+    return element.querySelector?.("webview, iframe") || null;
+  }
+
+  return element.closest?.("x-browser")?.querySelector?.("webview, iframe") || null;
+}
+
+function resolveBrowserElementId(element) {
+  if (!isElementLike(element)) {
+    return "";
+  }
+
+  if (isBrowserElementLike(element)) {
+    return String(element.dataset?.browserId || element.getAttribute?.("data-browser-id") || "").trim();
+  }
+
+  const browserElement = element.closest?.("x-browser");
+  return String(browserElement?.dataset?.browserId || browserElement?.getAttribute?.("data-browser-id") || "").trim();
+}
+
 export function createBrowserFrameBridge(target, options = {}) {
   const resolveTargetWindow =
     typeof target === "function"
@@ -69,6 +107,30 @@ export function createBrowserFrameBridge(target, options = {}) {
 }
 
 export function getBrowserFrameBridge(iframeId, options = {}) {
+  if (isElementLike(iframeId)) {
+    const target = resolveBrowserElementTarget(iframeId);
+    if (isWebviewLike(target)) {
+      return getBrowserWebviewBridge(target, options);
+    }
+
+    if (isIframeLike(target)) {
+      if (bridgeCache.has(target)) {
+        return bridgeCache.get(target);
+      }
+
+      const bridge = createBrowserFrameBridge(target, options);
+      bridgeCache.set(target, bridge);
+      return bridge;
+    }
+
+    const browserId = resolveBrowserElementId(iframeId);
+    if (browserId && hasDesktopBrowserBridge()) {
+      return getDesktopBrowserBridge(browserId, options);
+    }
+
+    throw new Error("Browser frame helper could not resolve a browser target from the supplied element.");
+  }
+
   const normalizedId = String(iframeId || "").trim();
   if (!normalizedId) {
     throw new Error("Browser frame helper requires a non-empty browser id.");

@@ -25,6 +25,42 @@ function installBrowserDomHelper(flagKey = DOM_HELPER_FLAG, helperKey = DOM_HELP
     "tab",
     "textbox"
   ]);
+  const STRUCTURAL_ROLES = new Set([
+    "alertdialog",
+    "article",
+    "banner",
+    "complementary",
+    "contentinfo",
+    "dialog",
+    "document",
+    "form",
+    "group",
+    "main",
+    "navigation",
+    "none",
+    "presentation",
+    "region"
+  ]);
+  const INTERACTIVE_EVENT_NAMES = new Set([
+    "auxclick",
+    "change",
+    "click",
+    "contextmenu",
+    "dblclick",
+    "input",
+    "keydown",
+    "keypress",
+    "keyup",
+    "mousedown",
+    "mouseup",
+    "pointerdown",
+    "pointerup",
+    "submit",
+    "touchend",
+    "touchstart"
+  ]);
+  const INTERACTIVE_EVENT_PROPERTIES = [...INTERACTIVE_EVENT_NAMES]
+    .map((eventName) => `on${eventName}`);
   const SKIP_TAGS = new Set([
     "HEAD",
     "LINK",
@@ -89,6 +125,72 @@ function installBrowserDomHelper(flagKey = DOM_HELPER_FLAG, helperKey = DOM_HELP
 
   function normalizeAttributeText(value) {
     return normalizeText(value).slice(0, 160);
+  }
+
+  function getAttributeNamesSafe(element) {
+    try {
+      if (typeof element?.getAttributeNames === "function") {
+        return element.getAttributeNames();
+      }
+
+      return [...(element?.attributes || [])]
+        .map((attribute) => String(attribute?.name || "").trim())
+        .filter(Boolean);
+    } catch {
+      return [];
+    }
+  }
+
+  function normalizeInteractiveEventName(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .split(/[.:]/u, 1)[0];
+  }
+
+  function isInteractiveEventName(value) {
+    return INTERACTIVE_EVENT_NAMES.has(normalizeInteractiveEventName(value));
+  }
+
+  function isInteractiveEventAttributeName(attributeName) {
+    const normalizedName = String(attributeName || "").trim().toLowerCase();
+    if (!normalizedName) {
+      return false;
+    }
+
+    if (normalizedName.startsWith("@")) {
+      return isInteractiveEventName(normalizedName.slice(1));
+    }
+
+    if (normalizedName.startsWith("x-on:") || normalizedName.startsWith("v-on:")) {
+      return isInteractiveEventName(normalizedName.slice(5));
+    }
+
+    if (normalizedName.startsWith("ng-")) {
+      return isInteractiveEventName(normalizedName.slice(3));
+    }
+
+    if (normalizedName.startsWith("on") && normalizedName.length > 2) {
+      return isInteractiveEventName(normalizedName.slice(2));
+    }
+
+    return false;
+  }
+
+  function hasInteractiveEventHandlerAttribute(element) {
+    return getAttributeNamesSafe(element).some((attributeName) => {
+      return isInteractiveEventAttributeName(attributeName);
+    });
+  }
+
+  function hasInteractiveEventHandlerProperty(element) {
+    return INTERACTIVE_EVENT_PROPERTIES.some((propertyName) => {
+      return typeof element?.[propertyName] === "function";
+    });
+  }
+
+  function hasInteractiveEventHandler(element) {
+    return hasInteractiveEventHandlerAttribute(element) || hasInteractiveEventHandlerProperty(element);
   }
 
   function truncateText(value, maxLength = 120) {
@@ -233,7 +335,19 @@ function installBrowserDomHelper(flagKey = DOM_HELPER_FLAG, helperKey = DOM_HELP
     }
 
     const role = String(element.getAttribute?.("role") || "").trim().toLowerCase();
-    return INTERACTIVE_ROLES.has(role);
+    if (INTERACTIVE_ROLES.has(role)) {
+      return true;
+    }
+
+    if (STRUCTURAL_ROLES.has(role)) {
+      return false;
+    }
+
+    if (hasInteractiveEventHandlerAttribute(element)) {
+      return true;
+    }
+
+    return hasInteractiveEventHandlerProperty(element) && Boolean(normalizeText(element.textContent || ""));
   }
 
   function parseCssColor(value) {
@@ -620,9 +734,17 @@ function installBrowserDomHelper(flagKey = DOM_HELPER_FLAG, helperKey = DOM_HELP
   }
 
   function normalizeSelectorList(payload = {}) {
-    const rawSelectors = Array.isArray(payload?.selectors)
-      ? payload.selectors
-      : [];
+    const rawSelectors = typeof payload === "string"
+      ? [payload]
+      : Array.isArray(payload?.selectors)
+        ? payload.selectors
+        : typeof payload?.selectors === "string"
+          ? [payload.selectors]
+          : Array.isArray(payload?.selector)
+            ? payload.selector
+            : typeof payload?.selector === "string"
+              ? [payload.selector]
+              : [];
 
     return rawSelectors
       .map((selector) => String(selector || "").trim())

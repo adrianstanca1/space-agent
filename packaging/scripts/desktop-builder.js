@@ -306,7 +306,14 @@ function createBuildConfig(platformSpec, options) {
   buildConfig.asar = false;
   buildConfig.buildVersion = buildVersion;
   buildConfig.electronVersion = ELECTRON_PACKAGE.version;
-  buildConfig.electronDist = ELECTRON_DIST_PATH;
+  if (process.platform === platformSpec.preferredHost) {
+    buildConfig.electronDist = ELECTRON_DIST_PATH;
+  } else {
+    delete buildConfig.electronDist;
+    warnings.push(
+      `Skipping local Electron dist override while packaging ${platformSpec.label} from ${process.platform}; electron-builder will resolve the target runtime instead.`
+    );
+  }
   buildConfig.extraMetadata = {
     ...(buildConfig.extraMetadata || {}),
     version: buildVersion
